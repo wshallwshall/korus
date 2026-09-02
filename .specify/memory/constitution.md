@@ -186,6 +186,43 @@ not carried to another without re-measuring. Article IV already requires this; i
 again here because the surface is the condition observers are least likely to think of
 varying, for the same reason Article IV gives: it is usually the only one they have.
 
+### X. A seat that cannot be measured cannot be steered
+
+Every seat's **cost** is attributed to that seat, and every seat's **conduct** is checkable
+against what its playbook told it to do. Both, separately. A fleet total answers neither
+question.
+
+Three things must be answerable about any seat, at any time:
+
+- **What has it spent**, on which account, and how much of that account is left.
+- **Did it do what it was told**, or something adjacent that looked like it.
+- **What came out**, in work that landed rather than in activity.
+
+**A design may not assume any of these is available.** Where an instrument does not exist,
+the spec says so and treats it as a gap to close, not a fact to rely on.
+
+**Evidence, and it is this document's own session.** The hook that reports remaining
+headroom ran on **every turn of the session that wrote this constitution and returned
+UNKNOWN 140 times**. The file it reads has never been written by anything. So the fleet
+that produced these articles spent an entire night without a meter, and none of the work
+above can say what it cost.
+
+Two open items name the same gap from opposite ends: one says no instrument answers whether
+a seat follows its playbook or what each seat costs; the other is marked blocking, because
+a seat cannot pick an account by headroom when most accounts have no usable reading.
+**Article VIII requires routing across accounts. This article is why that routing cannot be
+built yet.**
+
+**Absence and zero must be distinguishable.** A seat with no commits may be scoping, may be
+running a long serialised suite, or may be dead. From outside those render identically, and
+a fleet that cannot tell them apart will reap a working seat or wait on a dead one. An
+instrument that returns nothing must say whether it found nothing or failed to look, which
+is Article VI applied to the fleet's own telemetry.
+
+**A measure nobody reads is not a measure.** Publishing a number that no seat consults is
+the same as not measuring, and it is worse than not measuring because it looks like
+diligence.
+
 ## The execution environment
 
 These are conditions, not principles, and **every number here is a reading with a date**.
@@ -265,10 +302,16 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.3.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.4.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.4.0  2026-09-02  Added Article X: cost and conduct are measured per seat, and a design
+       may not assume either instrument exists. Its evidence is this document's own
+       session, where the headroom hook returned UNKNOWN 140 times and the file it reads
+       had never been written. Article VIII requires routing across accounts; Article X is
+       why that routing cannot be built yet.
 
 1.3.0  2026-09-02  Added Article IX: built for Claude Code, no design may require a
        particular surface, and a capability measured on one surface does not transfer.
