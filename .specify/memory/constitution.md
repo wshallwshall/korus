@@ -103,6 +103,68 @@ that has ended spends nothing.**
 This is why workers end rather than idle. It is also the cost a design must pay back when
 it needs a worker to persist, and that trade is stated in the spec rather than assumed.
 
+### VIII. Accounts are plural and their number varies, so the topology is read, never assumed
+
+KORUS runs across several accounts. How many is a **reading, not a property**: it changes
+as accounts are added or retired. Nothing may hard-code the count, and nothing may infer
+it from the last time someone looked.
+
+A seat's account decides its quota, which tools it may run, and **which other seats it can
+reach**. So no design may treat seats as interchangeable processes on one machine.
+
+**This is the article that forecloses the most.** The realtime session-to-session channel
+is **account-local**: two seats on different accounts cannot use it at all. Published
+descriptions of similar multi-agent setups have their agents communicate directly through
+that channel, which works only because every agent shares one account. **That topology is
+not available here.** A design copied from it will appear to work in testing on one account
+and fail silently across several.
+
+What is available is a shared file store, which is account-agnostic because it is a
+filesystem. It is asynchronous. **So any design requiring synchronous coordination between
+seats on different accounts is invalid**, and one needing low latency must state its
+polling cost against Article VII.
+
+Three structural facts, each of which outlives whatever the current count is:
+
+- **Config roots do not map one-to-one to accounts.** More than one root can resolve to the
+  same account, including the default root, so a session that sets nothing may draw on
+  another root's quota. **A fleet that routes by root believing it routes by account will
+  overload an account and never see it.** The map must be read at run time.
+- **The right to spawn is per-root and is read on the parent**, not the child. One granted
+  root can launch workers onto any account. It also means a fleet with a single granted
+  root **cannot have two leads restart each other**, which any mutual-accountability design
+  under Article I must solve rather than assume.
+- **Remaining quota is not readable on every root.** Work cannot be routed by headroom
+  until it is, and a design that assumes headroom is visible is assuming an instrument that
+  may not exist.
+
+## The execution environment
+
+These are conditions, not principles, and **every number here is a reading with a date**.
+They bound every spec, and a spec written without them will be wrong in ways that appear
+only at scale.
+
+**Read on 2026-09-02, and expected to change.** Six config roots resolved to five distinct
+accounts, with two roots sharing one, and one of those two was the default root. All six
+started a session. Cross-account messaging is a shared file store: reading a box directly
+took about 46 milliseconds, against about 17.5 seconds through the documented listing
+command, which also returns every box on the machine.
+
+Treat those figures as an instance demonstrating the structural facts in Article VIII, not
+as the shape of the fleet. **Re-read them; do not cite them.**
+
+**Not established.** Whether the account boundary affects anything beyond messaging, quota
+and grants. Whether the shared file store sustains a correction loop at the pace Article I
+needs: the result in Article I was measured on the **account-local realtime channel**, and
+that channel does not exist between accounts. **Carrying that result across the channel
+change would be exactly the substitution Article IV forbids.** Testing it is the first
+thing any multi-account design must do.
+
+**One project, not many.** Every seat works on one codebase, so seats converge on one merge
+point. Adding accounts adds capacity that this convergence may not let the system spend.
+That is a hypothesis from a single evening, not a measurement, and it is written here so a
+later spec tests it rather than inherits it.
+
 ## What the record must contain
 
 **Findings live where the work happens.** A finding filed against a published copy, in a
@@ -154,4 +216,16 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.1.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+
+<!--
+Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.1.0  2026-09-02  Added Article VIII and the execution-environment section.
+       An earlier draft of VIII stated the account and root counts as properties of the
+       fleet. They are readings that change as accounts are added or retired, and writing
+       a reading as a property is the error Article VI exists to prevent. Rewritten so the
+       article carries the structural facts, which outlive any count, and the numbers sit
+       in the environment section with their date and an instruction to re-read them.
+-->
+
