@@ -38,18 +38,27 @@ not paraphrase the refusal; quote it".
 So quote refusals, errors and rulings **character for character**. A paraphrase changes
 scope silently, and the changed version is what later work encodes.
 
-### III. A gate records that someone looked, not that a step happened
+### III. A gate that cannot check identity must make refusal legible
 
-A gate a party can satisfy without doing the work measures the wrong thing. So does one
-that cannot see a careful party declining to pass something.
+Every session pushes as one account, so the platform's own protection against an author
+approving their own change is unavailable. The review gate is therefore **a process gate,
+not an identity gate**, and it is that by necessity rather than by choice.
 
-**Evidence.** On 2026-09-02 a pull request drew two reviews eight minutes apart. The
-first found four defects and deliberately withheld its approval. The second found nothing
-and applied the label, which enqueued the change. **The gate recorded the review that
-found nothing**, because withholding a label is invisible to it: a reviewer that declines
-to pass looks exactly like one that never ran.
+**A process gate can be satisfied by the party it is meant to check.** So the only signal
+it carries that cannot be faked is a **refusal**. Refusal must therefore be recorded, and
+it must be as legible as approval. A gate that can only record approval is measuring
+whether a step happened, which is the one thing it did not need to know.
 
-Every gate needs a way to record refusal, and refusal must be as legible as approval.
+**Evidence.** On 2026-09-02 a pull request drew two reviews eight minutes apart. The first
+found four defects and deliberately withheld its approval. The second found nothing and
+applied the label, which enqueued the change. **The gate recorded the review that found
+nothing.** The careful reviewer's signal was its refusal, and the gate had no way to see
+one: a reviewer that declines to pass looks exactly like one that never ran.
+
+This article does not require a human to judge. A reviewer may be a process that runs
+checks and applies a label when they pass, and that is what the Owner has specified. The
+requirement is narrower and it survives either design: **whatever refuses must leave a mark
+the gate can read.**
 
 ### IV. Every claim names the condition it did not vary
 
@@ -96,9 +105,14 @@ evidence the instrument worked, and the plausible one gets checked least.**
 
 Seat lifetimes are chosen against measured spend, not preference.
 
-**Evidence, this fleet.** A session actively working spends about 10,041 tokens a minute.
-A three-minute heartbeat spends 2,108. A ten-minute sleep loop spends 22,275. **A session
-that has ended spends nothing.**
+**Evidence, this fleet, and the surprise is the point.** A session actively working spends
+about 10,041 tokens a minute. A three-minute heartbeat spends 2,108 a minute. **A session
+sitting in a ten-minute sleep loop spends 22,275 a minute, which is more than working.** A
+session that has ended spends nothing.
+
+Waiting is not cheaper than working. It is roughly twice the price, because a session that
+wakes re-reads its whole context to do nothing. An unreaped worker is the most expensive
+thing in the fleet.
 
 This is why workers end rather than idle. It is also the cost a design must pay back when
 it needs a worker to persist, and that trade is stated in the spec rather than assumed.
@@ -223,6 +237,35 @@ is Article VI applied to the fleet's own telemetry.
 the same as not measuring, and it is worse than not measuring because it looks like
 diligence.
 
+### XI. A seat's job is to write something down
+
+If a proposed role's product is a message to another role, it is not a seat.
+
+This is the rule that produced the current roster, and it is quoted from the design note
+that recorded the decision:
+
+> **The rule that generated all of it.** Every seat that survived does its job by WRITING
+> SOMETHING DOWN. Every seat that went away did its job by TALKING TO ANOTHER SEAT.
+
+**Evidence.** Seven seats were retired on 2026-09-01 and six kept. Every retained seat has
+an artefact: the Console writes briefs, the Builder writes a pull request, the Reviewer
+writes a label, the Regulator writes an attribution log, the Steward writes files other
+seats read, the Lander writes a merge order. Every retired seat existed to relay, route or
+represent, and produced nothing a later reader could open.
+
+**Why this is constitutional and not merely tidy.** A seat whose output is a message
+disappears when its session ends, so its work cannot be checked by Article I, cannot be
+republished as a reading under Article II, and cannot be measured under Article X. A relay
+seat is invisible to three other articles at once.
+
+It also matches the cost model. Article VII says an ended session spends nothing and a
+waiting one spends the most. A seat that must stay awake to relay is the expensive shape;
+a seat that writes and exits is the cheap one.
+
+**Numbering is not priority.** This article was added after the first ten and appended
+rather than inserted, because renumbering would break every reference made to the document
+in between.
+
 ## The execution environment
 
 These are conditions, not principles, and **every number here is a reading with a date**.
@@ -302,10 +345,31 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.4.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.5.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.5.0  2026-09-02  Three changes, one of them a correction to a published error.
+
+       CORRECTION. Article VII said "a ten-minute sleep loop spends 22,275". That read the
+       figure as a total. It is a RATE: 22,275 tokens a WAITING MINUTE, which is more than
+       working costs. The corpus states it both ways, and its own gloss "which is more
+       than working" settles it, since 22,275 over ten minutes would be far less than
+       working. The article now says waiting costs roughly twice what working costs. The
+       error was mine and it was live for about an hour.
+
+       Article III rewritten. It said a gate must record that someone LOOKED. That framed
+       review as human judgement, which contradicts the Owner's 2026-08-31 ruling that the
+       Reviewer is a process applying a tag. The real constraint is mechanical: every
+       session pushes as one account, so the platform cannot stop an author approving their
+       own change, and the gate is a PROCESS gate by necessity. A process gate can be
+       satisfied by the party it checks, so its only unfakeable signal is a REFUSAL. The
+       article now requires refusal to be legible and is silent on who reviews.
+
+       Added Article XI: a seat's job is to write something down. Quoted from the design
+       note that generated the 2026-09-01 roster cut. Appended rather than inserted,
+       because renumbering breaks outside references.
 
 1.4.0  2026-09-02  Added Article X: cost and conduct are measured per seat, and a design
        may not assume either instrument exists. Its evidence is this document's own
