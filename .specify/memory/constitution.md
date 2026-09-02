@@ -150,6 +150,42 @@ Three structural facts, each of which outlives whatever the current count is:
   until it is, and a design that assumes headroom is visible is assuming an instrument that
   may not exist.
 
+### IX. Built for Claude Code, and no design may require a particular surface
+
+KORUS is built for **Claude Code**. It is not agent-agnostic and does not need to be. A
+design may depend on Claude Code's own mechanics: its hooks, its skills, its settings
+files, its permission model, its tools.
+
+Claude Code runs on more than one surface. **The desktop application is the preferred seat
+for the Owner**, because that is where a person can watch work and interrupt it. That is a
+preference, not a requirement. **The command line is legitimate wherever it is the better
+tool, including as the Owner's own front end.** No design, seat definition or gate may
+require a particular surface, and none may assume the Owner is on one.
+
+**But the surfaces are not equivalent, and a capability measured on one does not transfer
+to another.** This is Article IV applied to a standing condition rather than to a single
+finding, and it has already cost real work.
+
+**Evidence.** Three differences, each of a different kind:
+
+- **What a session can see.** The desktop application's session tooling enumerates an
+  in-memory map of sessions **the desktop app itself spawned**, so a session started any
+  other way "is never entered into it -- not filtered, never registered -- and cannot be
+  listed or messaged by it". A design that reaches peers through that channel silently
+  loses every peer it did not spawn.
+- **What a session can do.** A desktop session cannot directly start another session.
+  A command-line session can. So the seat that spawns workers is constrained by its
+  surface, not only by its permissions.
+- **How a tool behaves.** On 2026-09-02 an identical command, on one account, in one
+  session, succeeded through a tool interactively and was refused headlessly. **The
+  refusal named a cause that was not the real one**, and two sessions built a wrong
+  mechanism on it before an observer on the other surface settled it in one command.
+
+So a finding states the surface it was measured on, and a claim measured on one surface is
+not carried to another without re-measuring. Article IV already requires this; it is stated
+again here because the surface is the condition observers are least likely to think of
+varying, for the same reason Article IV gives: it is usually the only one they have.
+
 ## The execution environment
 
 These are conditions, not principles, and **every number here is a reading with a date**.
@@ -229,10 +265,16 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.2.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.3.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.3.0  2026-09-02  Added Article IX: built for Claude Code, no design may require a
+       particular surface, and a capability measured on one surface does not transfer.
+       The desktop app is the preferred Owner seat; the CLI is legitimate anywhere,
+       including as the Owner's front end. NOTE: the adversarial review commissioned on
+       this document was launched against 1.2.0, so Article IX may be unreviewed.
 
 1.2.0  2026-09-02  Article VIII: the roster is ASSIGNED BY THE OWNER, not discovered.
        The 1.1.0 text said the topology is "read, never assumed", which made the
