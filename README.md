@@ -17,6 +17,32 @@ constitution first, then the spec, then the plan.
 **Nothing here is stable yet.** Findings are still being consolidated from three days of
 measured operation, and some published guidance has already been shown wrong.
 
+## Start here: the constitution
+
+**[The KORUS Constitution](.specify/memory/constitution.md)** is the only substantive
+document so far. It holds the rules a session, a seat, a gate or a later spec may not
+break, and **every article names the evidence behind it** so a reader can check rather than
+trust.
+
+Ten articles, in short:
+
+| | |
+|---|---|
+| I | No session is the only reader of its own work |
+| II | Publish readings, not conclusions |
+| III | A gate records that someone looked, not that a step happened |
+| IV | Every claim names the condition it did not vary |
+| V | No rule may manufacture its own evidence |
+| VI | A number without its instrument is not a measurement |
+| VII | Waiting is a design cost and it is measured |
+| VIII | The account roster is assigned by the Owner, and no design may infer it |
+| IX | Built for Claude Code, and no design may require a particular surface |
+| X | A seat that cannot be measured cannot be steered |
+
+It is at **v1.4.0** and it expects to be wrong in places. Most articles rest on a small
+number of observations, several from a single night of operation, and the document says so.
+Amendments require evidence, and retired text stays with the reason it was retired.
+
 ## What problem it solves
 
 Run more than one AI session on one repository and four things go wrong:
@@ -50,8 +76,9 @@ repository is being built to hold.
 ## Repository layout
 
 ```
-.specify/     Spec Kit scaffold: templates, scripts, the constitution
-specs/        One directory per feature: spec.md, plan.md, tasks.md
+.specify/memory/constitution.md   the rules nothing may break
+.specify/                         Spec Kit scaffold: templates and scripts
+specs/                            one directory per feature: spec.md, plan.md, tasks.md
 ```
 
 ## Related
