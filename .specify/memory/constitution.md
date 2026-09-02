@@ -103,11 +103,23 @@ that has ended spends nothing.**
 This is why workers end rather than idle. It is also the cost a design must pay back when
 it needs a worker to persist, and that trade is stated in the spec rather than assumed.
 
-### VIII. Accounts are plural and their number varies, so the topology is read, never assumed
+### VIII. The account roster is assigned by the Owner, and no design may infer it
 
-KORUS runs across several accounts. How many is a **reading, not a property**: it changes
-as accounts are added or retired. Nothing may hard-code the count, and nothing may infer
-it from the last time someone looked.
+KORUS runs across several accounts. **Which accounts are in play is the Owner's
+assignment**, not a fact about the machine. The number changes as accounts are added or
+retired. Nothing may hard-code it, and nothing may infer it by looking at what happens to
+be on disk.
+
+This is the same rule that stops a hook inventing a session's goal. **A roster is intent.**
+A machine that derives one from the filesystem produces something that looks authoritative
+and says nothing about what the Owner wants used: it will happily enlist a config root that
+exists but is not meant to be spent, or one that shares an account with another.
+
+Reading the roots is still worth doing, as an **instrument that checks the roster rather
+than replacing it**. It answers whether an assigned account can start a session, and
+whether two roots resolve to one account. When a reading and the assignment disagree, the
+assignment is what the fleet is for and the reading is what the machine currently is. Both
+matter, and neither is the other.
 
 A seat's account decides its quota, which tools it may run, and **which other seats it can
 reach**. So no design may treat seats as interchangeable processes on one machine.
@@ -150,8 +162,9 @@ started a session. Cross-account messaging is a shared file store: reading a box
 took about 46 milliseconds, against about 17.5 seconds through the documented listing
 command, which also returns every box on the machine.
 
-Treat those figures as an instance demonstrating the structural facts in Article VIII, not
-as the shape of the fleet. **Re-read them; do not cite them.**
+**That is a reading of the machine, and it is not the roster.** The Owner assigns which
+accounts are in play. The reading is useful only as a check against that assignment, and
+the two disagreeing is a finding rather than an error. Re-read it; do not cite it.
 
 **Not established.** Whether the account boundary affects anything beyond messaging, quota
 and grants. Whether the shared file store sustains a correction loop at the pace Article I
@@ -216,10 +229,17 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.2.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.2.0  2026-09-02  Article VIII: the roster is ASSIGNED BY THE OWNER, not discovered.
+       The 1.1.0 text said the topology is "read, never assumed", which made the
+       filesystem the source of truth. It is not. Which accounts are in play is intent,
+       and a machine that derives intent from disk will enlist a root that exists but is
+       not meant to be spent. Reading roots is retained as an instrument that CHECKS the
+       roster rather than replacing it. Same rule that stops a hook inventing a goal.
 
 1.1.0  2026-09-02  Added Article VIII and the execution-environment section.
        An earlier draft of VIII stated the account and root counts as properties of the
