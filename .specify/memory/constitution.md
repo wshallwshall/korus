@@ -25,10 +25,15 @@ do not model.
 ### II. Publish readings, not conclusions
 
 A session tells its peers what it ran and what came back: the command, the timestamp, the
-ref, the raw output. Not what it concluded.
+ref, the raw output. **Never a conclusion without the reading that produced it.**
 
-A peer who receives a conclusion can only agree or doubt. A peer who receives a reading
-can run it.
+A verdict is welcome. A verdict alone is not. A peer who receives only a conclusion can
+agree or doubt; a peer who receives the reading can run it and disagree with evidence.
+
+**This does not forbid stating a verdict, and Article III requires one.** A refusal is a
+conclusion, and it is the only signal a process gate carries that cannot be faked. So a
+report says what it decided and shows what it read. The failure this article names is a
+conclusion travelling alone, not a conclusion existing.
 
 **Evidence.** On 2026-09-02 a worker reported a refusal string verbatim, beside a
 conclusion it had been handed. Two senior sessions agreed the conclusion was wrong. **The
@@ -105,17 +110,21 @@ evidence the instrument worked, and the plausible one gets checked least.**
 
 Seat lifetimes are chosen against measured spend, not preference.
 
-**Evidence, this fleet, and the surprise is the point.** A session actively working spends
-about 10,041 tokens a minute. A three-minute heartbeat spends 2,108 a minute. **A session
-sitting in a ten-minute sleep loop spends 22,275 a minute, which is more than working.** A
-session that has ended spends nothing.
+**Evidence, this fleet, and the surprise is the point.** Tokens a minute: actively working
+10,041; waiting on a three-minute heartbeat 2,108; **waiting in a ten-minute sleep loop
+22,275, which is more than working**; turn over and idle, **zero**. Recorded in issue #9.
 
 Waiting is not cheaper than working. It is roughly twice the price, because a session that
-wakes re-reads its whole context to do nothing. An unreaped worker is the most expensive
-thing in the fleet.
+wakes re-reads its whole context to do nothing.
 
-This is why workers end rather than idle. It is also the cost a design must pay back when
-it needs a worker to persist, and that trade is stated in the spec rather than assumed.
+**The costly state is waiting, not existing.** A session that finished its turn and was
+never reaped spends nothing in tokens. It costs disk and worktree clutter, which is a
+different budget with a different owner. So the rule is **not** "end rather than idle". It
+is **never tell a worker to poll, to sleep, or to wait for a reply**. A worker ends because
+its worktree is worth reclaiming, not because idling is expensive.
+
+This is also the cost a design must pay back when it needs a worker to persist, and that
+trade is stated in the spec rather than assumed.
 
 ### VIII. The account roster is assigned by the Owner, and no design may infer it
 
@@ -215,15 +224,33 @@ Three things must be answerable about any seat, at any time:
 **A design may not assume any of these is available.** Where an instrument does not exist,
 the spec says so and treats it as a gap to close, not a fact to rely on.
 
-**Evidence, and it is this document's own session.** The hook that reports remaining
-headroom ran on **every turn of the session that wrote this constitution and returned
-UNKNOWN 140 times**. The file it reads has never been written by anything. So the fleet
-that produced these articles spent an entire night without a meter, and none of the work
-above can say what it cost.
+**Evidence, and it is this document's own session, which turned out to be a different story
+than the first draft of this article told.** The headroom hook fires on dispatch, not on
+every turn, and it reads a file named `latest.json`. **No file of that name exists under any
+config root on this machine**: needle `latest.json`, four roots, depth 3, count **0**,
+against positive control `status.json`, count **4**. So every headroom reading this fleet
+asked for came back UNKNOWN, all night.
 
-Two open items name the same gap from opposite ends: one says no instrument answers whether
-a seat follows its playbook or what each seat costs; the other is marked blocking, because
-a seat cannot pick an account by headroom when most accounts have no usable reading.
+**But the fleet was not without a meter.** A live collector was writing the whole time, into
+a different root: a `status.json` of 3,971 bytes written during this document's own session,
+beside five per-account files written the same day. The copy in the root the hook actually
+reads is 388 bytes and a month old.
+
+So the failure was never an absent instrument. **It was an instrument pointed at a filename
+nothing writes, in a root the collector does not write to, while a current reading sat
+beside it.** Two tools resolving one directory name to two different files, with no error
+anywhere, which is Article VI's own named failure, committed inside the article that demands
+an instrument beside every number.
+
+The first version of this article said the fleet "spent an entire night without a meter".
+That was false, and it was the document's proudest piece of evidence because it was about
+the document itself. **Evidence about your own session is not privileged. It is the evidence
+you check least.**
+
+Two open items name the real gap from opposite ends: #18 says no instrument answers whether
+a seat follows its playbook or what each seat costs; **#27 is marked blocking**, because a
+seat cannot pick an account by headroom when most accounts have no usable reading, and the
+collector that would fix it is held back by a leak guard, which is **#35**.
 **Article VIII requires routing across accounts. This article is why that routing cannot be
 built yet.**
 
@@ -345,10 +372,34 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.5.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.6.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.6.0  2026-09-02  Three corrections, all found by an adversarial review, all of them
+       errors this document's own articles forbid.
+
+       ARTICLE VII said "an unreaped worker is the most expensive thing in the fleet". The
+       source says the opposite: a session that finished its turn and sits idle costs ZERO
+       metered tokens. The costly state is WAITING, not existing. The rule is not "end
+       rather than idle", it is "never tell a worker to poll". I introduced that sentence
+       in 1.5.0, in the commit that corrected the rate, which is the shape where a
+       correction smuggles in a new error because it arrives wearing diligence.
+
+       ARTICLE X claimed the fleet "spent an entire night without a meter". FALSE. A live
+       collector wrote a 3,971-byte status.json during this document's own session, plus
+       five per-account files the same day. The hook reads a DIFFERENT filename in a
+       DIFFERENT root, where the copy is 388 bytes and a month old. So the instrument was
+       misaimed, not absent. Article VI names that exact failure, and this article
+       committed it while demanding an instrument beside every number.
+
+       ARTICLE II forbade reporting "what it concluded", while Article III requires a
+       refusal to be recorded, and a refusal IS a conclusion. A spec author defining a
+       report format would have read II and omitted the verdict field, breaking III's only
+       unfakeable signal. II now forbids a conclusion travelling ALONE.
+
+       Issue citations switched to this repository's numbers after the backlog transfer.
 
 1.5.0  2026-09-02  Three changes, one of them a correction to a published error.
 
