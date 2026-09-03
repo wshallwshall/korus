@@ -576,7 +576,7 @@ PREFERS.*** The rule is encoded as `STOP_AUTHORITY_WINDOWS`, a frozenset holding
 ***IT LIVES OUTSIDE THE REPOSITORY, AND SEARCHING GIT FOR IT IS THE WRONG INSTRUMENT:***
 
 ```
-C:\Users\Scott\.claude\mefor-usage\watch.py
+<HOME>\.claude\mefor-usage\watch.py
 ```
 
 **Section 6 already carries this rule** -- *the clock's files live outside the repo; pin the absolute
@@ -1005,7 +1005,7 @@ is the fourth.
 ***THE CLOCK'S FILES LIVE OUTSIDE THE REPO. PIN THE ABSOLUTE PATH; DO NOT SEARCH FOR THE NAME.***
 
 ```
-C:\Users\Scott\.claude\mefor-usage\        seat-tick.last, seat-tick.state.json, seats.json,
+<HOME>\.claude\mefor-usage\        seat-tick.last, seat-tick.state.json, seats.json,
                                            watch.py, usage-now.py
 ```
 

@@ -381,7 +381,7 @@ fan-out call, while everything looks recovered.
      one backslash     arrives as 1                  arrives as 1
      two              arrives as 1                  arrives as 2
      four             arrives as 2                  arrives as 4
-     C:\Users\Scott\file.py   arrives as 3            arrives as 3
+     <HOME>\file.py   arrives as 3            arrives as 3
 
    **A LONE BACKSLASH SURVIVES, so a Windows path typed inline is FINE. DOUBLED backslashes
    HALVE -- and doubled is exactly what a regex or a Python string literal needs.** The

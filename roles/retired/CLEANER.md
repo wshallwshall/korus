@@ -496,7 +496,7 @@ justifying hypothesis LOST -- the test it was meant to fix failed again afterwar
 dangerous and this seat will meet it more often, because a shared checkout is exactly where it
 lives.**
 
-*Measured 2026-08-28 on the vault primary, `C:\Users\Scott\Code\MessageFoundry-vault`.* It carried
+*Measured 2026-08-28 on the vault primary, `<HOME>\Code\MessageFoundry-vault`.* It carried
 every signal this seat reads as leftovers: **14 dirty paths, a branch 94 commits behind
 `origin/main`, staged files nobody committed, a half-done rename, and a last commit dated a week
 earlier.** It was a live workbench with three sessions typing in it, one of them writing this file.
