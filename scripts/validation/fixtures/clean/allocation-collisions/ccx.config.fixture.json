@@ -1,15 +1,6 @@
 {
   "prefix": "ccx",
   "trunk": "auto",
-  "worktreeLayout": "sibling",
-  "setupHook": ".ccx/worktree-setup.ps1",
-  "protectedRefs": [
-    "refs/heads/main",
-    "refs/heads/master"
-  ],
-  "ciRed": {
-    "label": "ci-red"
-  },
   "sequences": {
     "adr": {
       "dir": "docs/adr",
