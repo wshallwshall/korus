@@ -1,0 +1,109 @@
+# Review gate.
+#
+# WHAT THIS IS FOR. The constitution's Article III says a gate that cannot check identity
+# must make refusal legible. Every session here pushes as one account, so the platform's own
+# protection against an author approving their own change does not apply. This gate is
+# therefore a PROCESS gate by necessity, and a process gate can be satisfied by the party it
+# is meant to check.
+#
+# So the only signal it carries that cannot be faked is a REFUSAL, and the engine repository's
+# equivalent gate cannot see one: a reviewer that declines to apply the label looks exactly
+# like a reviewer that never ran. That was measured on 2026-09-02, when a pull request drew
+# two reviews eight minutes apart, the first found four defects and withheld its approval, the
+# second found nothing and labelled it, and the change merged on the commit the first reviewer
+# had refused.
+#
+# THIS GATE FIXES THAT with three states instead of two:
+#
+#   changes-requested present  -> FAIL, loudly. A refusal is recorded and blocks.
+#   reviewed present, no refusal -> PASS.
+#   neither                    -> FAIL as pending. A pull request nobody read does not merge.
+#
+# AND IT BINDS APPROVAL TO A HEAD. A push removes `reviewed`, because a review of an older
+# commit says nothing about a newer one. The engine's gate relies on that happening and does
+# not do it here, so it is done explicitly below.
+#
+# WHAT IT CANNOT DO. It cannot tell whether anyone actually read the diff. Labelling your own
+# unread pull request satisfies it. That is inherent to a process gate and is stated here so
+# nobody mistakes a green check for an independent read.
+
+name: review gate
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs first. A new commit invalidates any prior approval, so the label comes off before the
+  # gate reads it. Separated from the gate job because it needs write access and the gate does
+  # not: the job that decides must not be able to change what it decides on.
+  invalidate-on-push:
+    if: github.event.action == 'synchronize'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Remove reviewed, because the head moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh pr view "$PR" --repo "$REPO" --json labels \
+               --jq '.labels[].name' | grep -qx 'reviewed'; then
+            gh pr edit "$PR" --repo "$REPO" --remove-label reviewed
+            echo "Removed 'reviewed': head moved to ${{ github.event.pull_request.head.sha }}."
+          else
+            echo "No 'reviewed' label to remove."
+          fi
+
+  gate:
+    needs: [invalidate-on-push]
+    # `needs` on a skipped job would skip this one too, and a skipped required check counts as
+    # a pass. That is the failure this repository is built to avoid, so run regardless and only
+    # fail on a real failure upstream.
+    if: always() && needs.invalidate-on-push.result != 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read the labels and decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          labels=$(gh pr view "$PR" --repo "$REPO" --json labels --jq '.labels[].name' | sort)
+          echo "head:   $HEAD_SHA"
+          echo "labels: $(echo "$labels" | tr '\n' ' ')"
+          echo
+
+          if echo "$labels" | grep -qx 'changes-requested'; then
+            echo "REFUSED. A reviewer applied 'changes-requested'."
+            echo "This is a recorded refusal, not an absence of one, which is the whole point"
+            echo "of this gate. Address the findings, push, and remove the label."
+            exit 1
+          fi
+
+          if echo "$labels" | grep -qx 'reviewed'; then
+            echo "PASS. 'reviewed' is present and no refusal is recorded."
+            echo
+            echo "This records that a step happened. It does not record that anyone read the"
+            echo "diff, and it cannot. See the header of this file."
+            exit 0
+          fi
+
+          echo "PENDING. Neither 'reviewed' nor 'changes-requested' is present."
+          echo
+          echo "A reviewer that read this and declined should apply 'changes-requested' rather"
+          echo "than leaving it unlabelled, so its refusal is visible instead of looking like"
+          echo "a review that never ran."
+          exit 1
