@@ -77,7 +77,7 @@ IMPROVEMENT seat, which noticed the two renames above were recorded and this one
 > this folder.*
 
 **A FOURTH RENAME LANDED 2026-08-29, owner-set: `PLAYBOOKS-MANAGER.md` became
-[ROLE-MANAGER.md](ROLE-MANAGER.md)** (`befdc79a`), *to stop the collision with the Project Manager
+[ROLE-MANAGER.md](retired/ROLE-MANAGER.md)** (`befdc79a`), *to stop the collision with the Project Manager
 seat -- both abbreviate to PM and both were being addressed as "the manager".* **35 references
 updated across 8 files; controls: 35 occurrences of the retired name before and 0 after, and 0
 occurrences of the NEW name before, so nothing unrelated was folded into this seat.**

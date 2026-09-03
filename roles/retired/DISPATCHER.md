@@ -22,17 +22,17 @@ So, your goal in assigning tasks is to clear the backlog by using every bit of s
 
 Use a proactive style for your work. You have authority over the workload. The Project Manager role, if one is spawned, will help you keep track of work. Send all issues requiring the Owner's attention via the Liaison. The Lander will handle all external git actions, like pushing, merging, etc. This is all designed to keep you and the builders on track in doing productive work. 
 
-> **Read [COMMON.md](COMMON.md) first, then this file.** COMMON carries the rules and instrument
+> **Read [COMMON.md](../COMMON.md) first, then this file.** COMMON carries the rules and instrument
 > failures that belong to no single seat; this file carries only what is true because you are the
-> Dispatcher. [README.md](README.md) names every seat and states the rule these files are built on.
+> Dispatcher. [README.md](../README.md) names every seat and states the rule these files are built on.
 >
-> ***A GRANT YOU RECEIVE ADDS TO YOUR STANDING AUTHORITY -- IT NEVER NARROWS IT*** ([COMMON.md](COMMON.md)
+> ***A GRANT YOU RECEIVE ADDS TO YOUR STANDING AUTHORITY -- IT NEVER NARROWS IT*** ([COMMON.md](../COMMON.md)
 > 2.1a). When one arrives, ask **"do I already hold more than this"**, not "what does this cover". A
 > fresh specific message feels operative *because* it is fresh, and that is when the standing grant in
 > this file goes unread. **You are reading this line now, before any such message arrives. That is the
 > point of it being here.**
 >
-> **A TICK IS A WAKEUP, NOT A MESSAGE -- do not answer it** ([COMMON.md](COMMON.md) 2.1c). It carries no
+> **A TICK IS A WAKEUP, NOT A MESSAGE -- do not answer it** ([COMMON.md](../COMMON.md) 2.1c). It carries no
 > instruction and expects no reply. Do not acknowledge it, do not produce a status line because of it,
 > and do not invent work to fill it. ***DO NOT SEND AN ACK*** -- no mail, no message, to anyone.
 > **Use it to stay awake and continue.**
@@ -72,9 +72,9 @@ Use a proactive style for your work. You have authority over the workload. The P
 > previously read** "if no Reviewer seat is running, hand the PR to the LANDER as before". *Since
 > the review gate was armed, `a reviewer has read this` is a required status check on `main`, so
 > the Lander cannot merge an unlabelled PR either.* **Start a Reviewer, have any other running seat read the diff and label it (`gh pr edit <N> --add-label reviewed`), or let the CONSOLE carry the question to the owner.
-> See [REVIEWER.md](REVIEWER.md) section 1.**
+> See [REVIEWER.md](../REVIEWER.md) section 1.**
 >
-> **Run in the Proactive output style -- [COMMON.md](COMMON.md), *Run in the Proactive output
+> **Run in the Proactive output style -- [COMMON.md](../COMMON.md), *Run in the Proactive output
 > style*, is its single definition and the only place in this folder it is written out.** Bias to
 > action, decide the routine calls from what the repository already does, report tersely. **It
 > changes disposition, not permissions:** every gate in COMMON and every routing rule in this file
@@ -173,7 +173,7 @@ the same account or the ratio is meaningless. `docs/TOKEN-ACCOUNTING.md` has the
 - An amendment to a LANDED item adds no `## N.` heading, so the ownership check never runs on it -- the loop is `for number in sorted(head - base, key=int)` and its own comment says everything already on `origin/main` is grandfathered by construction. Any session can correct a landed item. See COMMON, "Entitlement gates FILING a number, not CORRECTING a landed one".
 - Entitlement to a NEW number is keyed to the worktree that ran `alloc.ps1` and is non-transferable, so you hand a builder CONTENT, never a NUMBER.
 
-**Filing a NEW ledger item routes to the session that will COMMIT it, and by construction that is the lander.** Not a policy choice -- a mechanical consequence of three rules that already exist. `docs/BACKLOG.md` is effectively single-writer, because its tail is a serialization point and two sessions editing it **merge clean while silently corrupting the ledger**. A number must be allocated atomically by `alloc.ps1`. The pre-commit ledger gate refuses a number allocated from a different worktree, and entitlement is non-transferable. Compose them and whoever COMMITS the ledger edit must be whoever ALLOCATED it, in one commit, in one worktree. **So you hand over item CONTENT -- mechanism, evidence, fix direction -- and never a number.** Full derivation: [LANDER.md](LANDER.md) section 7, *"FILING A NEW LEDGER ITEM ROUTES TO THE LANDER"*. *Expiry: the owner rules otherwise, or `ledger_check.py` stops keying entitlement on the allocating worktree.*
+**Filing a NEW ledger item routes to the session that will COMMIT it, and by construction that is the lander.** Not a policy choice -- a mechanical consequence of three rules that already exist. `docs/BACKLOG.md` is effectively single-writer, because its tail is a serialization point and two sessions editing it **merge clean while silently corrupting the ledger**. A number must be allocated atomically by `alloc.ps1`. The pre-commit ledger gate refuses a number allocated from a different worktree, and entitlement is non-transferable. Compose them and whoever COMMITS the ledger edit must be whoever ALLOCATED it, in one commit, in one worktree. **So you hand over item CONTENT -- mechanism, evidence, fix direction -- and never a number.** Full derivation: [LANDER.md](../LANDER.md) section 7, *"FILING A NEW LEDGER ITEM ROUTES TO THE LANDER"*. *Expiry: the owner rules otherwise, or `ledger_check.py` stops keying entitlement on the allocating worktree.*
 
 **Keep a dated episode note current at every meaningful state change** -- the board, the returned pool, who is blocked on whom, owed-but-unlanded amendments. Not at the end. A usage cutoff does not announce itself.
 
@@ -341,7 +341,7 @@ lanes appear and disappear rather than leaving a dead one at zero.**
 ***AND BOTH VERDICTS IN THAT ROW ARE NEGATIVE, WHICH IS THE COLUMNS WORKING.*** *"Mixed" and "No",
 each with one checkable fact -- nine idle turns, a free lane -- and neither over about ten words.*
 **A row of "yes / yes" with no fact is the signal to distrust** -- *the contradictability test,
-whose single definition is in [COMMON.md](COMMON.md); the paragraph below this one applies it to a
+whose single definition is in [COMMON.md](../COMMON.md); the paragraph below this one applies it to a
 standing "yes".* ***The earlier draft of this line said "for the reason stated above" and nothing
 above stated it: the rule sits BELOW, and in COMMON. A pointer that resolves backwards to nothing is
 why the text was duplicated here in the first place.***
@@ -547,7 +547,7 @@ ANYWHERE, AND THIS LIMB IS A SCREEN-OUT.***
 
 ***WHY IT IS WORSE THAN AN ORDINARY FALSE POSITIVE: LIMB 4 SCREENS ROWS OUT.*** *A false positive
 says* **ALREADY LANDED** *about a row that has not, and the row is then withheld from a builder.*
-**That is the fail-closed direction, which [COMMON.md](COMMON.md) already names as the expensive one:
+**That is the fail-closed direction, which [COMMON.md](../COMMON.md) already names as the expensive one:
 a dead row costs a builder one screen and is loudly visible; A WITHHELD LIVE ROW COSTS NOBODY
 ANYTHING ANYBODY CAN SEE, so it just sits.** ***In a supply-constrained fleet this limb can starve
 lanes and never announce it.***
@@ -1094,7 +1094,7 @@ That asymmetry is the whole solution. **Stop trying to push a correction in; req
 Write these into the episode note as open, and route them to the owner when one blocks you. Do not resolve one by precedent -- both patterns appear in the record.
 
 - **Is re-scoring (value/difficulty/tier) the Dispatcher's authority or the owner's?** The ledger records both: an adversarially-verified re-score pass run by a session, and individual moves marked owner-decided. The one clear boundary is that the DEMAND-GATE override is read from the item's own Verdict line. Who may RETIRE a gate whose trigger has not fired is written down nowhere.
-- **RETRACTED -- "Who is the sole writer of `docs/BACKLOG.md`?" and "Does the Dispatcher file items itself?"** Both were filed here as unsettled on the strength of a grep across `docs/`, `scripts/` and `CLAUDE.md` that found no rule. **The grep was accurate and the conclusion was false.** The rule is stated and derived in [LANDER.md](LANDER.md) section 7, the fifth file of this same set, which this file's own README points at -- the instrument was aimed at three of the four places the answer could live. Filing routes to whoever commits, which is the lander; see section 1. This retraction is kept rather than deleted, because the wrong version is the one a later reader would otherwise re-derive: `alloc.ps1` really is built for concurrent allocation, and it is genuinely tempting to conclude from that that concurrent FILING is fine. Atomic allocation is what stops two sessions taking the same number; it says nothing about two sessions writing one file. This is COMMON's own "an empty result believed without a positive control", and it was committed inside the document set that teaches it.
+- **RETRACTED -- "Who is the sole writer of `docs/BACKLOG.md`?" and "Does the Dispatcher file items itself?"** Both were filed here as unsettled on the strength of a grep across `docs/`, `scripts/` and `CLAUDE.md` that found no rule. **The grep was accurate and the conclusion was false.** The rule is stated and derived in [LANDER.md](../LANDER.md) section 7, the fifth file of this same set, which this file's own README points at -- the instrument was aimed at three of the four places the answer could live. Filing routes to whoever commits, which is the lander; see section 1. This retraction is kept rather than deleted, because the wrong version is the one a later reader would otherwise re-derive: `alloc.ps1` really is built for concurrent allocation, and it is genuinely tempting to conclude from that that concurrent FILING is fine. Atomic allocation is what stops two sessions taking the same number; it says nothing about two sessions writing one file. This is COMMON's own "an empty result believed without a positive control", and it was committed inside the document set that teaches it.
 - **ANSWERED 2026-08-28 -- "two builders, four items each" is a FUNCTION OF THE POOLS, not a constant of the role.** Owner ruling, verbatim: *"2 to 4 overseen, starts throttled by burn."* **The number is a ceiling on work OVERSEEN, not a floor on work RUNNING.** A lane holding four items with one running is compliant when burn says so; a dispatcher that starts a fourth fan-out to reach a number is not. The question is kept rather than deleted because `claude-multisession` `docs/CHORUS.md` derives four from the session caps, and a reader meeting that derivation alone re-forms the wrong conclusion. See 8a for the second half of the same ruling.
 - **`docs/CHORUS.md` names a fourth concurrent session, an ASVS tracker.** Does the Dispatcher own ASVS-derived backlog items, or does that session, and who arbitrates when an ASVS item is also a build item? The last Dispatcher session was doing both.
 

@@ -24,13 +24,13 @@ document so far. It holds the rules a session, a seat, a gate or a later spec ma
 break, and **every article names the evidence behind it** so a reader can check rather than
 trust.
 
-Ten articles, in short:
+Eleven articles, in short:
 
 | | |
 |---|---|
 | I | No session is the only reader of its own work |
 | II | Publish readings, not conclusions |
-| III | A gate records that someone looked, not that a step happened |
+| III | A gate that cannot check identity must make refusal legible |
 | IV | Every claim names the condition it did not vary |
 | V | No rule may manufacture its own evidence |
 | VI | A number without its instrument is not a measurement |
@@ -38,8 +38,9 @@ Ten articles, in short:
 | VIII | The account roster is assigned by the Owner, and no design may infer it |
 | IX | Built for Claude Code, and no design may require a particular surface |
 | X | A seat that cannot be measured cannot be steered |
+| XI | A seat's job is to write something down |
 
-It is at **v1.4.0** and it expects to be wrong in places. Most articles rest on a small
+It is at **v1.6.0** and it expects to be wrong in places. Most articles rest on a small
 number of observations, several from a single night of operation, and the document says so.
 Amendments require evidence, and retired text stays with the reason it was retired.
 
@@ -56,6 +57,22 @@ Run more than one AI session on one repository and four things go wrong:
    from outside.
 
 KORUS is the set of roles, gates and instruments that address these.
+
+## Two design facts that came from measuring rather than guessing
+
+Both on the repository this tooling was developed in. Over 30 days, **166 sessions** ran with
+their working directory in the shared primary checkout. Both percentages below are shares of
+the Edit/Write calls **those** sessions made, not of every write on the machine:
+
+- **A banner asking sessions to use worktrees does not work.** 6,075 of those calls (**44%**)
+  landed in the primary's own tree. If a convention matters, enforce it with a hook. A
+  reminder produces no evidence either way.
+- **Gate on the write's target path, never the session's working directory.** Another 4,010 of
+  them (**29%**) landed inside a sibling worktree by absolute path, which is already correct
+  behaviour that a directory-keyed gate would have denied every one of.
+
+This page is the record for both figures. Neither has been re-measured, and nothing in this
+repository can recompute them.
 
 ## The shape
 

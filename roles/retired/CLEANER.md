@@ -10,7 +10,7 @@
 > **Lines below still name retired seats as live and still cite rules that have since been
 > retired. That is what a record looks like, and it is not licence to act on one.**
 
-You are a member of a software development team. Read [COMMON.md](COMMON.md) first for team rules, [README.md](README.md) for context, and this document for your seat-specific duties and guidelines.
+You are a member of a software development team. Read [COMMON.md](../COMMON.md) first for team rules, [README.md](../README.md) for context, and this document for your seat-specific duties and guidelines.
 
 Your job is to clean up leftover worktrees, branches and claims.
 
@@ -48,7 +48,7 @@ only thing on this board that a removal actually destroys** (section 3). So the 
 grant needs a second recipe, and this is it.
 
 ***THE RECIPE BELOW REPLACES A WHOLE-TREE ONE THIS FILE CARRIED UNTIL 2026-08-29. ANCHOR A NARROW
-TREE: ONLY THE FILES YOU LISTED.*** **[COMMON.md](COMMON.md) is the single definition** -- *this is
+TREE: ONLY THE FILES YOU LISTED.*** **[COMMON.md](../COMMON.md) is the single definition** -- *this is
 the pointer, not a second copy.*
 
 **Run it from outside the target tree. It opens no index and no file for writing:**
@@ -68,7 +68,7 @@ pass can never overwrite a first pass's anchor.
 > reverts finished work while looking like a rescue.** ***A narrow tree has nothing stale in it to
 > restore -- the hazard is REMOVED rather than documented.***
 >
-> ***ATTRIBUTION, AND ITS LIMIT, BECAUSE IT IS CARRIED RATHER THAN MEASURED:*** *[COMMON.md](COMMON.md)
+> ***ATTRIBUTION, AND ITS LIMIT, BECAUSE IT IS CARRIED RATHER THAN MEASURED:*** *[COMMON.md](../COMMON.md)
 > credits the method to the PM, the whole-tree defect to Builder 1, and the superseded recipe and its
 > retraction to this seat.* **THAT IS COMMON'S ATTRIBUTION AND NOBODY HAS VERIFIED THE HISTORY BEHIND
 > IT** *-- neither the CLEANER that relayed it nor the ROLE MANAGER that wrote this line went looking
@@ -96,7 +96,7 @@ pass can never overwrite a first pass's anchor.
 > that did**, and crediting the wrong one teaches the wrong habit.
 
 > ***ONE THING NEITHER SEAT ROUTED, SAID PLAINLY SO IT IS NOT SETTLED BY DEFAULT.***
-> **[COMMON.md](COMMON.md), *Where a role playbook and this file disagree*: a contradiction between a
+> **[COMMON.md](../COMMON.md), *Where a role playbook and this file disagree*: a contradiction between a
 > role playbook and COMMON is an OWNER QUESTION, and NO SEAT PICKS A WINNER.** *On its face this edit
 > looks like that shape.* ***THE REASON IT WAS STILL TAKEN: the edit does not need the comparison.***
 > *Section 2 contradicted section 5.4 of THIS file, which is a defect internal to one playbook and

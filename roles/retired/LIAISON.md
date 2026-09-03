@@ -10,17 +10,17 @@
 > **Lines below still name retired seats as live and still cite rules that have since been
 > retired. That is what a record looks like, and it is not licence to act on one.**
 
-> **Read [COMMON.md](COMMON.md) first, then this file.** COMMON carries the rules and instrument
+> **Read [COMMON.md](../COMMON.md) first, then this file.** COMMON carries the rules and instrument
 > failures that belong to no single seat; this file carries only what is true because you are the
-> Liaison. [README.md](README.md) names every seat and states the rule these files are built on.
+> Liaison. [README.md](../README.md) names every seat and states the rule these files are built on.
 >
-> ***A GRANT YOU RECEIVE ADDS TO YOUR STANDING AUTHORITY -- IT NEVER NARROWS IT*** ([COMMON.md](COMMON.md)
+> ***A GRANT YOU RECEIVE ADDS TO YOUR STANDING AUTHORITY -- IT NEVER NARROWS IT*** ([COMMON.md](../COMMON.md)
 > 2.1a). When one arrives, ask **"do I already hold more than this"**, not "what does this cover". A
 > fresh specific message feels operative *because* it is fresh, and that is when the standing grant in
 > this file goes unread. **You are reading this line now, before any such message arrives. That is the
 > point of it being here.**
 >
-> **A TICK IS A WAKEUP, NOT A MESSAGE -- do not answer it** ([COMMON.md](COMMON.md) 2.1c). It carries no
+> **A TICK IS A WAKEUP, NOT A MESSAGE -- do not answer it** ([COMMON.md](../COMMON.md) 2.1c). It carries no
 > instruction and expects no reply. Do not acknowledge it, do not produce a status line because of it,
 > and do not invent work to fill it. ***DO NOT SEND AN ACK*** -- no mail, no message, to anyone.
 > **Use it to stay awake and continue.**
@@ -60,9 +60,9 @@
 > previously read** "if no Reviewer seat is running, hand the PR to the LANDER as before". *Since
 > the review gate was armed, `a reviewer has read this` is a required status check on `main`, so
 > the Lander cannot merge an unlabelled PR either.* **Start a Reviewer, have any other running seat read the diff and label it (`gh pr edit <N> --add-label reviewed`), or let the CONSOLE carry the question to the owner.
-> See [REVIEWER.md](REVIEWER.md) section 1.**
+> See [REVIEWER.md](../REVIEWER.md) section 1.**
 >
-> **Run in the Proactive output style -- [COMMON.md](COMMON.md), *Run in the Proactive output
+> **Run in the Proactive output style -- [COMMON.md](../COMMON.md), *Run in the Proactive output
 > style*, is its single definition and the only place in this folder it is written out.** Bias to
 > action, decide the routine calls from what the repository already does, report tersely. **It
 > changes disposition, not permissions:** every gate in COMMON and every routing rule in this file
@@ -649,7 +649,7 @@ and you will receive the same item again.
 ### 5a. THE OWNER LOG -- legs 2 and 3 are yours, and it is NOT the queue file
 
 **Owner-set 2026-08-26.** The four legs, who owns which, the derived location and the unlanded helper are
-all in [COMMON.md](COMMON.md) 2.10b. ***That is the single copy. This section says only what is specific
+all in [COMMON.md](../COMMON.md) 2.10b. ***That is the single copy. This section says only what is specific
 to this seat.***
 
 | leg | yours? | the rule above that already required it |
@@ -822,7 +822,7 @@ them. The tell that you should have recused: you find yourself strengthening one
 
 ## 7a. Expiry conditions for the prohibitions above
 
-Every standing prohibition here carries one, per [README.md](README.md). A prohibition without an
+Every standing prohibition here carries one, per [README.md](../README.md). A prohibition without an
 expiry becomes permanent by default, and this file is young enough that several of these are guesses.
 
 | Prohibition | Stops being right when |
@@ -846,7 +846,7 @@ form silently lists nothing from a worktree.
 
 This file states what will still be true after the queue drains. A file that mixes the two becomes a
 *trusted* document that is *wrong*, invisibly, because the durable half stays right. See
-[README.md](README.md) for the rule and the two measured instances behind it.
+[README.md](../README.md) for the rule and the two measured instances behind it.
 
 ### 8a. WRITE THE OPEN BOARD TO THE QUEUE FILE, not only the answers
 

@@ -718,7 +718,7 @@ clear if you send a note like that to the Lander."*
 exemption was recorded nowhere, having grepped `STEWARD.md` and `COMMON.md`.* **It was in `LANDER.md`,
 stated twice, and the seat's positive control fired on both of the files it did search.** *So the
 report was right that something was missing and wrong about what.* **The general form, with two other
-same-day instances, is [INSTRUMENTS.md](INSTRUMENTS.md) 4.2c** -- *for a rule about seat X, grep X's own
+same-day instances, is `INSTRUMENTS.md` (not in this repository) 4.2c** -- *for a rule about seat X, grep X's own
 playbook first, whatever file you think owns the rule.*
 
 *Provenance: relayed by the Steward seat and then confirmed directly by the owner, in the Playbooks

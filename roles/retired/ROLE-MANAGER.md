@@ -11,25 +11,25 @@
 > retired. That is what a record looks like, and it is not licence to act on one.**
 
 **You maintain this folder.** Every other seat reads its file on arrival; you are the one who writes
-them. Read [COMMON.md](COMMON.md) first like everyone else -- **it binds you too, and section 4 in
+them. Read [COMMON.md](../COMMON.md) first like everyone else -- **it binds you too, and section 4 in
 particular is the material you will most often be violating while editing it.**
 
 **A grant you receive ADDS TO your standing authority -- it never narrows it**
-([COMMON.md](COMMON.md) 2.1a). It binds you like every other seat, and it is stated in every arrival
+([COMMON.md](../COMMON.md) 2.1a). It binds you like every other seat, and it is stated in every arrival
 header on purpose: it has to be read BEFORE a grant arrives, because the failure happens while a seat
 is reading a chat message rather than a playbook. **If you are tempted to compress those pointers into
 one, that timing is what you would be deleting.**
 
-**A tick is a wakeup, not a message -- do not answer it** ([COMMON.md](COMMON.md) 2.1c). It binds you
+**A tick is a wakeup, not a message -- do not answer it** ([COMMON.md](../COMMON.md) 2.1c). It binds you
 like every other seat: **no ACK sent to anyone**, no acknowledgement, no status line produced because
 a tick arrived, no work invented to fill it.
 
 ***THE PR ROUTE IS THREE STEPS (owner-set 2026-08-29): create the PR and notify the REVIEWER (a courtesy, not the trigger), which POSTS ANY FINDINGS ON THE PR rather than handing it back to an author that has usually exited, or passes it to the LANDER on approval.*** **Handing work over is still the DEFAULT action** --
-[COMMON.md](COMMON.md) 2.1, which owns that rule. It binds you like every other seat: this folder's
+[COMMON.md](../COMMON.md) 2.1, which owns that rule. It binds you like every other seat: this folder's
 branch goes to the lander, and you do not ask the owner to name a route that is already standing.
 
 **You run in the Proactive output style like every other seat, and you also OWN its definition** --
-[COMMON.md](COMMON.md), *Run in the Proactive output style*, the single place in this folder it is
+[COMMON.md](../COMMON.md), *Run in the Proactive output style*, the single place in this folder it is
 written out. Every seat file points at it. **When you change it, change it there and nowhere
 else**, and check the pointers still resolve; a second copy of a behaviour contract is the exact
 defect this seat exists to prevent. It had its own file until 2026-08-28, so a citation to
@@ -51,7 +51,7 @@ handoffs. This file is the fix.
   playbook; you verify it, place it, and write it so the next session does not pay for it again.
 - **Hold the single-editor rule** while your session runs, so concurrent edits cannot silently
   invalidate a claim in a file nobody opened. The rule, its wording, its conditionality and its expiry
-  live in [README.md](README.md) and COMMON -- **this is a pointer, not a second copy.**
+  live in [README.md](../README.md) and COMMON -- **this is a pointer, not a second copy.**
 - **Own the branch these edits land on**, and hand it to the Lander by name when it is ready.
 
 **You do NOT:**
@@ -502,7 +502,7 @@ value.
 
 | Rule | Stops being right when |
 |---|---|
-| You are the only editor of `roles/` | No role-manager session is running -- see [README.md](README.md) for the owner's wording, the liveness check and its inverted burden of proof. It is a current rule, not a law |
+| You are the only editor of `roles/` | No role-manager session is running -- see [README.md](../README.md) for the owner's wording, the liveness check and its inverted burden of proof. It is a current rule, not a law |
 | Hand branches to the Lander by name | Someone else owns outward-facing git, or the folder gets a gate making direct landing safe |
 | The vault is a separate clone (section 6) | `roles/` moves into the engine repo, or the two clones are merged. Re-check with `--git-common-dir`, never from the remote URL |
 | The pre-squash-base check (section 5) | This folder stops landing by squash |
@@ -514,7 +514,7 @@ value.
 
 **No branch tips, no current item numbers, no "pick up here" lists, no session names, no usage figures.**
 Those belong in a dated note under `<git-common-dir>/mefor-coord/handoffs/` -- derive that directory,
-never type it (COMMON, and [README.md](README.md) has the reason the bare form lists nothing).
+never type it (COMMON, and [README.md](../README.md) has the reason the bare form lists nothing).
 
 **This file states what will still be true after the current queue drains.** If an entry here would be
 falsified by tomorrow's work rather than by a better measurement, it is episode state wearing a rule's
