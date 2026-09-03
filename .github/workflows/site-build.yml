@@ -44,10 +44,23 @@
 
 name: site
 
+# DISABLED ON PUSH AND PULL REQUEST, DELIBERATELY, 2026-09-03.
+# This workflow builds and deploys a site that korus does not have. It came across with the
+# tooling copy and its `build` job fails on every commit, because the Cloudflare project and
+# the served host both belong to another repository.
+#
+# A permanently red check on main is worse than no check: it trains every reader to ignore
+# red, and the next genuine failure arrives in a colour nobody looks at. So the automatic
+# triggers are removed rather than the workflow, because the capability is wanted later.
+#
+# RE-ENABLE WHEN: docs/_config.yml names this repository's own served host, a Cloudflare
+# project exists for it, and the CLOUDFLARE_API_TOKEN secret is set. Restore the two lines
+# below and delete this block. The skipped test in tests/test_internal_links_resolve.py
+# names the same condition and should be un-skipped in the same change.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  # push:
+  #   branches: [main]
+  # pull_request:
   workflow_dispatch:
 
 # Least privilege. Nothing here writes to the repository; the deploy authenticates to Cloudflare
