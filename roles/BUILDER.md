@@ -505,7 +505,7 @@ session; findings in mail do not.
 
 | Items being built | Items finished this session | Enough work? | Claims held | Claims released | Claims clean? |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 6 | Yes | 11 | 5 | Yes — 11 claims, 11 in flight |
+| 1 | 6 | Yes | 11 | 5 | Yes -- 11 claims, 11 in flight |
 
 > ***READ THAT LAST CELL AGAINST THE COLUMN 6 RULE BELOW BEFORE YOU COPY ITS VERDICT, BECAUSE THE
 > TWO CAN DISAGREE.*** *The example justifies "yes" with* **11 claims, 11 in flight** *-- while column

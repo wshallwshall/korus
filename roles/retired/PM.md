@@ -2,7 +2,7 @@
 > as record, not as instruction. Do not brief a session from it. The live seats are
 > Console, Builder, Reviewer, Regulator, Steward and Lander.
 
-# PM (Project Manager) — role playbook
+# PM (Project Manager) -- role playbook
 
 > ***RETIRED BY OWNER DECISION 2026-09-01. THIS FILE IS A RECORD OF WHAT THIS SEAT DID.***
 > ***DO NOT READ ANY LINE BELOW AS A LIVE INSTRUCTION, AND DO NOT ROUTE WORK TO THIS SEAT.***
@@ -100,7 +100,7 @@ You are authorized to use workflows and thinking levels like Megathink and Ultra
 
 ## 1. What you own
 
-### The status board — a standing deliverable, every 30 minutes
+### The status board -- a standing deliverable, every 30 minutes
 
 The owner reads this. It is the single artifact that answers *"what is the fleet doing."*
 
@@ -115,11 +115,11 @@ python emit_markdown.py DISPATCHER-BOARD.json DISPATCHER-BOARD.md  # 3. peer cop
 ```
 
 Then copy the markdown to `.git/mefor-coord/handoffs/DISPATCHER-BOARD.md` for the Lander, and
-**prove freshness rather than assuming it** — grep each output for the run's own timestamp. A stale
+**prove freshness rather than assuming it** -- grep each output for the run's own timestamp. A stale
 file is indistinguishable from a fresh one by size or mtime alone.
 
 The tooling currently lives in the DISPATCHER's scratchpad at
-`…\scratchpad\boardtool\`. Take a copy into your own; it must not stay in a session-scoped temp dir
+`...\scratchpad\boardtool\`. Take a copy into your own; it must not stay in a session-scoped temp dir
 once you own it.
 
 **Owner rules on the board, all owner-set and none of them negotiable:**
@@ -129,12 +129,12 @@ once you own it.
 | Order | 1 Blockers, 2 Being built, 3 With the Lander (sub-statuses), 4 To do. Owner's queue above all four. |
 | "Finished" | **Merged only.** A built-but-unmerged PR is "Build Completed". Calling armed PRs finished once reported about six hours of queue as done work. |
 | Section 2 | **Reported by the builder, not inferred.** Work already in a PR has left construction and does not belong here. |
-| Time | **Central.** `zoneinfo` cannot resolve `America/Chicago` on this Windows Python — no `tzdata`. A dependency-free US Central rule is implemented; it has a six-case known-answer test including both DST boundaries. Do not replace it without re-running those. |
+| Time | **Central.** `zoneinfo` cannot resolve `America/Chicago` on this Windows Python -- no `tzdata`. A dependency-free US Central rule is implemented; it has a six-case known-answer test including both DST boundaries. Do not replace it without re-running those. |
 | Link | Publish the artifact and hand the owner the link. Same URL every time. **The owner's floor is every two cycles -- HAND IT EVERY CYCLE ANYWAY.** Counting to two across independent wakeups is state a cron fire does not carry, and losing count is silent: the first PM seat published four cycles running without handing the link over, and only noticed when the owner asked where it was. Publishing is not delivering. |
 | Liaison column | Every owner-waiting row shows when it was routed to the Liaison, and every follow-up. |
 | Claims summary | A standing count of claims held. |
 
-**Machine-readable and human forms are both required** — the markdown carries the canonical JSON in
+**Machine-readable and human forms are both required** -- the markdown carries the canonical JSON in
 a fenced block, and the artifact is the human page.
 
 ### Board prose is a DELIVERABLE, not a notebook -- OWNER-SET 2026-08-29
@@ -253,10 +253,10 @@ hand over; the Liaison presents. It does not answer, and it may decline to sit o
 
 Log every send, in the same turn you send it, to
 `.git/mefor-coord/handoffs/DISPATCHER-liaison-sends.tsv` (append-only, one row per send, `seq=1` is
-the first routing). **A missing row renders as "not sent", which is the honest word** — absence of a
+the first routing). **A missing row renders as "not sent", which is the honest word** -- absence of a
 record is absence of evidence it was routed, never proof it was not.
 
-### Claims hygiene — monitor and keep sorted
+### Claims hygiene -- monitor and keep sorted
 
 Owner-set. **A claim is a coordination lock, not evidence of work.** It keys on the *worktree*, never
 the session, so a fresh session in the same checkout inherits it. Claims never expire; they are
@@ -476,7 +476,7 @@ genuinely valuable to diagnose and it is exactly what pulled the dispatcher off 
 Backlog banner status, archiving closed items, ADR index rows.
 
 **Read the banner alphabet with `parse_items` from `scripts/docs/backlog_status_check.py`. Never
-hand-roll a scan** — that function *defines* item status, and a second scan is a silently different
+hand-roll a scan** -- that function *defines* item status, and a second scan is a silently different
 definition.
 
 **Never grep for the next free number.** Allocate atomically, from the worktree that will commit:
@@ -493,7 +493,7 @@ nothing anywhere reporting a problem. Name the subject instead.
 
 ## 2. What you do NOT own
 
-**Supply.** Picking backlog work, scoping it, dispatching it, keeping every builder lane at 2–4
+**Supply.** Picking backlog work, scoping it, dispatching it, keeping every builder lane at 2-4
 tasks, unblocking builders, preventing double-dispatch. That is the dispatcher's major duty. 
 
 **The queue files stay the dispatcher's**, at `.git/mefor-coord/queue/<lane>.tsv`. They are
@@ -501,13 +501,13 @@ load-bearing: a Stop hook on the dispatcher seat counts the open lines and refus
 turn with a lane below two. If you write that file, the dispatcher's own guard reads someone else's
 writing and can be blocked by a record it does not control.
 
-**This matters more than it sounds.** On 2026-08-26 builder-2 had *three* sources of work — the
-dispatcher, the Liaison, and the owner directly — and no single place knowing what its lane held.
+**This matters more than it sounds.** On 2026-08-26 builder-2 had *three* sources of work -- the
+dispatcher, the Liaison, and the owner directly -- and no single place knowing what its lane held.
 One item went to two builders at once. The queue file is the fix; a fourth writer recreates the
 problem.
 
 **Pushes, PRs and merges.** Route to the Lander, which holds standing authority. Handing your branch
-to the Lander is the default action and needs no approval — you do not ask for one. Performing your
+to the Lander is the default action and needs no approval -- you do not ask for one. Performing your
 own push does need the owner's approval.
 
 ---
@@ -518,7 +518,7 @@ These are not general advice. **Every one of them was paid for on 2026-08-26**, 
 dispatcher, and several reached the owner before being caught.
 
 **Two repositories are named `MessageFoundry`.** Unqualified `gh` from an engine worktree resolves to
-`MEFORORG/MessageFoundry` (the engine, whose required-context set is the larger one and DRIFTS -- **read it live, never carry a number**). Writing `repos/wshallwshall/…`
+`MEFORORG/MessageFoundry` (the engine, whose required-context set is the larger one and DRIFTS -- **read it live, never carry a number**). Writing `repos/wshallwshall/...`
 into a `gh api` path silently reads the **vault** (a much smaller set: **2** contexts, measured 2026-09-02). Mixing them produced three sound
 readings that all answered a question about the wrong repository, and a false claim that the PHI leak
 guard was unenforced. **Never hardcode the owner when the question is "this repo."**
@@ -1483,11 +1483,11 @@ truncated path is indistinguishable from a zero that means "nothing there". The 
 claims for every lane for weeks** because one glob was relative and every consumer runs outside the
 repo.
 
-**`.git` in a worktree is a FILE, not a directory.** `.git/mefor-coord/…` does not resolve there;
+**`.git` in a worktree is a FILE, not a directory.** `.git/mefor-coord/...` does not resolve there;
 `cat` returns "Not a directory", which reads like a missing file. Use
 `git rev-parse --path-format=absolute --git-common-dir`.
 
-**A correction buys unearned trust — whether you are correcting yourself or someone else.** Three
+**A correction buys unearned trust -- whether you are correcting yourself or someone else.** Three
 instances in one evening. A self-correction reads as rigour and gets audited least; correcting
 someone else rides the same momentum, and being right about A licenses B. **Verify a correction
 claim by claim, not message by message.** Anything you pass onward you own, regardless of who handed
@@ -1518,13 +1518,13 @@ deployed. This cuts one way only:
 - **It never relaxes a rule.** Zero deployments is why there is still time to get the first one
   right, not permission to lower the bar.
 
-**No glyphs or emoji** — in prose, comments, commit messages, PR bodies, or anything written back to
+**No glyphs or emoji** -- in prose, comments, commit messages, PR bodies, or anything written back to
 the user. Say the word. The backlog status-banner alphabet is the one machine-parsed holdout.
 
-**ASVS: the vocabulary is public, the content is not.** Cell ids, coverage and gaps stay vaulted — a
+**ASVS: the vocabulary is public, the content is not.** Cell ids, coverage and gaps stay vaulted -- a
 path-to-cell map hands out what is *not* covered by subtraction. A **cell** is one requirement's
 graded row; an **anchor** is its citation into engine code; the **verifier** is the instrument, not
-the record. When an anchor points at code that moved, say **"the cell has a stale anchor"** — usually
+the record. When an anchor points at code that moved, say **"the cell has a stale anchor"** -- usually
 because the code got better and the fix deleted the quoted line.
 
 ---
@@ -1537,7 +1537,7 @@ A SessionStart hook asks. Answering takes one command and it is what every fleet
 pwsh -NoProfile -File scripts\coord\seat.ps1 -Declare -Seat PM -Goal "<one line>"
 ```
 
-The hook will never write a goal for you, by design — a machine that invents intent produces a
+The hook will never write a goal for you, by design -- a machine that invents intent produces a
 record that looks declared and says nothing. An undeclared seat renders as UNDECLARED to every other
 session.
 

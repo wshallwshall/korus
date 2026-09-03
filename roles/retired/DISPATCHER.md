@@ -330,7 +330,7 @@ reads healthy** -- the blocked-vs-concluded gap, this edge trigger, and a lane a
 
 | Builder 1 | Builder 2 | Spending your tokens well? | Maximizing the weekly allocation? |
 | --- | --- | --- | --- |
-| 5 | 0 -> 2 offered | Mixed. Nine idle turns while a lane sat empty. | No — a free lane is unused allocation. |
+| 5 | 0 -> 2 offered | Mixed. Nine idle turns while a lane sat empty. | No -- a free lane is unused allocation. |
 
 ***THE BUILDER 2 CELL IS THE ONE TO COPY, AND IT IS MORE THAN A BARE COUNT.*** **`0 -> 2 offered` reports a
 LEVEL AND THE ACT YOU TOOK ABOUT IT** -- *an empty lane you have already refilled reads completely

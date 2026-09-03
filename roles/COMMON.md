@@ -244,7 +244,7 @@ tokens.*
 | The test before you broadcast one | ***RUN YOUR OWN PRESCRIBED CONTROL AGAINST YOUR OWN FIX.*** *In both cases the author had already published the check that kills it:* **"pipe to `wc -c` and read the number"** *returns 0 for the broken fix.* **A remedy you have not put through your own gate is a claim, not a fix.** |
 | ***AND THE EARLIER TEST, WHICH COSTS NOTHING: A REMEDY THAT SHARES AN ORIGIN WITH THE DEFECT IS NOT A REMEDY*** | **Ask whether your fix routes around the CAUSE or only around the SYMPTOM'S LAST STEP.** *If both run through the same conversion, parser, clock or ref,* ***the fix inherits the defect and returns the bug's own failure wearing a fix's credibility.*** **The worked case:** `cat-file -p $(rev-parse ...)` *was offered as a way around a mangled* `git show` *-- but the mangling is in the ARGUMENT, so the inner* `rev-parse` *carries it identically.* **In its author's words: "I swapped the outer command and left the mangling untouched."** ***This is the control-shares-an-origin row above, aimed at fixes instead of at checks -- one rule, two faces.*** |
 | ***A ZERO FOR A MARKER YOU CHOSE IS NOT EVIDENCE OF AN ABSENT FIX*** | **Your search term is a HYPOTHESIS ABOUT THE IMPLEMENTATION, and a positive control cannot test it** -- the grep works, the file is right, the repo is right, and the zero is real. *A seat grepped a fixed script for `SpecifyKind`, got 0, and nearly reported it unfixed; the fix lives INSIDE A HELPER, not at the call site.* ***Verified here: `SpecifyKind` returns 0 in that copy while `ConvertTo-UtcInstant` -- the actual fix -- returns 1.*** **READ THE BLOCK, not your guess at how someone wrote it.** |
-| ***IT TAKES BOTH A SLASH-BEARING REF AND A DOT-PATH. EITHER ALONE IS FINE, AND THE BLIND SPOT IS THE GOVERNANCE SURFACE*** | *On Git Bash here,* `git show origin/main:.github/...` **fails** -- *MSYS rewrites the argument to* `origin\main;.github\...`. **Measured, same file, 11291 bytes:** `HEAD:` **OK** · `main:` **OK** · `@:` **OK** · `origin/main:` ***0*** · `refs/heads/main:` ***0*** *-- and those same slashed refs read* `docs/SECURITY.md` *at 202441.* ***So it is not `origin/` specifically: it is ANY SLASH IN THE REF,*** *rewritten to* `origin\main;.github\...`. `HEAD` *has no slash, so what comes out still resolves.* ***Every file answering "is this check required" is dot-prefixed.*** **Fix:** `MSYS_NO_PATHCONV=1` **on the command carrying the COLON** -- *and if you nest, it goes on the* ***INNER*** *one:* `cat-file -p $(rev-parse ...)` *fails bare because the rev-parse is mangled identically.* **A `./` prefix also works and needs no variable, but it is** ***CWD-RELATIVE, NOT REPO-ROOT-RELATIVE*** -- *measured: 11291 bytes from the root, and from* `docs/` *it resolves to* `docs/.github/...` *and dies.* **The variable works from any directory.** |
+| ***IT TAKES BOTH A SLASH-BEARING REF AND A DOT-PATH. EITHER ALONE IS FINE, AND THE BLIND SPOT IS THE GOVERNANCE SURFACE*** | *On Git Bash here,* `git show origin/main:.github/...` **fails** -- *MSYS rewrites the argument to* `origin\main;.github\...`. **Measured, same file, 11291 bytes:** `HEAD:` **OK** * `main:` **OK** * `@:` **OK** * `origin/main:` ***0*** * `refs/heads/main:` ***0*** *-- and those same slashed refs read* `docs/SECURITY.md` *at 202441.* ***So it is not `origin/` specifically: it is ANY SLASH IN THE REF,*** *rewritten to* `origin\main;.github\...`. `HEAD` *has no slash, so what comes out still resolves.* ***Every file answering "is this check required" is dot-prefixed.*** **Fix:** `MSYS_NO_PATHCONV=1` **on the command carrying the COLON** -- *and if you nest, it goes on the* ***INNER*** *one:* `cat-file -p $(rev-parse ...)` *fails bare because the rev-parse is mangled identically.* **A `./` prefix also works and needs no variable, but it is** ***CWD-RELATIVE, NOT REPO-ROOT-RELATIVE*** -- *measured: 11291 bytes from the root, and from* `docs/` *it resolves to* `docs/.github/...` *and dies.* **The variable works from any directory.** |
 | When you need `-C` and the guard together | ***USE A WINDOWS-STYLE `-C` PATH.*** *Measured, same command both ways:* `git -C <HOME>` **11291**, `git -C /c/Users/...` ***0***. **And the guard is harmless where it is not needed** -- *a non-dot path reads 202441 with it and without.* |
 | ***AND THE SILENCE IS CALLER-MADE, WHICH CORRECTS HOW IT WAS FIRST REPORTED*** | *It was relayed as "returns empty at exit 0".* ***GIT DOES NOT EXIT 0. IT EXITS 128 WITH A LOUD `fatal:` ON STDERR.*** **Three caller habits manufacture the silence:** *`2>/dev/null` hides the message; a pipe makes `$?` report the LAST stage; and `wc`/`grep` succeed happily on nothing.* **`PIPESTATUS` shows the truth --** *measured* `128 0`. ***This is `INSTRUMENTS` 4.15 exactly: verify by exit code, never by piping into a counter.*** |
 | `MSYS_NO_PATHCONV` is a TRADE, not a fix | **Setting it breaks `git -C /c/...` in the same command -- and THAT half fails by RESOLVING SOMEWHERE ELSE rather than by erroring.** ***A variable that fixes one path form by breaking another is not a fix; it is a choice of WHICH FAILURE YOU GET.*** *Set it for the one command that needs it and* ***never for a session.*** |
@@ -565,10 +565,10 @@ Bias toward action. When a task is clear enough to start, start it.
 
 Make the reasonable call on routine decisions rather than pausing to check:
 
-- Naming, file placement, and directory structure — follow whatever the codebase already does.
-- Library and pattern choices where the repo has an established convention — match it.
-- Formatting, lint, and style questions — defer to the existing config.
-- Ambiguity with an obvious safe default — take the default and note it in one line afterward.
+- Naming, file placement, and directory structure -- follow whatever the codebase already does.
+- Library and pattern choices where the repo has an established convention -- match it.
+- Formatting, lint, and style questions -- defer to the existing config.
+- Ambiguity with an obvious safe default -- take the default and note it in one line afterward.
 
 State assumptions in a short line at the end, not as a question before starting. "Assumed the new endpoint follows the existing `/v2` prefix" is the right shape. "Should I use the `/v2` prefix?" is not.
 
@@ -576,9 +576,9 @@ State assumptions in a short line at the end, not as a question before starting.
 
 Stop and ask when:
 
-- The decision is destructive or hard to reverse — dropping data, rewriting history, deleting files outside the task's scope.
+- The decision is destructive or hard to reverse -- dropping data, rewriting history, deleting files outside the task's scope.
 - Two plausible interpretations of the request lead to substantially different work, and picking wrong wastes real effort.
-- You need information you cannot discover from the repo, the tools, or the conversation — a credential, an external constraint, an intent only the user holds.
+- You need information you cannot discover from the repo, the tools, or the conversation -- a credential, an external constraint, an intent only the user holds.
 
 Everything else: decide and proceed. One well-chosen question beats five clarifying ones; zero beats one when the answer was inferable.
 
@@ -587,7 +587,7 @@ Everything else: decide and proceed. One well-chosen question beats five clarify
 - Skip plan-then-confirm cycles for small tasks. Do the work, then summarize what changed.
 - For medium and large tasks, plan work and create or update project documentation as reasonable and in line with best practices. 
 - Do not narrate what you are about to do at length. Do it, then report.
-- Follow through on obvious adjacent work the task implies — updating the caller when you change a signature, updating the test when you change behavior. Do not expand into unrelated refactors.
+- Follow through on obvious adjacent work the task implies -- updating the caller when you change a signature, updating the test when you change behavior. Do not expand into unrelated refactors.
 
 ## Report tersely
 

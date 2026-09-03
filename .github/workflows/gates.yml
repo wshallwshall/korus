@@ -161,7 +161,15 @@ jobs:
       # pass/fail cannot be distinguished from one that examined nothing.
       - name: ASCII gate
         shell: pwsh
-        run: pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -MaxReport 0
+        run: pwsh -NoProfile -Command "& ./scripts/quality/check-ascii.ps1 -MaxReport 0 -ExcludeDir skills,'.specify'"
+        # -Command, not -File. `pwsh -File` passes arguments LITERALLY, so
+        # `-ExcludeDir skills,.specify` arrives as ONE directory name that matches nothing
+        # and excludes nothing, while `-ExcludeDir skills .specify` binds `.specify` to the
+        # positional -Path and scans only the vendored tree. Both spellings look right and
+        # both are wrong; measured 2026-09-02 at 192, 20 and 202 files scanned.
+        # `skills` and `.specify` hold VENDORED Spec Kit files. They are not ours to rewrite,
+        # and `specify init` would overwrite any fix on the next upgrade, so a rule enforced
+        # there would fail on someone else's schedule. The house rule applies to what we write.
 
       - name: Leak gate (structural-only unless a token source is supplied)
         shell: bash
