@@ -147,12 +147,21 @@ matter, and neither is the other.
 A seat's account decides its quota, which tools it may run, and **which other seats it can
 reach**. So no design may treat seats as interchangeable processes on one machine.
 
-**This is the article that forecloses the most.** The realtime session-to-session channel
-is **account-local**: two seats on different accounts cannot use it at all. Published
-descriptions of similar multi-agent setups have their agents communicate directly through
-that channel, which works only because every agent shares one account. **That topology is
-not available here.** A design copied from it will appear to work in testing on one account
-and fail silently across several.
+The realtime session-to-session channel is **account-local**: two seats on different accounts
+cannot use it at all. Published descriptions of similar multi-agent setups have their agents
+communicate directly through that channel, which works only because every agent shares one
+account. **That topology is not available here.** A design copied from it will appear to work
+in testing on one account and fail silently across several.
+
+**But do not over-weight this.** An earlier version of this article called it "the article
+that forecloses the most". **Measured 2026-09-03, that was wrong.** Five sessions ran, one
+per account, each spawning its own workers in-process, and **none of them needed to reach
+another.** The account boundary foreclosed nothing, because nothing crossed it.
+
+The lesson is not that the boundary is unreal. It is that **a design can route around it by
+not needing it**, and the shape that does so is one self-contained controller per account
+rather than one controller reaching across all of them. What bound that run was the
+repository, which is Article XII.
 
 What is available is a shared file store, which is account-agnostic because it is a
 filesystem. It is asynchronous. **So any design requiring synchronous coordination between
@@ -246,9 +255,12 @@ because the evidence was about **this document's own session**, which is the evi
 checks least, and because each fix was a smaller version of the same mistake rather than a fresh
 reading. **Ask what the instrument would say if you ran it, and then run it.**
 
-**The scarcity this article assumes does not currently exist.** With weekly utilisation between 0
-and 9 per cent, nothing is near a limit, so routing by headroom solves a problem the fleet does not
-yet have. Article VIII still requires the roster; it does not require rationing. **A design that
+**Scarcity was absent when this was written and is no longer.** At the time, weekly utilisation
+sat between 0 and 9 per cent. After the 2026-09-03 run it read 5, 9, 17, 7 and 49 per cent,
+and
+shortly after that **every account began failing the read with HTTP 429**, which is rate limiting
+rather than expiry: the instrument goes blind exactly when load makes it worth reading. Do not
+carry either figure forward. Re-read it. Article VIII still requires the roster; it does not require rationing. **A design that
 rations an abundant resource is spending on a constraint it invented.**
 
 What survives, and it is the part worth keeping: **a design may not assume a measurement is
@@ -293,6 +305,44 @@ a seat that writes and exits is the cheap one.
 **Numbering is not priority.** This article was added after the first ten and appended
 rather than inserted, because renumbering would break every reference made to the document
 in between.
+
+### XII. The shared write surface is the boundary that binds, not the account
+
+Workers scale with accounts. **Landing does not.** Every worker writing to one repository
+contends for it, and the contention is set by which files they touch, not by how many of them
+there are.
+
+**Evidence, 2026-09-03 to 09-04, and it is the largest run this method has had.** Five
+controllers ran, one per account, each spawning its own workers. They produced 46 pull
+requests in about three and a half hours and landed 34 over the following day, at a sustained
+two to five an hour.
+
+**Thirty-three of those thirty-four merged commits touched the same file.** The item ledger.
+Not by accident and not by carelessness: **every item's pull request updates the ledger by
+construction**, so the contention is a property of the design rather than of any worker's
+behaviour.
+
+The merge queue rebases and revalidates each entry against the branch the previous entry just
+changed. So the queue is serial in exactly the dimension the fleet was parallel in, and
+**adding a controller adds arrivals without adding service.**
+
+Three consequences a spec must honour:
+
+- **Partition the write surface, not the workers.** Where a shared file is touched by every
+  unit of work, that file is the throughput limit and no amount of parallelism upstream moves
+  it. Split it, or batch the updates to it separately from the work.
+- **A claim on an item is not a claim on a path.** Two controllers can legitimately hold
+  different items and still collide, because the paths their work touches were never claimed.
+- **Serialising the merge is a real control and it has a real cost.** It is what made this run
+  survivable. It also makes one seat both the throughput ceiling and the single point of
+  failure, and **that seat can only be correct about a queue whose arrivals it does not
+  control.**
+
+**A correction belongs in this article rather than beside it.** Reading this run 3.6 hours in,
+I reported 46 open against 3 landed and called it a structural throughput ceiling. It was a
+burst measured at its worst moment. The queue drained. **The contention was real and my
+conclusion from it was wrong**, and the difference between those two is the difference between
+a snapshot and a rate.
 
 ## The execution environment
 
@@ -373,10 +423,30 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.7.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.8.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.8.0  2026-09-04  Added Article XII, and corrected Article VIII's weighting, both from the
+       largest run this method has had: five controllers, one per account, 46 pull requests in
+       3.5 hours, 34 landed over the following day.
+
+       ARTICLE VIII said the account boundary "forecloses the most". Measured wrong. Five
+       self-contained controllers never needed to cross it, so it foreclosed nothing. The
+       structural facts stand; the emphasis was mistaken, and a design can route around that
+       boundary by not needing it.
+
+       ARTICLE XII names what did bind: the shared write surface. 33 of 34 merged commits
+       touched one file, because every item's pull request updates the ledger by construction.
+       Adding a controller adds arrivals without adding service.
+
+       Also carries a correction I owe in the document rather than in a message: reading that
+       run 3.6 hours in, I called it a structural throughput ceiling. It was a burst at its
+       worst moment and the queue drained.
+
+       Article X's headroom figures are marked superseded rather than edited away: they read
+       0 to 9 per cent, then 5 to 49, then every account began returning HTTP 429.
 
 1.7.0  2026-09-03  Article X corrected a SECOND time, and the second correction was also wrong.
 
