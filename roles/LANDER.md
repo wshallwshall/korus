@@ -4024,7 +4024,7 @@ link is a missed duty, not a quiet turn.
 | | |
 | --- | --- |
 | **Source** | `docs/boards/landing-queue-status-board.html` **IN THE VAULT**, with `docs/boards/README.md` beside it. *18a names no path, so a successor authors a NEW file and orphans the existing one.* |
-| ***THE PUBLISHED URL, AND IT IS LOAD-BEARING*** | `https://claude.ai/code/artifact/d5c2716c-a5d7-4503-8e40-5b1ef09b38d4` |
+| ***THE PUBLISHED URL, AND IT IS LOAD-BEARING*** | *(the URL is private and is NOT recorded in this public file. It is in the vault beside the board's source, and the owner has it saved. Ask the owner or read it from the vault; do not author a new one, which is the failure this row exists to prevent.)* |
 | **Republish** | the Artifact tool, **SAME file path AND the `url` parameter.** *Same path alone suffices within one session; from any other session the `url` is REQUIRED.* |
 
 > ***REPUBLISHING WITHOUT PASSING THAT URL SILENTLY FORKS THE BOARD TO A NEW ADDRESS AND LEAVES THE

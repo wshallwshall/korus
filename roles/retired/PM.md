@@ -197,7 +197,7 @@ seat's. The record-sensitivity finding and the byte-identity form are the ROLE M
 **Handed over by the Status-boards seat and shipped, not pending:** vault `origin/main` `bec4f1fb`
 (#1441), verified an ancestor of `origin/main`.
 
-    LIVE   https://claude.ai/code/artifact/1e66e0e3-b874-4945-85c7-8e403aff4388
+    LIVE   (private artifact URL, not recorded in this public file)
     LOCAL  <vault>/docs/boards/index.html
     DOCS   <vault>/docs/boards/README.md  -- 263 lines. READ IT BEFORE TOUCHING ANYTHING.
 
