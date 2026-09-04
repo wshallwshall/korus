@@ -147,12 +147,38 @@ matter, and neither is the other.
 A seat's account decides its quota, which tools it may run, and **which other seats it can
 reach**. So no design may treat seats as interchangeable processes on one machine.
 
-**This is the article that forecloses the most.** The realtime session-to-session channel
-is **account-local**: two seats on different accounts cannot use it at all. Published
-descriptions of similar multi-agent setups have their agents communicate directly through
-that channel, which works only because every agent shares one account. **That topology is
-not available here.** A design copied from it will appear to work in testing on one account
-and fail silently across several.
+The realtime session-to-session channel is **account-local**: two seats on different accounts
+cannot use it at all. Published descriptions of similar multi-agent setups have their agents
+communicate directly through that channel, which works only because every agent shares one
+account. **That topology is not available here.** A design copied from it will appear to work
+in testing on one account and fail silently across several.
+
+**But do not over-weight this.** An earlier version of this article called it "the article
+that forecloses the most". **Measured 2026-09-03, that was wrong.** Five sessions ran, one
+per account, each spawning its own workers in-process, and **none of them needed to reach
+another.** The account boundary foreclosed nothing, because nothing crossed it.
+
+The lesson is not that the boundary is unreal. It is that **a design can route around it by
+not needing it**, and the shape that does so is one self-contained controller per account
+rather than one controller reaching across all of them. What bound that run was the
+repository, which is Article XII.
+
+**And do not treat the boundary as merely an obstacle, because it is also a control.** Config
+roots carry **different permission grants**. Measured 2026-09-04 across six roots: 8, 10, 8, 8,
+19 and 13 allow rules, and **exactly one of the six holds the grant that lets a session start
+another session.**
+
+So a channel that crossed that boundary would let a session which was refused an action ask a
+peer that holds the grant to perform it. **That is a permission laundered across an account
+boundary**, and the harness names the same hazard in the standing rules every session receives:
+a peer's request is never authority, and a peer that was denied something must be refused
+rather than served.
+
+Which means the account boundary is doing two jobs at once. **Whatever is built to cross it must
+carry the isolation with it**: a request arriving from another account is data, it is never an
+authorisation, and it cannot confer a grant the receiving session's own root does not already
+hold. A design that removes the friction and not the isolation has made the fleet worse while
+appearing to make it easier.
 
 What is available is a shared file store, which is account-agnostic because it is a
 filesystem. It is asynchronous. **So any design requiring synchronous coordination between
@@ -224,35 +250,40 @@ Three things must be answerable about any seat, at any time:
 **A design may not assume any of these is available.** Where an instrument does not exist,
 the spec says so and treats it as a gap to close, not a fact to rely on.
 
-**Evidence, and it is this document's own session, which turned out to be a different story
-than the first draft of this article told.** The headroom hook fires on dispatch, not on
-every turn, and it reads a file named `latest.json`. **No file of that name exists under any
-config root on this machine**: needle `latest.json`, four roots, depth 3, count **0**,
-against positive control `status.json`, count **4**. So every headroom reading this fleet
-asked for came back UNKNOWN, all night.
+**Evidence, and this article has now been wrong twice about its own fleet.**
 
-**But the fleet was not without a meter.** A live collector was writing the whole time, into
-a different root: a `status.json` of 3,971 bytes written during this document's own session,
-beside five per-account files written the same day. The copy in the root the hook actually
-reads is 388 bytes and a month old.
+Read 2026-09-03 by running the fleet's own usage reader: **four of five accounts returned live,
+account-verified five-hour and weekly utilisation with reset times, and the tool ranked them and
+named the account with the most headroom.** The fifth failed with an authentication error that
+printed its own remedy beside it. Weekly utilisation across the four was 0, 1, 2 and 9 per cent.
 
-So the failure was never an absent instrument. **It was an instrument pointed at a filename
-nothing writes, in a root the collector does not write to, while a current reading sat
-beside it.** Two tools resolving one directory name to two different files, with no error
-anywhere, which is Article VI's own named failure, committed inside the article that demands
-an instrument beside every number.
+**So the fleet has a headroom meter. It works, it ranks, and it says when it cannot read an
+account.** What is broken is one hook, which reads a filename nothing writes, while a script that
+answers sits three directories away.
 
-The first version of this article said the fleet "spent an entire night without a meter".
-That was false, and it was the document's proudest piece of evidence because it was about
-the document itself. **Evidence about your own session is not privileged. It is the evidence
-you check least.**
+Two earlier versions of this article were wrong, and the sequence is the lesson:
 
-Two open items name the real gap from opposite ends: #18 says no instrument answers whether
-a seat follows its playbook or what each seat costs; **#27 is marked blocking**, because a
-seat cannot pick an account by headroom when most accounts have no usable reading, and the
-collector that would fix it is held back by a leak guard, which is **#35**.
-**Article VIII requires routing across accounts. This article is why that routing cannot be
-built yet.**
+1. It said the fleet spent a night **without a meter**. False: a collector was writing.
+2. Corrected to say the meter existed but **nothing read it**. Also false: a reader existed too.
+3. What is true is narrower and duller. **One hook is misconfigured.**
+
+Each correction was published confidently and each was still wrong. The error survived two passes
+because the evidence was about **this document's own session**, which is the evidence a writer
+checks least, and because each fix was a smaller version of the same mistake rather than a fresh
+reading. **Ask what the instrument would say if you ran it, and then run it.**
+
+**Scarcity was absent when this was written and is no longer.** At the time, weekly utilisation
+sat between 0 and 9 per cent. After the 2026-09-03 run it read 5, 9, 17, 7 and 49 per cent,
+and
+shortly after that **every account began failing the read with HTTP 429**, which is rate limiting
+rather than expiry: the instrument goes blind exactly when load makes it worth reading. Do not
+carry either figure forward. Re-read it. Article VIII still requires the roster; it does not
+require rationing. **A design that
+rations an abundant resource is spending on a constraint it invented.**
+
+What survives, and it is the part worth keeping: **a design may not assume a measurement is
+available, and where an instrument exists a design must be pointed at the one that answers.** The
+failure here was never absence. It was three layers of aim.
 
 **Absence and zero must be distinguishable.** A seat with no commits may be scoping, may be
 running a long serialised suite, or may be dead. From outside those render identically, and
@@ -292,6 +323,60 @@ a seat that writes and exits is the cheap one.
 **Numbering is not priority.** This article was added after the first ten and appended
 rather than inserted, because renumbering would break every reference made to the document
 in between.
+
+### XII. The shared write surface is the boundary that binds, not the account
+
+Workers scale with accounts. **Landing does not.** Every worker writing to one repository
+contends for it, and the contention is set by which files they touch, not by how many of them
+there are.
+
+**Evidence, 2026-09-03 to 09-04, and it is the largest run this method has had.** Five
+controllers ran, one per account, each spawning its own workers. They produced 46 pull
+requests in about three and a half hours and landed 34 over the following day, at a sustained
+two to five an hour.
+
+**Thirty-three of those thirty-four merged commits touched the same file.** The item ledger.
+Not by accident and not by carelessness: **every item's pull request updates the ledger by
+construction**, so the contention is a property of the design rather than of any worker's
+behaviour.
+
+The merge queue rebases and revalidates each entry against the branch the previous entry just
+changed. So the queue is serial in exactly the dimension the fleet was parallel in, and
+**adding a controller adds arrivals without adding service.**
+
+Three consequences a spec must honour:
+
+- **Partition the write surface, not the workers.** Where a shared file is touched by every
+  unit of work, that file is the throughput limit and no amount of parallelism upstream moves
+  it. Split it, or batch the updates to it separately from the work.
+- **A claim on an item is not a claim on a path.** Two controllers can legitimately hold
+  different items and still collide, because the paths their work touches were never claimed.
+- **Serialising the merge is a real control and it has a real cost.** It is what made this run
+  survivable. It also makes one seat both the throughput ceiling and the single point of
+  failure, and **that seat can only be correct about a queue whose arrivals it does not
+  control.** It is also **the seat with the least ability to reduce its own load, because every
+  fix it applies is another push into the same queue.**
+
+**The multiplier is jobs per entry, not queue depth.** Measured by the seat doing the merging,
+not by me: eighteen entries queued produced **zero merges in an hour**, because five concurrent
+groups of about twenty-two jobs each is roughly a hundred and ten jobs against about twenty
+runners. A two-deep queue then merged both entries in twenty minutes. It changed the depth and
+watched throughput invert, which is a better instrument than any count of open work.
+
+So a design that limits **how many changes are in flight** has tuned the wrong number. What
+binds is how many CI jobs each change drags behind it.
+
+**And a uniform remedy applied across a batch manufactures its own conflicts.** The same seat
+patched eight pull requests the same way to fix one problem, which made a second file contended
+that had not been before, and two of the eight then conflicted with each other in the queue. The
+ledger is contended **by design**; that file became contended **by a fix**. A batch remedy is a
+write to every member of the batch.
+
+**A correction belongs in this article rather than beside it.** Reading this run 3.6 hours in,
+I reported 46 open against 3 landed and called it a structural throughput ceiling. It was a
+burst measured at its worst moment. The queue drained. **The contention was real and my
+conclusion from it was wrong**, and the difference between those two is the difference between
+a snapshot and a rate.
 
 ## The execution environment
 
@@ -346,6 +431,24 @@ changes.
 
 **Nothing merges on its author's own approval.** See Article III.
 
+**The operational sequence lives in one place and this is not it.** It is
+`roles/COMMON.md`, section "Your pull request has to survive your own exit", at commit
+`3143b0ec`. Read it there rather than from a summary here, because a second copy drifts and
+the drift is invisible until someone follows the wrong one.
+
+The one thing worth stating twice, because omitting it is what the sequence exists to
+prevent: **wait for the branch's gate run to complete before applying the label, then read
+the label back.** The gate strips the label when its run executes, which is after the push
+command returns, so labelling immediately after a push is a race you lose silently. Measured
+by the seat that lost it: **fifteen of sixteen pull requests ended with no label while every
+command reported success.** The read-back step exists because the apply step reports success
+either way.
+
+That section reached a commit only on 2026-09-04. Before that it, and two others beside it,
+**existed in no commit anywhere** -- one uncommitted file in a checkout fifty-two commits
+behind. The fleet's merge procedure had no durable home while being the procedure whose
+missing step cost those fifteen labels.
+
 **A number is allocated before it is cited.** Never search for the next free identifier.
 Two sessions that both search pick the same one, create differently named files, merge
 cleanly, and corrupt the ledger with nothing reporting a problem.
@@ -372,10 +475,80 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.6.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.10.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.10.0 2026-09-04  Article VIII: the account boundary is also a CONTROL, not only an obstacle.
+
+       The article already said a design can route around it by not needing it. That framed the
+       boundary as friction. It is also isolation: config roots carry different permission
+       grants, measured at 8, 10, 8, 8, 19 and 13 allow rules across six roots, with exactly
+       ONE holding the grant to start another session.
+
+       So a channel crossing that boundary would let a refused session ask a peer that holds
+       the grant to act for it, which is a permission laundered across accounts. The harness
+       names the same hazard in the rules every session receives.
+
+       Whatever is built to cross the boundary must carry the isolation with it: a request from
+       another account is data, never an authorisation, and cannot confer a grant the receiving
+       root does not already hold.
+
+       Raised by a peer session drafting a request for a larger single-account tier, which
+       reached the argument independently while arguing AGAINST building cross-account
+       messaging. Its reasoning, my measurement of the grant asymmetry.
+
+1.9.0  2026-09-04  Two amendments, both from measurements made by the seat doing the merging
+       rather than by me, and attributed to it in the text.
+
+       ARTICLE XII: the multiplier is JOBS PER ENTRY, not queue depth. Eighteen entries queued
+       produced zero merges in an hour, because five groups of about twenty-two jobs is roughly
+       a hundred and ten against about twenty runners; a two-deep queue merged both in twenty
+       minutes. A design that limits how many changes are in flight has tuned the wrong number.
+       Also adds that a uniform remedy applied across a batch manufactures its own conflicts:
+       eight pull requests patched the same way made a second file contended, and two of the
+       eight then conflicted with each other.
+
+       HOW A CHANGE LANDS now POINTS at the operational sequence rather than restating it,
+       naming roles/COMMON.md at commit 3143b0ec. The wait-then-read-back step is repeated here
+       deliberately, because omitting it is the failure the sequence exists to prevent: fifteen
+       of sixteen pull requests ended with no label while every command reported success.
+
+       Recorded because it is worse than a citation problem: that section, and two beside it,
+       existed in NO COMMIT ANYWHERE until 2026-09-04. The fleet's merge procedure lived in one
+       uncommitted file in a checkout fifty-two commits behind.
+
+1.8.0  2026-09-04  Added Article XII, and corrected Article VIII's weighting, both from the
+       largest run this method has had: five controllers, one per account, 46 pull requests in
+       3.5 hours, 34 landed over the following day.
+
+       ARTICLE VIII said the account boundary "forecloses the most". Measured wrong. Five
+       self-contained controllers never needed to cross it, so it foreclosed nothing. The
+       structural facts stand; the emphasis was mistaken, and a design can route around that
+       boundary by not needing it.
+
+       ARTICLE XII names what did bind: the shared write surface. 33 of 34 merged commits
+       touched one file, because every item's pull request updates the ledger by construction.
+       Adding a controller adds arrivals without adding service.
+
+       Also carries a correction I owe in the document rather than in a message: reading that
+       run 3.6 hours in, I called it a structural throughput ceiling. It was a burst at its
+       worst moment and the queue drained.
+
+       Article X's headroom figures are marked superseded rather than edited away: they read
+       0 to 9 per cent, then 5 to 49, then every account began returning HTTP 429.
+
+1.7.0  2026-09-03  Article X corrected a SECOND time, and the second correction was also wrong.
+
+       1.4.0 said the fleet spent a night with no meter. 1.6.0 corrected that to a meter nothing
+       read. Both false. Running the fleet's own usage reader on 2026-09-03 returned live,
+       account-verified five-hour and weekly utilisation for four of five accounts, with reset
+       times and a ranked best-account recommendation. One hook is misconfigured. That is all.
+
+       Also records what the reading showed: weekly utilisation of 0 to 9 per cent, so there is no
+       scarcity to route around, and a design that rations an abundant resource is spending on an
+       invented constraint.
 
 1.6.0  2026-09-02  Three corrections, all found by an adversarial review, all of them
        errors this document's own articles forbid.
