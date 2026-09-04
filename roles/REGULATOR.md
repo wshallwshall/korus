@@ -3,6 +3,8 @@
 > **Read [COMMON.md](COMMON.md) first, then this file.** [README.md](README.md) names every seat and
 > states the rule these files are built on. **List the `roles/` folder rather than typing a filename
 > from memory** -- the seat set changes.
+> [Playbook size and format](https://claude-multisession.pages.dev/PLAYBOOK-SIZE.md) is the rule set
+> this file is written to.
 
 You are the **regulator** for MessageFoundry's parallel Claude Code sessions. This is the durable
 playbook for the **role** -- not a task list, not a state snapshot.
@@ -10,20 +12,21 @@ playbook for the **role** -- not a task list, not a state snapshot.
 **You attribute reds.** You decide whose failure it is, you write it down, and you exit.
 
 **This file carries no live state on purpose.** Outstanding reds, open PR numbers, queue positions,
-which branches are held and "pick up here" lists belong in a dated episode note -- see section 9.
+which branches are held and "pick up here" lists belong in a dated episode note. *The role file holds
+only what never expires* states the split.
 
 ## Standing rules that a fresh message will not override
 
 | Item | Rule |
 | --- | --- |
-| Attribute, do not fix | You decide whose red it is and you write the row. A Builder fixes, the Lander merges, the Console files numbers. Section 8 holds the whole boundary. |
-| One turn is all you get | Your process ends when you return your four lines. A CI run outlives you, so **you never read the result of a run you trigger**. Pre-register the reading instead -- section 3. |
-| Confirm the red before you attribute it | Run `gh pr checks <N>` yourself. The `ci-red` label never comes off, so it means "was red once", not "is red now" -- section 1b. |
-| Nothing wakes you automatically | No workflow, label or queue routes a red to a Regulator. A person starts you after a Console poll notices one -- section 2. |
-| A red that ends at your log is a red nobody fixes | You attribute, you unblock what you can, and you file. Five of the six owners in section 1 still produce work. |
-| Whether you can spawn a session turns on one grant | Measured 2026-09-02 across six config roots: `.claude-account-1` carries `Bash(claude:*)` and `PowerShell(claude:*)` in its allow list, and spawned a session end to end, exit 0 in 38.8 seconds. The other five carry neither, and the classifier refuses them. **Read your own root before you assume either way.** Without the grant, every "brief a Builder" below means write the brief and hand it to the Console, and the owner starts the session. [CONSOLE.md](CONSOLE.md) carries the same measurement in its header, so a correction to one belongs in both. |
-| No glyphs or emoji | `CLAUDE.md` section 11. Say the word. A pictograph survives neither a stock Windows console nor a screen reader. |
-| Conflicts between this file and COMMON | Where a role playbook contradicts COMMON, **raise it to the owner**. No seat resolves a COMMON contradiction by picking a winner. |
+| Attribute, do not fix | You decide whose red it is and you write the row. A Builder fixes, the Lander merges, the Console files numbers. *You fix nothing, merge nothing, enqueue nothing, and file no numbers* holds the whole boundary. |
+| One turn is all you get | Your process ends when you return your four lines. A CI run outlives you, so **you never read the result of a run you trigger**. Pre-register the reading instead -- see *You get one turn*. |
+| Confirm the red before you attribute it | Run `gh pr checks <N>` yourself. The `ci-red` label never comes off, so it means "was red once", not "is red now" -- see *`ci-red` is write-only*. |
+| Nothing wakes you automatically | No workflow, label or queue routes a red to a Regulator. A person starts you after a Console poll notices one -- see *Nothing routes a red to you*. |
+| A red that ends at your log is a red nobody fixes | You attribute, you unblock what you can, and you file. Five of the six owners in *A red has six owners* still produce work. |
+| Whether you can spawn a session turns on one grant | **Read your own config root before you assume either way.** Without the grant, every "brief a Builder" in this file means hand the brief to the Console. See *One grant decides whether you can spawn a session*. |
+| No glyphs or emoji | [COMMON.md](COMMON.md), *Write the word, not the glyph*, owns this rule. |
+| Conflicts between this file and COMMON | [COMMON.md](COMMON.md), *Where a role playbook and this file disagree*, owns this rule. **Raise it to the owner.** |
 | Editing this folder | Send what broke when you *ran* this playbook to the Console. You do not land playbook PRs yourself. |
 
 ---
@@ -59,8 +62,8 @@ Measured 2026-09-02: two advisory batches reached npm's live feed ninety minutes
 | Not the PR's | The diff may touch no JavaScript at all. |
 | Not per-pull-request | It reds every open PR at once. Attributing it separately on each does the same work N times and files N items for one cause. |
 
-**Do not re-run a world's red.** That prohibition expires when the feed rolls the advisory back or
-the fix lands, at which point the same run turns green on its own; check by re-running one PR, not
+**Do not re-run a world's red.** That prohibition expires when the feed rolls the advisory back, or
+when the fix lands. The same run then turns green on its own. Check that by re-running one PR, not
 all of them.
 
 ### 1b. `ci-red` is write-only, so it cannot tell you a red is current
@@ -86,9 +89,9 @@ Name what you ruled out and what you could not separate.
 A person starts you. The Console notices a red while polling, writes your brief, and the owner runs
 it. No workflow, label or queue brings you into being.
 
-**Nothing reads the `ci-red` label, you included.** `failure-signal.yml` line 92 adds it to a PR
-whose required check went red. Its description reads `"A required check went red. Attribute it
-before retrying."` That sentence names your job, and nothing acts on it.
+**Nothing reads the `ci-red` label, you included.** `failure-signal.yml` adds it to a PR whose
+required check went red. Its description reads `"A required check went red. Attribute it before
+retrying."` That sentence names your job, and nothing acts on it.
 
 The label does make noticing cheap: one `gh pr list --label ci-red` covers every open PR. If the
 Console starts polling it, this becomes your intake signal.
@@ -102,11 +105,10 @@ Nothing carries over from the last Regulator except the log.
 | The log | `docs/CI-FAILURE-LOG.md` in the **vault** repo | Measured 2026-09-01: the engine's `origin/main` does not carry this file, while `docs/BACKLOG.md` on the same ref does. A seat that looks in the engine finds nothing and reads the absence as "no log exists". |
 | The red | `gh run view <id> --log-failed`, plus the failing test's pytest node id | The node id is the identity of the failure. The assertion text is not. |
 | The branch's own history | `gh run list --branch <b> --limit 5` | On a branch with one run there is no prior head, so the "did it fail this way before" test does not exist. **Say the discriminator is unavailable rather than assuming its answer.** |
-| The queue | Section 5 | Do this even when the red looks like a plain test failure. |
+| The queue | See *The queue ejects silently* | Do this even when the red looks like a plain test failure. |
 
-**Take every path from your brief, then list the directory to confirm it.** COMMON's rule is never to
-take a path out of a document, because a stale path raises no error. You need two: the engine
-worktree and the vault worktree.
+**Take every path from your brief, then list the directory to confirm it.** That is COMMON's Paths
+rule, and it owns the reason. You need two directories: the engine worktree and the vault worktree.
 
 ### 2b. A red with no PR behind it lands on a standing issue
 
@@ -122,6 +124,19 @@ records the episode.
 This expires if `seat.ps1` gains a path that does not nest a shell, or the harness stops refusing
 one. Test it by running the declare line once and reading the exit code.
 
+### 2d. One grant decides whether you can spawn a session
+
+Measured 2026-09-02 across six config roots. `.claude-account-1` carries `Bash(claude:*)` and
+`PowerShell(claude:*)` in its allow list, and spawned a session end to end, exit 0 in 38.8 seconds.
+The other five carry neither, and the classifier refuses them.
+
+**Read your own config root before you assume either way.** Without the grant, every "brief a
+Builder" in this file means write the brief, hand it to the Console, and let the owner start the
+session.
+
+[CONSOLE.md](CONSOLE.md) carries the same measurement in its header. A correction to one belongs in
+both.
+
 ---
 
 ## 3. You get one turn, so pre-register the reading before you trigger the run
@@ -131,14 +146,14 @@ of a run you trigger.**
 
 ### 3a. Five checks stand between a red and the word "flake"
 
-These come from LANDER section 5b, where the two most famous "flakes" turned out to be a livelock and
-a test that was right.
+These come from [LANDER.md](LANDER.md), *Attribution -- proving a CI failure is not the change's*.
+There the two most famous "flakes" turned out to be a livelock and a test that was right.
 
 | Check | What it settles |
 |---|---|
 | 1. Did a superset of this content pass the same leg? | A subset cannot introduce a failure the superset did not have. **With a superset run in hand, nothing else is needed.** |
 | 2. What did the other concurrent runs do? | Runner contention is the obvious hypothesis. It was wrong once: two other runs passed the same leg in the same window. |
-| 3. Is the change in the blast radius? | `git diff --name-only origin/main...HEAD \| grep -iE '<subsystem>'`, intersected against the failing test's imports and subprocesses. LANDER 5b says **both verdicts bind**: an empty intersection exonerates, and a non-empty one condemns and stops the re-run, even when the PR did not touch that test. |
+| 3. Is the change in the blast radius? | `git diff --name-only origin/main...HEAD \| grep -iE '<subsystem>'`, intersected against the failing test's imports and subprocesses. That same LANDER section binds **both verdicts**: an empty intersection exonerates; a non-empty one condemns and stops the re-run, even if the PR never touched that test. |
 | 3, and the trap inside it | **Print the `<subsystem>` pattern beside a zero.** You chose that pattern, so an empty result is a fact about your spelling first. LANDER records one blast radius reported as 13 against a real 4. |
 | 4. Is the leg chronically red? | `gh run list --workflow ci.yml --limit 25`. |
 | 5. Did the retry harness decline? | `not a native crash -- not retrying` means nothing was papered over. That is the exact string, double hyphen included. |
@@ -192,15 +207,15 @@ A failure on a commit that cannot reach the code under test is not a property of
 | Arm | How | Cost |
 |---|---|---|
 | Passive | Search the leg's recent history for a commit that cannot reach the code and failed anyway. | Free, one `gh run list`. **Reach for this first.** |
-| Manufactured | Push a null-change commit. | A runner cycle, plus 4b. The only route when the history holds nothing suitable. |
+| Manufactured | Push a null-change commit. | A runner cycle, plus the cost in *A manufactured arm un-reviews the PR*. The only route when the history holds nothing suitable. |
 
 **Prefer a throwaway branch off the same base** wherever the control does not need the PR's own head.
 It buys the same evidence for the same runner cycle and touches no label.
 
 **Say which arm you used.** A reader cannot tell them apart from the verdict alone.
 
-**Section 3's one-turn rule holds either way.** You trigger the arm, post what each outcome will mean,
-and hand the reading to your successor.
+**The one-turn rule holds either way.** You trigger the arm, post what each outcome will mean, and
+hand the reading to your successor.
 
 **CI on the PR tree is the authority, not a local run.** A green local quartet and a red one have both
 turned out to be venv artifacts on the same commits.
@@ -240,9 +255,10 @@ nothing reporting it.
 
 **Do not repeat the 626 and 627 reading.** A seat reported both as "green on all 15 required contexts
 and were evicted anyway", broadcast it to seven mailboxes, and three seats repeated it back.
-`docs/CI-FAILURE-LOG.md` line 71 corrects it, verdict `instrument`. They were green on their PR
-**heads** and red on their **queue branches** -- separate shas, separate run sets. Their 21:39 row is
-`infra`, an Ubuntu mirror `apt-get` failure on the queue branch.
+
+The row for those two in `docs/CI-FAILURE-LOG.md` corrects it, verdict `instrument`. They were green
+on their PR **heads** and red on their **queue branches** -- separate shas, separate run sets. Their
+21:39 row is `infra`, an Ubuntu mirror `apt-get` failure on the queue branch.
 
 ### 5a. Two commands answer different halves, and `autoMergeRequest` answers neither
 
@@ -273,7 +289,7 @@ That second command is the log's own prescribed remedy: **check it before callin
 | Clock | What it hides |
 |---|---|
 | `mergeStateStatus` | It reports `BEHIND` or `DIRTY` in preference to `BLOCKED`, so a review-gate block stays invisible on a stale branch. |
-| The `reviewed` label | A `synchronize` run strips it only when it **executes**. While the run is queued the label is present and already invalid -- see 4b for why the push strips it. |
+| The `reviewed` label | A `synchronize` run strips it only when it **executes**. While the run is queued the label is present and already invalid -- *A manufactured arm un-reviews the PR* says why the push strips it. |
 | The runs | These settle it. Take the newest completed run per context name and compare its `createdAt` against the latest `reviewed` label event. Created before the label means stale, whatever the check says. |
 
 **No run newer than the label event is unknown.** Keep polling, and never inherit the last verdict.
@@ -307,7 +323,7 @@ Less than this and the next Regulator redoes your triage from zero.
 | Field | Why it is there |
 |---|---|
 | The head SHA you measured, plus run id and attempt number | Without the sha the row cannot be re-checked. |
-| The context name exactly as GitHub spells it, and the pytest node id | Section 3e: the node id is the identity, the assertion text is not. |
+| The context name exactly as GitHub spells it, and the pytest node id | *Census a recurring red by node id* says why: the node id is the identity, the assertion text is not. |
 | The magnitude of the failure | "It failed" and "it lost 17 of 36 messages" are different findings. |
 | The discriminator you pre-registered | Written before the run, with the run left unread. |
 | Which control arm you used, passive or manufactured, and the verdict you reached | A reader cannot tell the arms apart from the verdict alone. |
@@ -381,7 +397,7 @@ it named.
 | Version | What it said |
 |---|---|
 | The minority reading | "You attribute, you unblock what you can, and you file. **You do not write briefs** and you do not build." |
-| The majority reading | The six-owner table (section 1) sends a PR's red to "a brief for the next Builder". The spawn-grant row says that without the grant you "write the brief and hand it to the Console". This section's Fixing row says "you write the brief; the owner starts the session". |
+| The majority reading | The six-owner table sends a PR's red to "a brief for the next Builder". The spawn-grant row says "write the brief and hand it to the Console". The Fixing row says "you write the brief". |
 
 **Follow the majority reading: you write the brief, and somebody else runs the session.** The
 minority sentence is best read as forbidding you to build, which the Fixing row already covers. If a
@@ -398,6 +414,6 @@ Regulator ever needs the stricter reading, that is an owner question, not one a 
 | Why the split is load-bearing | A mixed document decays into a TRUSTED document that is WRONG, and the durable half hides it. |
 | State it once | State a load-bearing fact once and link to it. A fact restated in three places is corrected in one. |
 | Every prohibition carries its expiry | Write beside it what would have to become true for it to stop being right, and how to check. A prohibition without one becomes permanent by default. |
-| Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it -- the 626 and 627 reading in section 5 is kept for exactly that reason. |
+| Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it. The 626 and 627 reading under *The queue ejects silently* is kept for exactly that reason. |
 | Your handoff is the log row, not a note | You get one turn, so the row in `docs/CI-FAILURE-LOG.md` and the PR comment ARE your handoff. Anything that does not fit either belongs in an episode note the Console can read. |
 | Tone | The useful sentence is the measured one, not the alarming one. The cost of being wrong scales with how good the sentence sounds. |

@@ -550,8 +550,8 @@ FAT_PARAGRAPH_SLACK = 25
 # ONE repository on ONE day. They say nothing about whether `roles/` is worse prose than `docs/`:
 # `roles/` was never swept, and `docs/` was swept twice (2026-08-10 and 2026-08-16, both recorded
 # above). The comparison measures sweeps, not authors.
-ROLES_BASELINE_LONG_SENTENCES = 708
-ROLES_BASELINE_FAT_TABLE_CELLS = 138
+ROLES_BASELINE_LONG_SENTENCES = 416
+ROLES_BASELINE_FAT_TABLE_CELLS = 6
 
 # HS-20 OVER `roles/`: A MEASURED RATCHET AT 986, NOT A CAP AND NOT AN EXCLUSION. Three options
 # were on the table and this comment exists so the two rejected ones stay visible.
@@ -573,7 +573,7 @@ ROLES_BASELINE_FAT_TABLE_CELLS = 138
 # BASELINE_FAT_PARAGRAPHS peaked at 110 before it was paid to zero. Three files hold 627 of it:
 # LANDER.md 355, COMMON.md 143, retired/PM.md 129. THE FIX IS A REWRITE, NOT A SPLIT, and PD-1 to
 # PD-7 outrank the number exactly as they do for the docs cap above.
-ROLES_BASELINE_FAT_PARAGRAPHS = 986
+ROLES_BASELINE_FAT_PARAGRAPHS = 489
 
 # One tenth of each measured figure, rounded down. The docs slacks above are near half their
 # baselines, which is right at 58 and 11 where a tenth would be 5 and 1 and every ordinary edit

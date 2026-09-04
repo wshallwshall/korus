@@ -211,6 +211,30 @@ preference, not a requirement. **The command line is legitimate wherever it is t
 tool, including as the Owner's own front end.** No design, seat definition or gate may
 require a particular surface, and none may assume the Owner is on one.
 
+**Outside tools are welcome, as enhancement rather than foundation.** The desktop application
+or the command line is the floor every design stands on. Anything else sits above it.
+
+| Item | Rule |
+| --- | --- |
+| The foundation | Claude Code, desktop or CLI. A seat, a gate or a spec may assume that and nothing more |
+| An outside tool | Welcome. Use it for what it is good at, and expect to enjoy it |
+| The test that decides | **Remove the tool. Does the method still run?** If yes it is an enhancement. If no it has become foundation, and that is the line |
+| What may depend on one | A person's own comfort and speed. Never a seat definition, a gate, a spec, or a rule another session must follow |
+| Where a tool earns its place | A harness that spawns sessions, watches a fleet, reads quota or annotates a diff is doing work KORUS has not built and need not build |
+
+**Why the line sits there rather than at "no outside tools".** A tool the Owner enjoys using is
+worth having, and refusing one on principle costs real convenience for no gain. The cost only
+arrives when a rule cannot be followed without it. At that point every session lacking the tool
+is locked out of the method, and the method has silently narrowed to whoever installed it.
+
+**This is Article XII's reasoning applied to tooling.** The shared write surface binds because
+everyone touches it. A rule that needs a particular tool creates a second such surface, with a
+smaller membership and no measurement of who is inside it.
+
+**How to tell the difference in practice.** An enhancement makes the same work faster or nicer
+for whoever runs it. A foundation is something a later reader must install before a written rule
+makes sense to them.
+
 **But the surfaces are not equivalent, and a capability measured on one does not transfer
 to another.** This is Article IV applied to a standing condition rather than to a single
 finding, and it has already cost real work.
@@ -451,6 +475,75 @@ burst measured at its worst moment. The queue drained. **The contention was real
 conclusion from it was wrong**, and the difference between those two is the difference between
 a snapshot and a rate.
 
+### XIII. Work reaches the model through Claude Code, never through the API
+
+Every seat, every harness and every orchestrator reaches the model by running **Claude Code** --
+the CLI or the desktop application. **No design may call the Anthropic API directly.**
+
+This is not Article IX restated. Article IX governs the **surface** a design may require. This
+one governs the **path to the model**, and the two fail differently: a design that requires a
+GUI is visibly narrow, while a design that reaches the API is invisibly expensive.
+
+**The reason is the roster.** Article VIII establishes that the accounts are assigned by the
+Owner. Those accounts are **subscriptions**. An API call does not touch them. It bills
+pay-as-you-go credits against a different balance, so the roster the Owner assigned goes unspent
+while a bill accrues somewhere nobody is reading.
+
+| Item | Rule |
+| --- | --- |
+| What is permitted | Anything that runs `claude`, or drives the desktop application. A harness that spawns a terminal agent inherits Claude Code's own subscription authentication by construction |
+| What is forbidden | An orchestrator that holds an API key and calls the model itself. The SDK-based category is the one this rules out, not the terminal-harness category |
+| The failure mode | Not a design choosing the API. **A permitted design silently becoming a forbidden one through the environment it inherits** |
+| What to check | Whether `ANTHROPIC_API_KEY` is set in the environment a session inherits, and what `ANTHROPIC_BASE_URL` points at |
+| Who is responsible | The seat that spawns. A parent passes its whole environment down, so a clean parent is the only control that reaches every child |
+
+**The mechanism, and it is the part worth knowing.** Claude Code will use `ANTHROPIC_API_KEY` if
+it finds one. Nothing announces the switch. So the risk is never a tool deciding to use the API;
+it is a correct tool inheriting an environment that has already decided.
+
+**Evidence, measured 2026-09-04 on this machine.** `ANTHROPIC_API_KEY` is unset, and
+`ANTHROPIC_BASE_URL` is set. Command:
+
+```
+python -c "import os; print({k: bool(os.environ.get(k)) for k in ('ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN','ANTHROPIC_BASE_URL')})"
+```
+
+**What was not varied:** one machine, one session's inherited environment, one moment. A spawned
+child was not probed, and a settings root may pin a value this command cannot see. So this is a
+reading about the parent, not a proof about the fleet.
+
+**KORUS's own spawn inherits everything, and this is the measured gap.**
+`scripts/cron/watch-ci-red.ps1` is the fleet's only agent spawn. It sets
+`$psi.UseShellExecute = $false` and never touches `$psi.Environment`, so the child receives the
+parent's whole environment. Commands:
+
+```
+grep -nE 'UseShellExecute|\$psi\.Environment' scripts/cron/watch-ci-red.ps1
+git grep -c 'ANTHROPIC_API_KEY|env_remove|Environment.Remove' -- scripts/
+python -c "import os; print(len(os.environ))"
+```
+
+The first shows the assignment and no filter, the second returns **nothing anywhere in
+`scripts/`**, and the third returned **96** variables in the parent at the time of writing.
+**What was not varied:** one script, one machine, one moment. No spawned child was probed to
+confirm what it actually received.
+
+**One outside tool implements this rule, which is how the mechanism was found.** Vibe Kanban
+reads `apiKeySource` out of Claude Code's own init message and warns *"ANTHROPIC_API_KEY env
+variable detected, your Anthropic subscription is not being used"*, with a toggle that removes
+the variable before spawning. It is the only tool in a ten-tool survey that checks.
+
+**Do not copy its coverage, only its idea.** A search of all 3,284 lines of its
+`claude.rs` returns zero matches for `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` or any
+`CLAUDE_CODE_*`. It guards one variable.
+
+**So this article is currently a rule with no gate behind it** -- exactly the shape *Playbook
+size and format* says decays. The rule stands because the Owner set it. The gate is owed.
+
+**Expiry.** This stops being right if the Owner moves billing to the API deliberately, or if
+subscription authentication becomes reachable without running Claude Code. Either would be an
+Owner decision, and neither has happened.
+
 ## The execution environment
 
 These are conditions, not principles, and **every number here is a reading with a date**.
@@ -548,10 +641,34 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.11.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
+**Version**: 1.13.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.13.0 2026-09-04  Article IX widened: outside tools are welcome as ENHANCEMENT, never as
+       FOUNDATION. Owner instruction. The article already said no design may require a particular
+       surface, which read as hostility to outside tooling and was not meant to. The floor is
+       Claude Code, desktop or CLI; anything above it is welcome and the Owner should use what
+       they enjoy. The test is one sentence: remove the tool, does the method still run. An
+       enhancement makes the same work faster for whoever runs it; a foundation is something a
+       later reader must install before a written rule makes sense. This is Article XII's
+       reasoning applied to tooling -- a rule needing a particular tool creates a second shared
+       surface with a smaller membership and no measurement of who is inside it. Prompted by a
+       survey of ten agent harnesses, where the useful ones are GUIs and the old wording would
+       have refused them all rather than bounding what they may carry.
+
+1.12.0 2026-09-04  Added Article XIII: work reaches the model through Claude Code, never
+       through the API. Owner instruction. It is deliberately NOT Article IX restated -- IX
+       governs which SURFACE a design may require, XIII governs the PATH to the model, and the
+       two fail differently: requiring a GUI is visibly narrow, reaching the API is invisibly
+       expensive. The reason is Article VIII's roster: those accounts are subscriptions, and an
+       API call bills a different balance, so the assigned roster goes unspent while a bill
+       accrues where nobody is reading. The article's real content is the failure mode, which is
+       not a design choosing the API but a permitted design inheriting an environment that
+       already did. Measured the same day: ANTHROPIC_API_KEY unset, ANTHROPIC_BASE_URL set, on
+       the parent only -- no spawned child was probed. The article states plainly that KORUS has
+       no gate behind this rule, so by its own Playbook size and format it is a rule that decays.
 
 1.11.0 2026-09-04  Two repairs, both defects this document commits against its own articles.
 
