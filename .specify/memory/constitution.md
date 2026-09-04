@@ -337,7 +337,23 @@ Three consequences a spec must honour:
 - **Serialising the merge is a real control and it has a real cost.** It is what made this run
   survivable. It also makes one seat both the throughput ceiling and the single point of
   failure, and **that seat can only be correct about a queue whose arrivals it does not
-  control.**
+  control.** It is also **the seat with the least ability to reduce its own load, because every
+  fix it applies is another push into the same queue.**
+
+**The multiplier is jobs per entry, not queue depth.** Measured by the seat doing the merging,
+not by me: eighteen entries queued produced **zero merges in an hour**, because five concurrent
+groups of about twenty-two jobs each is roughly a hundred and ten jobs against about twenty
+runners. A two-deep queue then merged both entries in twenty minutes. It changed the depth and
+watched throughput invert, which is a better instrument than any count of open work.
+
+So a design that limits **how many changes are in flight** has tuned the wrong number. What
+binds is how many CI jobs each change drags behind it.
+
+**And a uniform remedy applied across a batch manufactures its own conflicts.** The same seat
+patched eight pull requests the same way to fix one problem, which made a second file contended
+that had not been before, and two of the eight then conflicted with each other in the queue. The
+ledger is contended **by design**; that file became contended **by a fix**. A batch remedy is a
+write to every member of the batch.
 
 **A correction belongs in this article rather than beside it.** Reading this run 3.6 hours in,
 I reported 46 open against 3 landed and called it a structural throughput ceiling. It was a
@@ -398,6 +414,24 @@ changes.
 
 **Nothing merges on its author's own approval.** See Article III.
 
+**The operational sequence lives in one place and this is not it.** It is
+`roles/COMMON.md`, section "Your pull request has to survive your own exit", at commit
+`3143b0ec`. Read it there rather than from a summary here, because a second copy drifts and
+the drift is invisible until someone follows the wrong one.
+
+The one thing worth stating twice, because omitting it is what the sequence exists to
+prevent: **wait for the branch's gate run to complete before applying the label, then read
+the label back.** The gate strips the label when its run executes, which is after the push
+command returns, so labelling immediately after a push is a race you lose silently. Measured
+by the seat that lost it: **fifteen of sixteen pull requests ended with no label while every
+command reported success.** The read-back step exists because the apply step reports success
+either way.
+
+That section reached a commit only on 2026-09-04. Before that it, and two others beside it,
+**existed in no commit anywhere** -- one uncommitted file in a checkout fifty-two commits
+behind. The fleet's merge procedure had no durable home while being the procedure whose
+missing step cost those fifteen labels.
+
 **A number is allocated before it is cited.** Never search for the next free identifier.
 Two sessions that both search pick the same one, create differently named files, merge
 cleanly, and corrupt the ledger with nothing reporting a problem.
@@ -424,10 +458,30 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.8.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.9.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.9.0  2026-09-04  Two amendments, both from measurements made by the seat doing the merging
+       rather than by me, and attributed to it in the text.
+
+       ARTICLE XII: the multiplier is JOBS PER ENTRY, not queue depth. Eighteen entries queued
+       produced zero merges in an hour, because five groups of about twenty-two jobs is roughly
+       a hundred and ten against about twenty runners; a two-deep queue merged both in twenty
+       minutes. A design that limits how many changes are in flight has tuned the wrong number.
+       Also adds that a uniform remedy applied across a batch manufactures its own conflicts:
+       eight pull requests patched the same way made a second file contended, and two of the
+       eight then conflicted with each other.
+
+       HOW A CHANGE LANDS now POINTS at the operational sequence rather than restating it,
+       naming roles/COMMON.md at commit 3143b0ec. The wait-then-read-back step is repeated here
+       deliberately, because omitting it is the failure the sequence exists to prevent: fifteen
+       of sixteen pull requests ended with no label while every command reported success.
+
+       Recorded because it is worse than a citation problem: that section, and two beside it,
+       existed in NO COMMIT ANYWHERE until 2026-09-04. The fleet's merge procedure lived in one
+       uncommitted file in a checkout fifty-two commits behind.
 
 1.8.0  2026-09-04  Added Article XII, and corrected Article VIII's weighting, both from the
        largest run this method has had: five controllers, one per account, 46 pull requests in
