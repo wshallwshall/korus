@@ -260,7 +260,8 @@ sat between 0 and 9 per cent. After the 2026-09-03 run it read 5, 9, 17, 7 and 4
 and
 shortly after that **every account began failing the read with HTTP 429**, which is rate limiting
 rather than expiry: the instrument goes blind exactly when load makes it worth reading. Do not
-carry either figure forward. Re-read it. Article VIII still requires the roster; it does not require rationing. **A design that
+carry either figure forward. Re-read it. Article VIII still requires the roster; it does not
+require rationing. **A design that
 rations an abundant resource is spending on a constraint it invented.**
 
 What survives, and it is the part worth keeping: **a design may not assume a measurement is
