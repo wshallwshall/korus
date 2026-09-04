@@ -199,7 +199,7 @@ Three structural facts, each of which outlives whatever the current count is:
   until it is, and a design that assumes headroom is visible is assuming an instrument that
   may not exist.
 
-### IX. Built for Claude Code, and no design may require a particular surface
+### IX. Claude Code is the foundation; every other tool is an enhancement
 
 KORUS is built for **Claude Code**. It is not agent-agnostic and does not need to be. A
 design may depend on Claude Code's own mechanics: its hooks, its skills, its settings
@@ -641,10 +641,18 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.13.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
+**Version**: 1.13.1 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.13.1 2026-09-04  Article IX's HEADING now states the finding the body already states. It read
+       "Built for Claude Code, and no design may require a particular surface", which is the
+       prohibition; the body has said since 1.13.0 that outside tools are welcome as enhancement,
+       which is the permission. A reader scanning the article list met the refusal and never
+       reached the table. Renaming was free: every citation in the corpus is by NUMBER, and a
+       grep for the old heading text across roles/ and docs/ returns zero, so nothing broke.
+       No body text changed.
 
 1.13.0 2026-09-04  Article IX widened: outside tools are welcome as ENHANCEMENT, never as
        FOUNDATION. Owner instruction. The article already said no design may require a particular
