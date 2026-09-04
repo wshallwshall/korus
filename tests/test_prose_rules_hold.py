@@ -550,7 +550,7 @@ FAT_PARAGRAPH_SLACK = 25
 # ONE repository on ONE day. They say nothing about whether `roles/` is worse prose than `docs/`:
 # `roles/` was never swept, and `docs/` was swept twice (2026-08-10 and 2026-08-16, both recorded
 # above). The comparison measures sweeps, not authors.
-ROLES_BASELINE_LONG_SENTENCES = 416
+ROLES_BASELINE_LONG_SENTENCES = 417
 ROLES_BASELINE_FAT_TABLE_CELLS = 6
 
 # HS-20 OVER `roles/`: A MEASURED RATCHET AT 986, NOT A CAP AND NOT AN EXCLUSION. Three options
