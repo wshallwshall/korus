@@ -142,6 +142,28 @@ ruling exists.
 **Why over-triggering is the expensive error.** A false collision takes a real row away from a
 builder, and supply is this fleet's binding constraint.
 
+### A saved verifier result does not learn either
+
+A workflow writes its findings to an output file. That file is a claim about the moment it ran,
+and it reads exactly like a reading of now.
+
+| Item | Rule |
+| --- | --- |
+| Before quoting a saved finding | Re-check it against the tree. One command, and the whole trap is not running it |
+| What to send with it | The ref or the time it was measured at. A finding with no timestamp cannot be aged by its reader |
+| The tell | Everything in the report was true when written and none of it was true when sent |
+| Why it survives review | A stored result is formatted like a measurement, carries real file and line numbers, and none of that goes stale in a way the text shows |
+
+**Measured 2026-09-04.** A session read three blockers out of a workflow's output file and relayed
+them to a peer as current state. All three had been fixed twenty minutes earlier.
+
+One of the three carried a number: it named three ratchet baselines to set. Acting on it would
+have re-reddened the build, because a file imported after that run added 96 long sentences and 104
+fat paragraphs to the corpus.
+
+**Why this is worse than a stale backlog row.** A row is visibly old and has a filed date on it. A
+verifier output has neither, and it arrives in the voice of a measurement that was just taken.
+
 ### The vault primary's `roles/` folder is authoritative, and its checkout can still be stale
 
 **Read `roles/<SEAT>.md`, and say in your output which copy you read.** The owner ruled the vault
