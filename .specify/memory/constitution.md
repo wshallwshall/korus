@@ -224,35 +224,36 @@ Three things must be answerable about any seat, at any time:
 **A design may not assume any of these is available.** Where an instrument does not exist,
 the spec says so and treats it as a gap to close, not a fact to rely on.
 
-**Evidence, and it is this document's own session, which turned out to be a different story
-than the first draft of this article told.** The headroom hook fires on dispatch, not on
-every turn, and it reads a file named `latest.json`. **No file of that name exists under any
-config root on this machine**: needle `latest.json`, four roots, depth 3, count **0**,
-against positive control `status.json`, count **4**. So every headroom reading this fleet
-asked for came back UNKNOWN, all night.
+**Evidence, and this article has now been wrong twice about its own fleet.**
 
-**But the fleet was not without a meter.** A live collector was writing the whole time, into
-a different root: a `status.json` of 3,971 bytes written during this document's own session,
-beside five per-account files written the same day. The copy in the root the hook actually
-reads is 388 bytes and a month old.
+Read 2026-09-03 by running the fleet's own usage reader: **four of five accounts returned live,
+account-verified five-hour and weekly utilisation with reset times, and the tool ranked them and
+named the account with the most headroom.** The fifth failed with an authentication error that
+printed its own remedy beside it. Weekly utilisation across the four was 0, 1, 2 and 9 per cent.
 
-So the failure was never an absent instrument. **It was an instrument pointed at a filename
-nothing writes, in a root the collector does not write to, while a current reading sat
-beside it.** Two tools resolving one directory name to two different files, with no error
-anywhere, which is Article VI's own named failure, committed inside the article that demands
-an instrument beside every number.
+**So the fleet has a headroom meter. It works, it ranks, and it says when it cannot read an
+account.** What is broken is one hook, which reads a filename nothing writes, while a script that
+answers sits three directories away.
 
-The first version of this article said the fleet "spent an entire night without a meter".
-That was false, and it was the document's proudest piece of evidence because it was about
-the document itself. **Evidence about your own session is not privileged. It is the evidence
-you check least.**
+Two earlier versions of this article were wrong, and the sequence is the lesson:
 
-Two open items name the real gap from opposite ends: #18 says no instrument answers whether
-a seat follows its playbook or what each seat costs; **#27 is marked blocking**, because a
-seat cannot pick an account by headroom when most accounts have no usable reading, and the
-collector that would fix it is held back by a leak guard, which is **#35**.
-**Article VIII requires routing across accounts. This article is why that routing cannot be
-built yet.**
+1. It said the fleet spent a night **without a meter**. False: a collector was writing.
+2. Corrected to say the meter existed but **nothing read it**. Also false: a reader existed too.
+3. What is true is narrower and duller. **One hook is misconfigured.**
+
+Each correction was published confidently and each was still wrong. The error survived two passes
+because the evidence was about **this document's own session**, which is the evidence a writer
+checks least, and because each fix was a smaller version of the same mistake rather than a fresh
+reading. **Ask what the instrument would say if you ran it, and then run it.**
+
+**The scarcity this article assumes does not currently exist.** With weekly utilisation between 0
+and 9 per cent, nothing is near a limit, so routing by headroom solves a problem the fleet does not
+yet have. Article VIII still requires the roster; it does not require rationing. **A design that
+rations an abundant resource is spending on a constraint it invented.**
+
+What survives, and it is the part worth keeping: **a design may not assume a measurement is
+available, and where an instrument exists a design must be pointed at the one that answers.** The
+failure here was never absence. It was three layers of aim.
 
 **Absence and zero must be distinguishable.** A seat with no commits may be scoping, may be
 running a long serialised suite, or may be dead. From outside those render identically, and
@@ -372,10 +373,21 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.6.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.7.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.7.0  2026-09-03  Article X corrected a SECOND time, and the second correction was also wrong.
+
+       1.4.0 said the fleet spent a night with no meter. 1.6.0 corrected that to a meter nothing
+       read. Both false. Running the fleet's own usage reader on 2026-09-03 returned live,
+       account-verified five-hour and weekly utilisation for four of five accounts, with reset
+       times and a ranked best-account recommendation. One hook is misconfigured. That is all.
+
+       Also records what the reading showed: weekly utilisation of 0 to 9 per cent, so there is no
+       scarcity to route around, and a design that rations an abundant resource is spending on an
+       invented constraint.
 
 1.6.0  2026-09-02  Three corrections, all found by an adversarial review, all of them
        errors this document's own articles forbid.
