@@ -25,6 +25,7 @@ ASVS Tracker.*
 | Seat | File | What it owns |
 |---|---|---|
 | Console | [CONSOLE.md](CONSOLE.md) | The plan and the brief. Reads the ledger, picks the row, writes a brief that holds for one turn, and polls for what comes back. **Replaces the Dispatcher.** Does not build, enqueue or merge. |
+| Manager | [MANAGER.md](MANAGER.md) | **An ALTERNATIVE to the Console, not a layer.** Owner-spawned in one desktop instance, bound to ONE account, and runs its workers as in-process subagents rather than separate sessions. Several run at once and the only thing they share is the repository. Does not build, enqueue or merge. |
 | Builder | [BUILDER.md](BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR carrying the ledger row, then its process exits. It does not guess at what the brief left open, and it does not wait: it writes the question to the Console, comments it on the PR, and stops. |
 | Reviewer | [REVIEWER.md](REVIEWER.md) | Reads the diff. A pass applies the `reviewed` label and posts the head SHA it read. A fail posts findings on the PR, for whichever Builder comes next. **The label is a required status check on `main`, and nothing automated ever adds it.** |
 | Regulator | [REGULATOR.md](REGULATOR.md) | Decides whose failure a red is: the PR's, `main`'s, a flake, or the queue's. Only the PR's own failure becomes work. **It starts with no memory, so its log is not optional.** |
