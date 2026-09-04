@@ -40,7 +40,7 @@ Liaison both. Nothing replaced the other five.
 
 | Item | Rule |
 | --- | --- |
-| Where they live | [retired/DISPATCHER.md](retired/DISPATCHER.md), [retired/PM.md](retired/PM.md), [retired/LIAISON.md](retired/LIAISON.md), [retired/CLEANER.md](retired/CLEANER.md), [retired/ROLE-MANAGER.md](retired/ROLE-MANAGER.md), [retired/PROCESS IMPROVEMENT.md](retired/PROCESS%20IMPROVEMENT.md). |
+| Where they live | [retired/DISPATCHER.md](retired/DISPATCHER.md), [retired/PM.md](retired/PM.md), [retired/LIAISON.md](retired/LIAISON.md), [retired/CLEANER.md](retired/CLEANER.md), [retired/ROLE-MANAGER.md](retired/ROLE-MANAGER.md), [retired/PROCESS IMPROVEMENT.md](<retired/PROCESS IMPROVEMENT.md>). |
 | ASVS Tracker is the exception | `ASVS-TRACKER.md` is **absent from this edition**, not filed under `retired/`. Measured 2026-09-04: zero files matching `*asvs*` anywhere in this repository. A reader who remembers that seat finds nothing here. |
 | Why the rows survive | They record what those seats did. A document that routes work through any of the seven is stale. |
 | Where their general rules went | Into [COMMON.md](COMMON.md), rather than lost with the seats. |

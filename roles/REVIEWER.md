@@ -57,7 +57,10 @@ check on `main`, with `strict: true` and `enforce_admins: true`.
 
 | Item | Rule |
 | --- | --- |
-| How you signal, and it is the only way | `gh pr edit <N> --add-label reviewed`. Nothing automated ever adds it, and this command appears nowhere else in this folder. |
+| How you pass | `gh pr edit <N> --add-label reviewed`. Nothing automated ever adds it. |
+| How you refuse | `gh pr edit <N> --add-label changes-requested`. Section 1g. Both are labels; the refusal is the one a process gate cannot have faked. |
+| RETRACTED in place: "this command appears nowhere else in this folder" | The pass row used to end that way. It is wrong, and backwards: any seat may apply the label (section 1e), so the command belongs everywhere. |
+| The measurement | 2026-09-04, `git grep -l "add-label reviewed" -- roles` returns nine files beside this one: `BUILDER.md`, `COMMON.md`, `CONSOLE.md`, `LANDER.md`, `README.md`, `STEWARD.md`, `retired/DISPATCHER.md`, `retired/LIAISON.md`, `retired/PM.md`. |
 | Read the required set fresh; never quote a count | `gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts'`. The set drifts. |
 | Who armed it | The owner, deliberately. `review-gate.yml` calls arming "a separate, OWNER-ONLY step". |
 | What the label proves | `required_approving_review_count` is still 0, so this is a label and not an approval. It records that a step happened. It does not establish that an independent party looked. |
@@ -112,6 +115,31 @@ Many workflows already run on every pull request: `ci`, `codeql`, `security`, `b
 
 A finding a linter would have caught costs the fleet nothing to skip. This stops being right for
 any check you have shown blind to the class you are reporting -- see section 4, first row.
+
+### 1g. A refusal and an unread pull request currently render the same
+
+This repository's `.github/workflows/review-gate.yml` reads three states. `changes-requested`
+fails the run loudly. `reviewed` with no refusal passes. Neither one present fails it as pending.
+
+A process gate can be satisfied by the party it checks, so its approval is fakeable and its
+refusal is not. Article III of the constitution states that, and carries the 2026-09-02 incident
+that produced it: `.specify/memory/constitution.md`. Read it there rather than here.
+
+The gate says so in its own pending message. Quoted rather than paraphrased:
+
+> "A reviewer that read this and declined should apply 'changes-requested' rather than leaving it
+> unlabelled, so its refusal is visible instead of looking like a review that never ran."
+
+| Item | Rule |
+| --- | --- |
+| When you decline | Apply `changes-requested` before you leave the pull request. |
+| Why unlabelled is not a refusal | The gate fails both and prints PENDING for both. Nothing downstream separates a reviewer that read the diff and declined from one that never ran. |
+| Post the findings too | On the pull request, per section 1a. The label records that you refused. It does not record why. |
+| A push does not clear it | The `invalidate-on-push` job removes only `reviewed`. Clearing a refusal takes `gh pr edit <N> --remove-label changes-requested`. The gate's instruction: "Address the findings, push, and remove the label." |
+| Measured 2026-09-04 | `git grep -l "changes-requested" 6cc87c0 -- ':!roles/REVIEWER.md'` returns `6cc87c0:.github/workflows/review-gate.yml`, and nothing else. Only the gate names the label. No playbook did, so a refusal was implemented and undocumented. |
+| A count recorded inside its own corpus | A count of occurrences goes wrong the moment you record it inside the corpus you counted. Unpinned over the working tree this one returns two files, this row included. Pin the ref, or exclude the record. |
+| The condition this does not vary | The gate measured here is this repository's. Section 1b cites a `review-gate.yml` in the ENGINE repository, a different file of the same name. Whether that one reads `changes-requested` is UNMEASURED here. |
+| When this stops being right | When the gate stops reading `changes-requested`. Read the file, never this row. |
 
 ---
 
@@ -294,6 +322,35 @@ This rule outranks all six classes above. Run it. Put the command and its output
 
 On 2026-08-29 four seats, including the one that wrote this file, published confident findings that
 a control later refuted. **Every one had a plausible mechanism and no measurement.**
+
+### 4b. Grade the outcome, because there is no fixed path to grade against
+
+**Adapted from a rubric written for research answers, and UNMEASURED on code review.** Nobody has
+run it over this fleet's reviews and shown it agrees with anyone's judgment.
+
+Section 3g scores a FINDING before you publish it. This scores the CHANGE and your pass over it.
+
+The source is Anthropic's engineering post on its multi-agent research system, which names its eval
+and its conditions.
+
+Its argument: agents given the same start take different valid routes, so a check that expects a
+fixed path fails good work and passes bad. Judge whether the right end state was reached by a
+defensible route.
+
+Its own rubric graded factual accuracy, citation accuracy, completeness, source quality and tool
+efficiency. One call returning a 0.0 to 1.0 score plus a pass or fail tracked human judgment best.
+
+**That result was measured on RESEARCH tasks, and the same post says coding parallelises worse.**
+Take the shape and leave the score.
+
+| Item | Rule |
+| --- | --- |
+| Does the diff do what the description says | A description promising more than the diff delivers is section 4's completeness class. |
+| Does every reference in it resolve | Each `#N`, path, sha and command in the description and the comments. Section 4's last row is the test. |
+| Did you cover the diff or part of it | The denominator, from section 5. A grade over the part you happened to read is not a grade of the change. |
+| Is the evidence it rests on first-hand | Section 4's first row, applied to any green check the change is credited by. |
+| Did the pass earn its rounds | Rounds added, against whether anything changed. Section 7's `delta` column is where that lands. |
+| One score, one verdict | A single 0.0 to 1.0 plus a pass or a refusal, which is the source's shape. Scoring each row separately is untested here. |
 
 ---
 

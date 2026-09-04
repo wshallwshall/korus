@@ -320,6 +320,46 @@ It also matches the cost model. Article VII says an ended session spends nothing
 waiting one spends the most. A seat that must stay awake to relay is the expensive shape;
 a seat that writes and exits is the cheap one.
 
+**Written down is measured. Read is not, and the first reading is thin.** This method
+accumulates context on an assumption nobody here has stated: that a fuller playbook makes the
+next seat better. Nothing bounds how large one may grow. In this repository at commit
+`1b6b7fc`, `roles/COMMON.md` is 145,758 bytes and the largest, `roles/LANDER.md`, is 288,883.
+
+**Evidence, 2026-09-04, and it is a floor rather than a rate.** Across 401 session transcripts
+on this machine, **25 issued a Read against any role playbook**. Reads of `COMMON.md` numbered
+**84: five whole-file, and 79 with an explicit offset or limit.** A transcript records every
+Read with its `file_path`, `offset` and `limit`, so read depth is recoverable afterwards.
+
+```powershell
+$roots = "$env:USERPROFILE\.claude\projects", "$env:USERPROFILE\.claude-account-1\projects"
+$t = Get-ChildItem $roots -Recurse -Depth 1 -Filter *.jsonl -File
+$t.Count
+($t | Select-String -Pattern '"name":"Read","input":\{"file_path":"[^"]*roles..[A-Z][A-Z]' -List).Count
+$m = ($t | Select-String -Pattern '"name":"Read","input":\{"file_path":"[^"]*roles..COMMON\.md"(,"(offset|limit)")?' -AllMatches).Matches
+$m.Count
+($m | Where-Object { $_.Value -notmatch 'offset|limit' }).Count
+
+# The two sizes, from this repository.
+git cat-file -s HEAD:roles/COMMON.md; git cat-file -s HEAD:roles/LANDER.md
+```
+
+**What this instrument cannot say.** Each line is a way the number is too low, or the wrong
+shape:
+
+- **It is not a compliance rate.** The 401 transcripts include many sessions that were never
+  seats, so 25 is a floor over a mixed population.
+- **It counts one tool.** A playbook reached by Grep, by a Bash `cat`, or injected by a hook is
+  invisible to it.
+- **It counts two config roots.** Four more exist on this machine and are outside the corpus.
+- **An earlier hand count of the same corpus read 22 sessions**, and split the same 84 as six
+  and 78. The command above returns 25, five and 79. I could not recover the definition behind
+  the smaller figures, and neither reading moves the finding.
+
+**So playbooks are read rarely, and read in pieces when they are read.** That is one
+measurement on one machine. It settles nothing about whether a larger playbook helps, and it is
+why **no rule here caps playbook size**: Article V forbids a prohibition nobody has tried and
+recorded. Testing the hypothesis is what would earn one.
+
 **Numbering is not priority.** This article was added after the first ten and appended
 rather than inserted, because renumbering would break every reference made to the document
 in between.
@@ -339,6 +379,39 @@ two to five an hour.
 Not by accident and not by carelessness: **every item's pull request updates the ledger by
 construction**, so the contention is a property of the design rather than of any worker's
 behaviour.
+
+**The instrument, because Article VI binds this article too.** The four figures above were
+counted by hand during the run and carried a date but no command, which is the shape this
+document discounts when an outside source does it. These are the commands, and what they
+return now:
+
+```powershell
+# Pull requests opened, and landed, in the window. Both return a SUPERSET of the run.
+gh pr list --repo MEFORORG/MessageFoundry --state all --limit 300 --search "created:2026-09-03" --json number,createdAt
+gh pr list --repo MEFORORG/MessageFoundry --state merged --limit 300 --search "created:2026-09-03" --json number,mergedAt
+
+# The merge rate, bucketed by the hour of mergedAt.
+gh pr list --repo MEFORORG/MessageFoundry --state merged --limit 300 --search "created:2026-09-03" --json mergedAt --jq '.[].mergedAt' | ForEach-Object { $_.Substring(0,13) } | Group-Object | Sort-Object Name
+
+# Which file the landed commits contended for. This NAMES the file rather than assuming it.
+# Run it inside the MessageFoundry checkout, after a fetch.
+git log origin/main --since=2026-09-03 --until=2026-09-05 --format= --name-only | Where-Object { $_ } | Group-Object | Sort-Object Count -Descending | Select-Object -First 5 Count,Name
+```
+
+**Run 2026-09-04, and the gap is the finding.** The day window returns **74 opened and 53
+merged**, against the 46 and 34 recorded during the run. The commands are right and the window
+is wider than the run. **The run's own subset cannot be recovered.** Every seat pushes as one
+account, so no author filter separates the five controllers from the rest of that day's work.
+Article III names the same missing distinction for review.
+
+**The two figures the article rests on do reproduce.** Merges bucketed by hour read two to six
+an hour across the drain on 2026-09-04, against the two to five recorded at the time. And **51
+of the 53 commits in that window touched `docs/BACKLOG.md`**, against 33 of 34: a different
+count over a wider window, and the same ratio.
+
+So **46, 34 and three and a half hours were recorded by hand and are not now reproducible.**
+Treat them as an anecdote about one evening. What is measured is the ratio, and the ratio is
+what the three consequences below need.
 
 The merge queue rebases and revalidates each entry against the branch the previous entry just
 changed. So the queue is serial in exactly the dimension the fleet was parallel in, and
@@ -475,10 +548,33 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.10.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.11.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.11.0 2026-09-04  Two repairs, both defects this document commits against its own articles.
+
+       ARTICLE XII FAILED ARTICLE VI. Its four headline figures -- 46 pull requests, 34 landed,
+       33 of 34 touching one file, two to five an hour -- carried a date and no command, which
+       is the shape this document discounts in an outside source. The article now prints the gh
+       and git commands beside them, and what those commands return: 74 opened and 53 merged
+       over the day window, because the window is wider than the run and the run's own subset
+       cannot be recovered when every seat pushes as one account. The ratio does reproduce, at
+       51 of 53 commits touching docs/BACKLOG.md, and the rate at two to six an hour. So 46, 34
+       and three and a half hours are marked as recorded by hand and not now reproducible,
+       rather than left standing as measurements.
+
+       ARTICLE XI records the first readership measurement. The method accumulates context on an
+       assumption never stated here: that a fuller playbook makes the next seat better. Measured
+       2026-09-04 over 401 session transcripts under two config roots, 25 issued a Read against
+       any role playbook, and COMMON.md drew 84 reads -- five whole-file, 79 with an explicit
+       offset or limit. It is a floor over a mixed population, not a compliance rate, and it
+       counts one tool. Recorded with its command and its limits, and with no size cap attached,
+       because Article V forbids a prohibition nobody has tried.
+
+       Also corrects the Last Amended date. It read 2026-09-02 through the four amendments
+       1.7.0 to 1.10.0, all of which are dated later in this log.
 
 1.10.0 2026-09-04  Article VIII: the account boundary is also a CONTROL, not only an obstacle.
 

@@ -250,6 +250,20 @@ the account from a fresh usage reading, not from a number you remember.
 | Never pass the primary checkout as the working directory | It sits on `main`, behind `origin/main`. A Builder grepping it gets false zeros on rows that exist, and can then conclude its own work is already done. |
 | `.claude/settings.json` is tracked | Each worktree carries the copy from its own branch. A rule the Builder needs to survive belongs in the account's settings file, outside git. |
 
+### 6a. A Console's fan-out is bounded by accounts and by what the Lander can land
+
+[COMMON.md](COMMON.md) section 5s owns what binds both fan-out seats: declare the number and the
+reason first, and copy the outside ladder's shape, never its integers. **This section is the half
+that differs, and it differs because your Builders outlive you on budgets you do not hold.**
+
+| Item | Rule |
+| --- | --- |
+| Size it by what can land | The Lander merges serially and you never enqueue, per section 10. What binds is CI jobs per change rather than changes in flight. The constitution derives it in Article XII. |
+| Price the fan-out, not the first launch line | Each Builder binds a separate account, so one fan-out draws on several at once. [STEWARD.md](STEWARD.md) section 3h prices one run against the whole fleet's rate. |
+| Your per-launch check passes honestly and the sum is still wrong | [COMMON.md](COMMON.md) section 5p measured that shape twice. Read it before you launch a second wave inside one window. |
+| A vague brief buys duplicated work, and no gate catches it | A subject duplicate passes every gate and merges clean, per [COMMON.md](COMMON.md) section 3b. |
+| Where you stop it is the brief | Section 5b field 1 names the one outcome and field 4 names what is out of scope. A brief missing either lets two Builders pick the same half. |
+
 ---
 
 ## 7. You poll. Nothing pushes to you.

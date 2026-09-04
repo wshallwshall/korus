@@ -1301,6 +1301,20 @@ that started before it. It was not landed. **Pin the ref at the start of a long 
 re-check it at the end:** if `origin/main` moved, the parts written after the move are not what they appear
 to be.
 
+### 5s. A fan-out nobody sized was sized by whatever was on the bench
+
+Two seats fan work out. A Console spawns sessions that outlive it on other accounts; a Manager spawns
+in-process subagents that share its account and die with its turn. **What bounds the number is
+different for each, and each playbook owns its own bound.** These rows are the part that is not.
+
+| Item | Rule |
+| --- | --- |
+| Write the number and the reason first | One line in your episode note: how many workers, and what about the work makes that the number. A count with no reason cannot be argued down later. |
+| The outside ladder is a shape to copy, not a size to adopt | Anthropic's write-up of its multi-agent research system keeps the sizing rule in the orchestrator. It calls the lack of one a common failure mode, and records fifty subagents spawned for one simple query. |
+| Its integers do not come with it | The ladder runs from one agent for simple fact-finding, through two to four for a direct comparison, to ten or more for complex research. |
+| The condition that stops them transferring | **Those were measured on research tasks, and the same post says coding parallelises worse.** No number in that ladder has been measured on this fleet. |
+| What bounds YOUR number is in your own playbook | [CONSOLE.md](CONSOLE.md) section 6a bounds a Console's fan-out. [MANAGER.md](MANAGER.md) section 3a bounds a Manager's. Read the one you are sitting in. |
+
 ---
 
 ## 6. A green light proves only what the gate asserts

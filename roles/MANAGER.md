@@ -95,6 +95,19 @@ gh pr list --repo <repo> --state open --limit 200 --json number,mergeStateStatus
 **If the open count is already several times the hourly merge rate, briefing more is negative work.**
 It does not speed anything up, and it costs the Lander a longer queue to be correct about.
 
+### 3a. A Manager's fan-out is bounded by one window and by shared runners
+
+[COMMON.md](COMMON.md) section 5s owns what binds both fan-out seats: declare the number and the
+reason first, and copy the outside ladder's shape, never its integers. **This section is the half
+that differs, and it differs because your subagents share your account and die with your turn.**
+
+Section 3 above bounds the batch. The rows below size it.
+
+| Item | Rule |
+| --- | --- |
+| The bill is one account, and the runners are not yours | Your subagents spend your window, per section 2. Each pull request they open also drags CI jobs onto shared runners, and that is the number that binds the fleet. See the constitution, Article XII. |
+| A vague brief buys duplicated work, and merge is where you find it | Two subagents given overlapping scope each produce a branch, and neither knows. Section 4 puts the paths in the brief. Nothing else separates their scope. |
+
 ---
 
 ## 4. A claim on an item is not a claim on a path

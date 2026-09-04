@@ -111,12 +111,17 @@ method for that case.
 | Do this | Why | Where |
 |---|---|---|
 | Install and prove the gates | Roles are advisory; the gates are not | [Quickstart](QUICKSTART.md) |
+| Run one task end to end, by hand | You cannot size the queue until you know how long one task takes to land | [Coordination](COORDINATION.md#a-clean-merge-is-not-evidence-that-nobody-duplicated-your-work) |
 | Give each session its own worktree | Two sessions in one tree overwrite each other | [Worktrees](WORKTREES.md) |
 | Check the config root your console runs on can spawn a session | Spawning is granted per config root, not per machine, and a root without the grant refuses | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
 | Wire the steering hook | It only takes effect in sessions started afterwards | [Steering](STEERING.md) |
 | Write the working agreement | It only reaches sessions that start later | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Turn on Ultracode and pick Opus 5 in every session | The build shape assumes workflows and adversarial review | [The KORUS framework](KORUS.md) |
 | Be on Max 20x, and expect to need more than one account | This shape spends a weekly window in about two days. Check current plan terms yourself; that page dates from 2026-08 | [The KORUS framework](KORUS.md) |
+
+**That row is one operator's experience, not a measurement here.** The Every team ran a flow by hand
+until it was predictable before automating it. Skipping that gave them agents opening pull requests
+for finished work, and duplicate issues. **It expires** once you can predict the flow.
 
 **Plan on more than one account rather than treating it as a wrinkle.** Set them up before you start:
 one desktop instance per account, and each one adds a config root the installers have to reach
