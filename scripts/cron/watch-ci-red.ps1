@@ -262,6 +262,62 @@ function New-Control {
     }
 }
 
+# ------------------------------------------------------------------------------------------------
+# What a child must NOT inherit
+#
+# A spawn passes the parent's whole environment down. Measured 2026-09-04 on this machine: 96
+# variables in the parent, and this file's own spawn set $psi.UseShellExecute = $false and never
+# touched $psi.Environment, so a seat received all 96. A git grep for ANTHROPIC_API_KEY,
+# env_remove or Environment.Remove across scripts/ returned nothing anywhere.
+#
+# Each of these redirects something with NO ERROR ANYWHERE. That is what makes them worth a table
+# rather than a note: the failure is silent by construction, so nothing downstream reports it and
+# a reader has no reading that would contradict "the seat ran fine".
+#
+# THE INHERITED VALUE IS THE HAZARD, NOT THE VARIABLE. A caller that means to name an account may
+# still do so, deliberately and visibly, through -ChildEnv. What is removed is the accident.
+$script:ChildEnvStrip = [ordered]@{
+    # Names the account root the child bills. Inherited, every seat this watcher starts bills the
+    # watcher's account instead of its own, and any per-account routing is defeated silently.
+    # Measured 2026-08-31 and recorded in this file's own header: a CLAUDE_CONFIG_DIR that does not
+    # exist makes `claude agents --json` return an empty list and exit 0. The variable is already
+    # known here to fail without saying so.
+    'CLAUDE_CONFIG_DIR'    = 'redirects which account the child bills'
+    # Claude Code uses an API key if it finds one, and announces nothing. An inherited key turns a
+    # compliant spawn -- a terminal agent on the Owner's subscription -- into a pay-as-you-go API
+    # call against a balance nobody is reading. The constitution's execution-path article names
+    # this exact shape: not a design choosing the API, but a permitted design silently becoming a
+    # forbidden one through the environment it inherits.
+    'ANTHROPIC_API_KEY'    = 'silently switches the child off the subscription and onto API billing'
+    # The same mechanism under a second name. Vibe Kanban, the only tool in a ten-tool survey that
+    # guards any of this, guards ANTHROPIC_API_KEY alone -- so copying its coverage would leave
+    # this one live. Its idea is worth having; its list is not.
+    'ANTHROPIC_AUTH_TOKEN' = 'a second name for the same billing switch'
+}
+
+# WARNED, NOT STRIPPED, and the difference is deliberate. ANTHROPIC_BASE_URL is SET on this machine
+# (measured 2026-09-04, same reading that found ANTHROPIC_API_KEY unset), so it is plausibly a
+# proxy somebody chose on purpose. Removing a deliberate setting would break the spawn to fix a
+# hazard that may not exist here, which is the worse trade: a broken spawn is loud, and this whole
+# section exists because the quiet failures are the expensive ones. So the run says what it saw and
+# lets a reader decide.
+#
+# UNMEASURED: nobody has checked what this machine's ANTHROPIC_BASE_URL points at, or whether a
+# `claude -p` child honours it. Until someone does, "deliberate proxy" is the assumption, not a
+# finding.
+$script:ChildEnvWarn = @('ANTHROPIC_BASE_URL')
+
+# The reading is taken ONCE, from the parent, before any spawn. Two reasons: the receipt has to be
+# able to report it whether or not a red was found, and a per-spawn reading would let two spawns in
+# one tick disagree about what the parent held.
+$script:ChildEnvRemoved = @(
+    $script:ChildEnvStrip.Keys | Where-Object { $null -ne [Environment]::GetEnvironmentVariable($_) }
+)
+$script:ChildEnvWarnings = @(
+    $script:ChildEnvWarn | Where-Object { $null -ne [Environment]::GetEnvironmentVariable($_) } |
+        ForEach-Object { "$_ is set in this process and is passed through to every child unchanged. If it is not a proxy you chose, the seat is reaching a model you did not intend." }
+)
+
 # ProcessStartInfo.ArgumentList, not Start-Process -ArgumentList. The second joins an array with
 # spaces and quotes nothing, so a briefing path or a note containing a space arrives at the child as
 # two arguments. The .NET collection escapes each element for the platform it is on, which this has
@@ -275,13 +331,38 @@ function Start-Child {
         # Capture the child's output instead of letting it reach our stdout. Required for anything
         # chatty, or -Json emits a receipt with another script's console noise in the middle of it.
         [switch]$Quiet,
-        [switch]$Wait
+        [switch]$Wait,
+        # Values to SET in the child, applied after the strip above. A key mapped to $null removes
+        # it. This is how a caller names an account on purpose; there is no switch to skip the
+        # strip, because a skip is what the accident already looks like.
+        [hashtable]$ChildEnv
     )
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = $FileName
     foreach ($a in $ArgumentList) { $psi.ArgumentList.Add([string]$a) }
     if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
     $psi.UseShellExecute = $false
+
+    # THE STRIP HAS NO PARAMETER AND NO CALLER OPT-OUT. This function is the only place in this file
+    # that starts a process, so a name in $script:ChildEnvStrip cannot reach a child by any route
+    # the script has. A rule that depends on the next caller remembering decays; a rule inside the
+    # only door does not. Measured 2026-09-04 across this fleet: the same house rule held at 0
+    # violations where a gate refuses and 93 where it was prose alone.
+    #
+    # Reading $psi.Environment materialises a COPY of this process's variables into the collection,
+    # and Process.Start then uses that copy verbatim under UseShellExecute = $false. So the child
+    # gets exactly what the parent had, minus what is removed here -- not a blank environment.
+    # bin/ccx-doctor.ps1's Invoke-Probe already drives children this way; this is the same
+    # mechanism, applied where it was missing rather than a second one invented beside it.
+    foreach ($name in $script:ChildEnvStrip.Keys) { $null = $psi.Environment.Remove($name) }
+    if ($ChildEnv) {
+        foreach ($k in $ChildEnv.Keys) {
+            $v = $ChildEnv[$k]
+            if ($null -eq $v) { $null = $psi.Environment.Remove([string]$k) }
+            else { $psi.Environment[[string]$k] = [string]$v }
+        }
+    }
+
     if ($Quiet) {
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
@@ -394,6 +475,11 @@ $receipt = [ordered]@{
         labelled          = $null
         truncated         = $false
         dryRun            = [bool]$DryRun
+        # A strip nobody can see is a behaviour change that reads as no change at all. These two
+        # name what the parent actually held, so a reader can tell "nothing to remove" from "the
+        # removal did not run" -- which are the same empty list from outside.
+        childEnvRemoved   = $script:ChildEnvRemoved
+        childEnvWarnings  = $script:ChildEnvWarnings
     }
     controls = @()
     red      = @()
@@ -418,6 +504,11 @@ function Write-Receipt {
     Write-Host "           $open open pull requests examined, $carry carry the label"
     if ($s.truncated) { Write-Host "           WARNING: a list filled the -Limit of $Limit, so these counts may be short" }
     if ($s.query) { Write-Host "           $($s.query)" }
+    # Printed even when empty, because "no account variable was in this environment" and "the strip
+    # never ran" are the same silence otherwise, and only one of them is safe.
+    $stripped = if ($s.childEnvRemoved) { $s.childEnvRemoved -join ', ' } else { 'none were set here' }
+    Write-Host "           child env: removed $stripped"
+    foreach ($w in $s.childEnvWarnings) { Write-Host "           WARNING: $w" }
     foreach ($c in $receipt.controls) {
         $verdict = if ($c.proved) { 'proved' } else { 'NOT PROVED' }
         Write-Host "  control: $($c.name) -- $verdict (expected '$($c.expected)', read '$($c.reading)')"
