@@ -223,6 +223,9 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
             # the likeliest one to be pasted into a note -- and it was the one reported clean.
             ("https://claude.ai/code/", "artifact/", "q4-migration-plan-" + FAKE_UUID),
             ("https://claude.ai/code/", "frame/", "my_draft-2-" + FAKE_UUID),
+            # The vendor writes the slug `[A-Za-z0-9_-]*`, so a ZERO-LENGTH one parses, leaving a
+            # bare hyphen. It addresses the same artifact. A `{1,64}` bound reported this clean.
+            ("https://claude.ai/code/", "artifact/", "-" + FAKE_UUID),
             # The content host: the UUID is a SUBDOMAIN and `claude.ai` never appears at all.
             ("https://", FAKE_UUID, ".frame.claudeusercontent.com/"),
             ("https://", FAKE_UUID, ".frame.staging.claudeusercontent.com/"),

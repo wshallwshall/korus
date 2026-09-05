@@ -178,9 +178,11 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 #   3. The content host carries the UUID as a SUBDOMAIN, and the string `claude.ai` never appears.
 #      No widening of the path arm reaches it; it needs an arm of its own.
 #
-# Measured over 12 forms that must fire and 9 near misses that must not: one arm failed 6, this
-# fails 0. The slug is bounded at 64 rather than the vendor's unbounded `+`, because their pattern
-# is anchored at both ends and this one is not.
+# Measured over 13 forms that must fire and 9 near misses that must not: one arm failed 7, this
+# fails 0. The slug is bounded at 64 rather than the vendor's unbounded `*`, because their pattern
+# is anchored at both ends and this one is not. The lower bound is 0, not 1, because the vendor
+# writes the slug `[A-Za-z0-9_-]*` -- a zero-length one is in their grammar, and it addresses the
+# same artifact as every other form here. `{1,64}` reported `artifact/-<uuid>` clean.
 #
 # WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK, because it is also a member of
 # _VALUE_IS_THE_DISCLOSURE. Over-reach is LOUD in detection -- a false positive fails a run -- and
@@ -201,7 +203,7 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 _ARTIFACT_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 _ARTIFACT_URL = re.compile(
-    rf"claude\.ai/(?:code/)?(?:artifact|frame)/(?:[A-Za-z0-9_-]{{1,64}}-)?{_ARTIFACT_UUID}"
+    rf"claude\.ai/(?:code/)?(?:artifact|frame)/(?:[A-Za-z0-9_-]{{0,64}}-)?{_ARTIFACT_UUID}"
     rf"|{_ARTIFACT_UUID}\.frame\.(?:staging\.)?claudeusercontent\.com",
     re.IGNORECASE,
 )
