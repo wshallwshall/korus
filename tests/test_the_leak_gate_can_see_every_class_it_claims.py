@@ -509,6 +509,12 @@ class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
             "than a key",
             ("the ", "sk-ant-", " prefix is documented"),
         ),
+        (
+            "_ARTIFACT_URL widened to any claude.ai link, or to any URL at all. Measured against "
+            "#51's own mutations: the bare-UUID row above does NOT redden on either, because it "
+            "carries no URL. One class can need more than one bait",
+            ("see ", "https://claude.ai/", "code", " for the docs"),
+        ),
     )
 
     CO_OCCURRING = " from " + "".join(("198.18.", "0.1"))

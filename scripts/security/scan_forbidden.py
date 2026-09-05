@@ -245,15 +245,29 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # suppression: a too-greedy pattern would quietly stop `--show-context` printing context across the
 # whole corpus, and every control asserting a value is ABSENT would stay green while it happened.
 #
-# `ContextSurvivesOnALineThatDisclosesNothing`, also on that branch, is the corpus for the case, and
-# this comment first said it CATCHES it, which claimed more than it delivers. It plants ONE line --
-# `the host is <an address>` -- so only an over-reach broad enough to match prose reddens. Measured:
-# a pattern widened to any claude.ai URL, to any run of hex and hyphens, or to any http URL leaves
-# it GREEN. Only `.` reddens it. A corpus of one chosen line, asserted as a general property.
+# `ContextSurvivesOnALineThatDisclosesNothing`, also on that branch, is the corpus for the case.
+# This comment first said it CATCHES the case, which claimed more than the control THEN delivered:
+# it planted ONE line -- `the host is <an address>` -- so only an over-reach broad enough to match
+# ordinary prose reddened it. Measured then: widened to any claude.ai URL, to any run of hex and
+# hyphens, or to any http URL, all GREEN; only `.` reddened it. A corpus of one chosen line,
+# asserted as a general property.
 #
-# So what evidences that this widening silenced nothing is a POPULATION reading rather than that
-# control: zero lines in the tracked tree match the widened pattern. Weaker in a specific way worth
-# naming -- it says nothing about lines that do not exist yet.
+# It is a bait table now, one row per plausible widening, and all four of those reden it.
+#
+# THAT IS THE LAST THING THIS COMMENT SAYS ABOUT THAT CONTROL, on purpose. The two sentences above
+# each had to be corrected because a comment HERE described the shape of a control THERE, and the
+# branch above kept moving -- twice, in both directions, each correction accurate when written. The
+# durable half is the risk and the name. For what the control covers today, read the control.
+#
+# THAT CONTROL IS NOW A TABLE, one bait row per suppression class, and the rows were chosen against
+# these very mutations. Re-measured after the change: hex-and-hyphens RED, any claude.ai URL RED,
+# any http URL RED, `.` RED. The correction above is kept rather than deleted because the reasoning
+# is the durable part -- a fixture a widening cannot reach cannot redden on it, whatever the
+# docstring claims.
+#
+# The population reading -- zero lines in the tracked tree match the widened pattern -- still stands
+# beside it, and is weaker in a specific way worth naming: it says nothing about lines that do not
+# exist yet.
 #: The UUID itself, shared by both arms so they cannot drift apart.
 _ARTIFACT_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
