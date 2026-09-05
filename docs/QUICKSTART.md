@@ -215,6 +215,81 @@ Four controls, and each one covers a failure the others do not:
 | `commit-msg` claim gate | A commit whose subject claims work this worktree does not hold |
 | `pre-push` guard | A direct push to a protected ref |
 
+## A seat's standing rules live in `roles/`, and nothing delivers them
+
+Each seat named on [Run a KORUS build](KORUS-BUILD.md) has a **playbook**: a durable file it reads
+on arrival. Those files sit at the repository root, not under `docs/`, and this site serves them.
+
+**Start at [roles/README.md](https://claude-multisession.pages.dev/roles/README.md).** It defines
+what a playbook is, and its section 1a is the seat-to-file table.
+
+**This page carries no copy of that table on purpose.** A moving set gets one snapshot, and that
+is the one.
+
+Nothing routes a playbook to the session that needs it, for the reason
+[Run a KORUS build](KORUS-BUILD.md) gives. So name the file yourself, in the opening prompt:
+
+```text
+You are the Builder. Read roles/COMMON.md, then roles/BUILDER.md, before anything else.
+```
+
+### The playbook corpus drifts, and nothing here fixes that
+
+A pointer is worth less when what it points at disagrees with itself. **This is a known unsolved
+problem.** No script reconciles the copies, and no check reports the drift.
+
+| Measured 2026-09-04 | Reading |
+|---|---|
+| Editions of `roles/` on the machine this was written on | At least 2 -- this repository, and a separate private vault |
+| Filenames the two editions share | 13, and **all 13 differ in content** |
+| Filenames in only one edition | 2 here, 1 in the vault |
+| Vault worktrees carrying a `roles/` copy | 62, excluding the primary |
+| Copies among those differing from the vault's own working tree | 607, against 35 that matched |
+| Registered vault worktrees safe to remove | 10 of 79 |
+
+**The last two rows count different populations, so do not read them as one fraction.** The 607
+copies sit in the 62 worktrees that carry `roles/`. The 10 are counted over all 79 registered
+worktrees, most of which carry no playbook at all.
+
+The two instruments, both run to produce the rows above:
+
+```powershell
+# Two editions, compared by filename and by content hash.
+$k = Get-ChildItem <this-checkout>/roles -Recurse -Filter *.md -File
+$v = Get-ChildItem <vault>/roles -Recurse -Filter *.md -File
+($k | Where-Object { $n = $_.Name
+    ($h = $v | Where-Object Name -eq $n) -and
+    (Get-FileHash $_.FullName).Hash -ne (Get-FileHash $h[0].FullName).Hash }).Count
+```
+
+```powershell
+# Worktree copies, hashed against the vault's own working tree.
+Set-Location <vault>
+$primary = (git worktree list --porcelain | Select-String '^worktree ' |
+    Select-Object -First 1) -replace '^worktree ',''
+$dirs = (git worktree list --porcelain | Select-String '^worktree ') -replace '^worktree ','' |
+    Where-Object { $_ -ne $primary -and (Test-Path "$_/roles") }
+$stale = 0
+foreach ($d in $dirs) {
+  foreach ($f in Get-ChildItem "$d/roles" -Filter *.md -File) {
+    $p = Join-Path "$primary/roles" $f.Name
+    if ((Test-Path $p) -and (Get-FileHash $f.FullName).Hash -ne (Get-FileHash $p).Hash) { $stale++ }
+  }
+}
+"$($dirs.Count) worktrees, $stale stale copies"
+```
+
+Removal safety was classified separately: a worktree is safe only when `git merge-base
+--is-ancestor <tip> origin/main` succeeds **and** `git diff origin/main...<tip> --name-only` returns
+nothing.
+
+**What none of it varied.** Every comparison read **working trees**, never either repository's
+`origin/main`. So a worktree sitting on a legitimately newer branch is counted as stale here. Line
+endings were varied and changed nothing: the 13 shared files still differ with `\r` stripped.
+
+**These rows are what the rule in `roles/README.md` costs when nobody holds it.** The measurement
+expires the day a check reports two copies disagreeing.
+
 ## Next
 
 **Give the sessions a working agreement.** Copy
