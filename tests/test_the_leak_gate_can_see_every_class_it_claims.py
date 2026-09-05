@@ -165,6 +165,29 @@ QUIET: tuple[tuple[str, tuple[str, ...]], ...] = (
         "the artifact content host with no UUID in front of it",
         ("https://cdn", ".frame.claudeusercontent.com/"),
     ),
+    # THE HOST ARM'S NEAR MISSES, measured by the serene-bhabha-7decd7 session against the widened
+    # pattern and taken with attribution. Each is a shape that a later loosening of the host arm
+    # would newly match, so together they bound it from the outside rather than trusting its text.
+    (
+        "the staging lookalike: a real subdomain shape on a host nobody owns here",
+        ("https://", FAKE_UUID, ".frame.staging.example.com/"),
+    ),
+    (
+        "the right host name under the wrong TLD",
+        ("https://", FAKE_UUID, ".frame.staging.claudeusercontent.NET/"),
+    ),
+    (
+        "a UUID-shaped run that is one character short in its last group, on the real host",
+        ("https://", FAKE_UUID[:-1], ".frame.claudeusercontent.com/"),
+    ),
+    (
+        "the real host with a subdomain label that is not `frame`",
+        ("https://", FAKE_UUID, ".preview.claudeusercontent.com/"),
+    ),
+    (
+        "a hostile domain that merely CONTAINS the content host's name, with the UUID in its path",
+        ("https://evil-claudeusercontent.com/", FAKE_UUID),
+    ),
     (
         "a home path written with the placeholder the detector exempts",
         ("C:", r"\Users", r"\<name>", r"\notes.md"),
@@ -229,6 +252,15 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
             # The content host: the UUID is a SUBDOMAIN and `claude.ai` never appears at all.
             ("https://", FAKE_UUID, ".frame.claudeusercontent.com/"),
             ("https://", FAKE_UUID, ".frame.staging.claudeusercontent.com/"),
+            # THE SUBDOMAIN ARM'S OWN CASE. Every other row on this arm is lower-case, so the single
+            # shared `re.IGNORECASE` was proved only through the PATH arm. This row was argued for
+            # and initially refused, on the grounds that narrowing one arm's case alone was not a
+            # realistic edit. That was wrong, and the counter-example is in this same file:
+            # `_HOME_PATH` scopes case-blindness to its Windows branch by inlining the class,
+            # precisely because one shared flag is too coarse. It is the likeliest future edit here.
+            # Measured: a mutant that inlines case into the path arm and drops the shared flag
+            # passes every other row above and fails only this one.
+            ("https://", FAKE_UUID.upper(), ".FRAME.CLAUDEUSERCONTENT.COM/"),
         ):
             with self.subTest(form="".join(parts)[:36]):
                 hits = scan_line(self.gate, "".join(parts))
