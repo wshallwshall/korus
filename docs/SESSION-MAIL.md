@@ -6,9 +6,20 @@
 realtime channel can *list* but cannot *send* to. Two peers need one: an editor-extension session,
 and a session under a [second Claude account](DESKTOP-ACCOUNTS.md).
 
-**This page ships nothing. No script here implements it.** It is the design, staged as buildable
-steps, plus every failure a first attempt hits. Each failure below was measured, not reasoned about.
-Two survived a full review before anyone caught them.
+**This lane now ships, and these are the scripts.** The page stays the design and the record of
+every failure a first attempt hits. Each failure below was measured, not reasoned about. Two
+survived a full review before anyone caught them.
+
+| Piece | File |
+|---|---|
+| Shared key and root resolution | `scripts/coord/_mail.ps1` |
+| Send, list and status | `scripts/coord/mail.ps1` |
+| The drain | `scripts/hooks/mail-drain.ps1` |
+| The tests, one class per failure below | `tests/test_session_mail.py` |
+
+**The urgent mid-turn tier is NOT built**, deliberately. It is the one section here with no script
+behind it, and [why it is left alone](#a-mid-turn-wake-up-is-one-shot-and-cannot-fix-itself) is at
+the end of the page.
 
 **Why you should care.** [Announce](COORDINATION.md#announcing-yourself), the realtime channel, only
 knows about sessions the desktop app itself started. Neither peer above is one of those, by
