@@ -53,7 +53,7 @@ rather than hosts. The other detectors still run there.
 | Absolute user-home path | `<drive>:\Users\<account>\...`, `/home/<account>/...`, `/Users/<account>/...`. Carries an OS login, usually a real person's name, often the internal project name below it. Exempt: placeholders (`<name>`, `$HOME`, `%USERPROFILE%`, `{home}`) and a few conventional stand-ins. Everything else reads as a real account |
 | Routable IPv4 | A free-standing quad that is not RFC1918, loopback, link-local, broadcast, `0.`-prefixed, multicast, or an RFC5737 documentation address. Naming a real host is a network disclosure, even a jump box. Look-arounds keep dotted OIDs, version strings and spec-section citations out. |
 | Credential shapes | Private-key block headers, and prefix-anchored token formats. It prints `private key block`, `cloud access key id`, `forge access token`, `chat platform token` and `model API key`. Prefix-anchored because an entropy heuristic over source produces a false-positive storm, and a muted gate is worth nothing. Run a real secret scanner too: this catches only copy-paste leaks riding with identifying content. |
-| Private artifact URL | `claude.ai/artifact/<uuid>`, with or without the `code/` segment. The UUID is a *capability*, not a name: whoever holds the URL can fetch the artifact. The UUID shape is required, so the placeholder form this row prints does not trip the detector that documents it, and a deliberately shared `/public/artifacts/` link does not either -- that segment is plural. Prints bare, like a credential hit. |
+| Private artifact URL | All three addresses one artifact has: `claude.ai/artifact/<uuid>` and `claude.ai/code/artifact/<uuid>`; the same with `frame` in place of `artifact`; an optional readable slug before the UUID, as in `claude.ai/code/artifact/q4-plan-<uuid>`; and the content host `<uuid>.frame.claudeusercontent.com`, plus its `.staging.` variant, where `claude.ai` never appears. The UUID is a *capability*, not a name: whoever holds the URL can fetch the artifact. The UUID shape is required, so the placeholder forms this row prints do not trip the detector that documents them, and a deliberately shared `/public/artifacts/` link does not either -- that segment is plural. Prints bare, like a credential hit. |
 
 **Token detectors** come from a file *you* supply and never commit: the literal names of the private
 projects, clients, vendors, hosts or people that must not appear. Nobody can ship that list for you,
@@ -76,6 +76,14 @@ them.
 That is the review this gate exists to make cheaper, doing the whole job unaided. The detector
 closes the pattern gap, and `tests/test_the_leak_gate_can_see_every_class_it_claims.py` plants a line
 per detector so a future green is a reading rather than a detector that is off.
+
+**It then matched one of that artifact's three addresses.** Corroborated against the vendor's own
+client, not reasoned about. The slug form is what the address bar produces, so of every shape it was
+the likeliest paste, and it read clean. The content host names no `claude.ai` at all.
+
+**Widening it is not a one-sided risk.** The pattern also decides whether `--show-context` prints a
+line, and over-reach there is silent: a control asserting a value is *absent* stays green while the
+gate prints no context at all. Measured after widening: zero lines in the tree match.
 
 Out of the tree is not out of *history*. They stay reachable through `a3df144`, which no file scan
 reaches -- see [the ref store](#what-this-gate-never-looks-at-the-ref-store). Rotating the artifact

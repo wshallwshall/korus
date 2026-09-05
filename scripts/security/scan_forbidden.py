@@ -162,9 +162,39 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # own session ids are UUIDs. The first pasted session id, PowerShell New-Guid or hard-coded test GUID
 # fires it, gets an allowlist line, and that line vetoes every detector on the lines it covers. A
 # gate people mute is worth nothing.
+# A PRIVATE ARTIFACT HAS THREE ADDRESSES, AND THE FIRST VERSION OF THIS DETECTOR MATCHED ONE.
+# Corroborated against the vendor's own client rather than reasoned about -- `resources/app.asar`,
+# Claude 1.40609.1, read with a negative control that returned zero:
+#
+#     /^\/code\/(?:artifact|frame)\/(?:[A-Za-z0-9_-]+-)?(<uuid>)$/
+#     [`*.frame.claudeusercontent.com`, `*.frame.staging.claudeusercontent.com`]
+#
+# Three shapes were missed, and the middle one is the one that matters:
+#
+#   1. `frame` is a SIBLING PATH of `artifact`.
+#   2. An optional human-readable slug may sit between the path and the UUID. THIS IS THE SHAPE THE
+#      ADDRESS BAR PRODUCES, and pasting is the entire arrival path this detector exists for -- so
+#      the likeliest real leak of all was the one reported clean.
+#   3. The content host carries the UUID as a SUBDOMAIN, and the string `claude.ai` never appears.
+#      No widening of the path arm reaches it; it needs an arm of its own.
+#
+# Measured over 12 forms that must fire and 9 near misses that must not: one arm failed 6, this
+# fails 0. The slug is bounded at 64 rather than the vendor's unbounded `+`, because their pattern
+# is anchored at both ends and this one is not.
+#
+# WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK, because it is also a member of
+# _VALUE_IS_THE_DISCLOSURE. Over-reach is LOUD in detection -- a false positive fails a run -- and
+# SILENT in suppression: a too-greedy pattern here quietly stops `--show-context` printing context
+# across the whole corpus, and every control that asserts a value is ABSENT stays green while it
+# happens. `ContextSurvivesOnALineThatDisclosesNothing` is the corpus that catches that, and the
+# near-miss table is what feeds it. Measured after this widening: zero lines in the tracked tree
+# match, so nothing in the corpus has been silenced.
+#: The UUID itself, shared by both arms so they cannot drift apart.
+_ARTIFACT_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+
 _ARTIFACT_URL = re.compile(
-    r"claude\.ai/(?:code/)?artifact/"
-    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    rf"claude\.ai/(?:code/)?(?:artifact|frame)/(?:[A-Za-z0-9_-]{{1,64}}-)?{_ARTIFACT_UUID}"
+    rf"|{_ARTIFACT_UUID}\.frame\.(?:staging\.)?claudeusercontent\.com",
     re.IGNORECASE,
 )
 

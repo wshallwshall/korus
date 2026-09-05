@@ -140,6 +140,31 @@ QUIET: tuple[tuple[str, tuple[str, ...]], ...] = (
         "an ordinary claude.ai link with no artifact path. roles/REVIEWER.md carries one",
         ("https://claude.ai/", "code"),
     ),
+    # THE THREE BELOW ARE THE ONLY NEAR MISSES WITH WIDTH DISCRIMINATION, and without them a
+    # path-widened detector passes this whole table. Every other quiet case here uses a `<uuid>`
+    # PLACEHOLDER, so it stays silent under any widening of the PATH -- a widened pattern still
+    # demands a real UUID. Only the right host carrying a real UUID on the wrong path refuses it.
+    # Measured: widening the path arm to `[a-z]+/` is caught by these three and by nothing else.
+    (
+        "the right host and a real UUID, on a path that is not an artifact",
+        ("https://claude.ai/", "chat/", FAKE_UUID),
+    ),
+    (
+        "the same, on the recents route",
+        ("https://claude.ai/", "recents/", FAKE_UUID),
+    ),
+    (
+        "the same, one level deeper, so `code/` alone is not enough to fire",
+        ("https://claude.ai/code/", "project/", FAKE_UUID),
+    ),
+    (
+        "a UUID-bearing subdomain on a host that is not the artifact content host",
+        ("https://", FAKE_UUID, ".frame.example.com/"),
+    ),
+    (
+        "the artifact content host with no UUID in front of it",
+        ("https://cdn", ".frame.claudeusercontent.com/"),
+    ),
     (
         "a home path written with the placeholder the detector exempts",
         ("C:", r"\Users", r"\<name>", r"\notes.md"),
@@ -191,6 +216,16 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
             ("claude.ai/code/", "artifact/", FAKE_UUID.upper()),
             ("https://claude.ai/code/", "artifact/", DIGIT_UUID),
             ("[the handoff](https://claude.ai/code/", "artifact/", FAKE_UUID + ")"),
+            # `frame` is a sibling path of `artifact` in the vendor's own route grammar.
+            ("https://claude.ai/code/", "frame/", FAKE_UUID),
+            ("https://claude.ai/", "frame/", FAKE_UUID),
+            # The vanity slug. This is what the ADDRESS BAR produces, so of every form here it is
+            # the likeliest one to be pasted into a note -- and it was the one reported clean.
+            ("https://claude.ai/code/", "artifact/", "q4-migration-plan-" + FAKE_UUID),
+            ("https://claude.ai/code/", "frame/", "my_draft-2-" + FAKE_UUID),
+            # The content host: the UUID is a SUBDOMAIN and `claude.ai` never appears at all.
+            ("https://", FAKE_UUID, ".frame.claudeusercontent.com/"),
+            ("https://", FAKE_UUID, ".frame.staging.claudeusercontent.com/"),
         ):
             with self.subTest(form="".join(parts)[:36]):
                 hits = scan_line(self.gate, "".join(parts))
