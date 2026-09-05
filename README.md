@@ -19,12 +19,15 @@ measured operation, and some published guidance has already been shown wrong.
 
 ## Start here: the constitution
 
-**[The KORUS Constitution](.specify/memory/constitution.md)** is the only substantive
-document so far. It holds the rules a session, a seat, a gate or a later spec may not
-break, and **every article names the evidence behind it** so a reader can check rather than
-trust.
+**[The KORUS Constitution](.specify/memory/constitution.md)** is the document to read first.
+It holds the rules a session, a seat, a gate or a later spec may not break, and **every
+article names the evidence behind it** so a reader can check rather than trust.
 
-Eleven articles, in short:
+Alongside it are the seat playbooks in [`roles/`](roles/), the working guides in
+[`docs/`](docs/), and the specs in [`specs/`](specs/). The constitution outranks all of them:
+where a playbook and an article disagree, the article wins and the playbook is the bug.
+
+Twelve articles, in short:
 
 | | |
 |---|---|
@@ -39,8 +42,9 @@ Eleven articles, in short:
 | IX | Built for Claude Code, and no design may require a particular surface |
 | X | A seat that cannot be measured cannot be steered |
 | XI | A seat's job is to write something down |
+| XII | The shared write surface is the boundary that binds, not the account |
 
-It is at **v1.6.0** and it expects to be wrong in places. Most articles rest on a small
+It is at **v1.10.0** and it expects to be wrong in places. Most articles rest on a small
 number of observations, several from a single night of operation, and the document says so.
 Amendments require evidence, and retired text stays with the reason it was retired.
 
@@ -81,6 +85,7 @@ Work is divided among **seats**, each a session with one job:
 | Seat | What it does | Lifetime |
 |---|---|---|
 | Console | Plans, spawns workers, holds the owner's attention | long-lived |
+| Manager | Same job as a Console, but its workers are in-process subagents | long-lived |
 | Builder | Takes one brief, does the work, opens a pull request | one turn |
 | Reviewer | Reads one pull request | per pull request |
 | Regulator | Attributes a failing build | woken on a red |
