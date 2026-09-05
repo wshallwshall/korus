@@ -298,11 +298,22 @@ try {
             if ($won) { $consumed++ }
         }
 
+        # STOP SPEAKS ONLY WHEN IT ACTED. Step 8's "the box is empty beats silence" does not reach
+        # this path. That rule serves a reader at SESSION START who is deciding whether mail is
+        # waiting. Stop fires at the end of every turn and has no such reader, so a line here
+        # narrates the normal state into every turn, forever. docs/HOOKS.md: an occasional-use
+        # feature does not belong on an every-turn event, and the wiring question that line answered
+        # is answered once, for free, by settings.example.json and tests/test_no_hook_is_orphaned.py.
+        #
+        # The line that stood here also asserted more than this code knows. It read $consumed -eq 0
+        # and reported "nothing was displayed to this session". A peer that reaches Stop first files
+        # the message, and this session then consumes nothing HAVING DISPLAYED IT. Duplicate display
+        # is the accepted trade, so the sentence was false in a case the design plans for.
+        #
+        # EVERY FAULT PATH ABOVE STILL SPEAKS AT STOP: no queue, no box, delivery off, a helper that
+        # would not load, and the outer catch. Only success with nothing to do is quiet.
         if ($consumed -gt 0) {
             Write-Drain "[session-mail] Filed $consumed message(s) this session had already displayed. As of $(Get-CcxMailStamp)."
-        }
-        else {
-            Write-Drain "[session-mail] No mail to file: nothing was displayed to this session. As of $(Get-CcxMailStamp)."
         }
         exit 0
     }

@@ -540,6 +540,68 @@ class SilenceIsNeverAmbiguous(_LaneCase):
         self.assertRegex(self.ctx(self.drain(self.peer)), r"(?i)off|suppress")
 
 
+class TheStopDrainSpeaksOnlyWhenItActed(_LaneCase):
+    """The other half of step 8, and the one the step does NOT cover.
+
+    Step 8's rule -- "the box is empty" beats silence -- was written for a reader at SESSION START,
+    who is deciding whether mail is waiting. `SilenceIsNeverAmbiguous` above is that rule, and every
+    one of its cases drains at SessionStart.
+
+    Stop has no such reader. It fires at the end of EVERY turn, so a line on the consumed-nothing
+    path injects context into every turn, forever, to report the normal state. docs/HOOKS.md, "State
+    the cost of an always-on hook": an occasional-use feature does not belong on an every-turn
+    event. The wiring question that line answered is answered instead, once and for free, by
+    `.claude/settings.example.json` and `tests/test_no_hook_is_orphaned.py`.
+
+    THE LINE WAS ALSO WRONG. It read `$consumed -eq 0` and reported "nothing was displayed to this
+    session". Those are different facts. When two sessions display one message and the first to
+    reach Stop files it, the second finds an empty inbox and consumed nothing -- having displayed
+    it. Step 5 calls that duplicate display the accepted trade, so the sentence was false in a case
+    the design plans for.
+
+    STOP IS NOT SILENT. It loses one line: success with nothing to do. Every fault path still
+    speaks, and the last two cases here are what stops a later change from quieting those too.
+    """
+
+    def test_a_stop_that_consumed_nothing_says_nothing(self):
+        r = self.drain(self.peer, event="Stop", session_id="s1")
+        self.assertEqual(0, r.returncode, r.stderr)
+        self.assertIsNone(self.context(r), "Stop narrates the normal case into every turn")
+
+    def test_a_stop_that_consumed_something_still_says_so(self):
+        """The control. Without it the case above passes against a drain silent at every Stop."""
+        self.send(body="filed at stop")
+        self.drain(self.peer, event="SessionStart", session_id="s1")
+        self.assertRegex(
+            self.ctx(self.drain(self.peer, event="Stop", session_id="s1")), r"(?i)filed")
+
+    def test_a_message_a_peer_filed_first_draws_no_claim_of_never_displaying_it(self):
+        """The false sentence, pinned. s2 displayed the message; s1 reached Stop first."""
+        self.send(body="filed by the other session")
+        self.drain(self.peer, event="SessionStart", session_id="s1")
+        self.drain(self.peer, event="SessionStart", session_id="s2")
+        self.drain(self.peer, event="Stop", session_id="s1")
+        self.assertIsNone(self.context(self.drain(self.peer, event="Stop", session_id="s2")))
+
+    def test_session_start_still_announces_an_empty_box(self):
+        """The asymmetry, stated where a reader tempted to restore the Stop line will see it."""
+        self.assertRegex(self.ctx(self.drain(self.peer, event="SessionStart")), r"(?i)no mail|empty")
+
+    def test_a_stop_outside_a_clone_still_speaks(self):
+        """A fault, not a normal state: there is no queue, and nothing was read."""
+        ctx = self.context(self.drain(self.root, event="Stop"))
+        self.assertIsNotNone(ctx, "a Stop with no queue went byte-identical quiet")
+        self.assertRegex(ctx or "", r"(?i)not inside a git|no queue|-Anchor")
+
+    def test_a_stop_with_delivery_off_still_speaks(self):
+        """Suppressed is a state someone has to undo, so it is reported at either event."""
+        self.send(body="queued while off")
+        (self.mail_root / "OFF").write_text("", encoding="ascii")
+        ctx = self.context(self.drain(self.peer, event="Stop"))
+        self.assertIsNotNone(ctx, "a Stop against a suppressed queue went quiet")
+        self.assertRegex(ctx or "", r"(?i)off|suppress")
+
+
 class ASessionOutsideACloneIsToldWhereItsQueueIs(_LaneCase):
     """A container holding ~25 clones has no common dir. The mail queued, nothing was ever
     delivered, and every send reported success. The silence was byte-identical to a healthy

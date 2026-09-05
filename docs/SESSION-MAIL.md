@@ -339,12 +339,29 @@ than reading a successful send as proof.
 **What to do.** Build three habits into the drain, which make delivery observable instead of merely
 wired:
 
-- **The drain announces that it ran.** "The box is empty" beats silence: a missing line means the hook
-  did not fire, where silence alone reads the same as a hook that fired and found nothing.
+- **The drain announces that it ran, where a reader is deciding.** At **session start**, "the box is
+  empty" beats silence: a missing line means the hook did not fire, where silence alone reads the
+  same as a hook that fired and found nothing.
 - **A receipt records what was observed, not what was attempted**, written by the drain at the moment
   it renders. A receipt written by hand can assert a delivery that never happened.
 - **Every observation carries its as-of time.** An undated observation reads as current and is not
   usable for anything.
+
+**This rule stops at `SessionStart`. Do not carry it to `Stop`.** `Stop` fires at the end of every
+turn, so a line on the consumed-nothing path injects context into every turn, forever, to report the
+normal state. It was observed five turns in a row, with nothing else happening.
+
+Nobody is deciding anything at `Stop`. Its one reader wants to know the matcher is wired, and that
+is asked once, at install. Answer it once: a settings file carrying the matcher, and a test that
+fails when a hook script is referenced by nobody.
+
+**That line also claimed more than the drain knows.** Two sessions display one message. The first to
+reach `Stop` files it, so the second consumes nothing **having displayed it**.
+[Step 5](#step-5-split-show-from-consume-across-two-hook-events) calls that the accepted trade.
+
+**Every fault still speaks at `Stop`.** No queue, no box, delivery switched off, a helper that
+would not load, the catch-all: all of them report. `Stop` loses exactly one line, the one that
+reported success with nothing to do.
 
 ---
 
