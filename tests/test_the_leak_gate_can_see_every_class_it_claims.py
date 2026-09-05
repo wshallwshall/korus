@@ -42,6 +42,7 @@ Run: python -m unittest discover -s tests
 from __future__ import annotations
 
 import importlib.util
+import re
 import subprocess
 import sys
 import tempfile
@@ -549,6 +550,35 @@ class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
                     "".join(fragments),
                     hits[0],
                     "the DEFAULT output carried the line. That output goes to public CI logs.",
+                )
+
+    def test_the_home_path_bait_does_not_depend_on_where_the_line_ends(self):
+        """The bait row's comment claims four behaviours. This is what makes them checkable.
+
+        The comment says `profile` was chosen over `me` because the exemption needs a separator
+        after the name, so `me` bait works only at end of line. Prose, until now -- and prose about
+        a fixture's teeth is the thing that goes stale silently, because nothing re-reads it.
+
+        The widened pattern is derived from the gate's own source rather than retyped, so it cannot
+        drift away from the pattern it is meant to mirror.
+        """
+        widened = re.compile(self.gate._HOME_PATH.pattern, re.IGNORECASE)
+        route = "".join(("GET ", "/users", "/"))
+        cases = (
+            (f"{route}profile", True, "the bait name is not exempt, so it fires"),
+            (f"{route}profile ", True, "and it fires with a separator after it too"),
+            (f"{route}me", True, "`me` at END OF LINE has no separator, so it is NOT exempt"),
+            (f"{route}me ", False, "one trailing space exempts it -- this is why bait 1 failed"),
+            (f"{route}me HTTP/1.1", False, "and tidying it into a log line exempts it as well"),
+        )
+        for line, should_fire, why in cases:
+            with self.subTest(line=line):
+                self.assertEqual(
+                    should_fire,
+                    bool(widened.search(line)),
+                    f"{line!r}: expected fire={should_fire}. {why}. The bait row's comment states "
+                    "this behaviour; if the exemption list or its separator class changed, the "
+                    "comment is now wrong and the bait may no longer reach the over-reach.",
                 )
 
     def test_every_suppression_class_has_a_bait_row(self):
