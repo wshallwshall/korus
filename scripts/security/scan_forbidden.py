@@ -196,15 +196,20 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # slug, which leaves a bare hyphen and still addresses the artifact -- `{1,64}` reported
 # `artifact/-<uuid>` clean.
 #
-# WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK, because it is also a member of
-# _VALUE_IS_THE_DISCLOSURE. Over-reach is LOUD in detection -- a false positive fails a run -- and
-# SILENT in suppression: a too-greedy pattern here quietly stops `--show-context` printing context
-# across the whole corpus, and every control that asserts a value is ABSENT stays green while it
-# happens.
+# WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK ONCE `_VALUE_IS_THE_DISCLOSURE` EXISTS, which it
+# does NOT in this file -- it arrives with the branch that stacks above this one, and this pattern
+# joins it there. Stated in the future tense on purpose: the two paragraphs below were first
+# written in the present, describing a tuple and a control neither of which is in the file the
+# comment sits in. True of the branch above, read as true of this one, which is the same mistake
+# this whole comment block is about.
 #
-# `ContextSurvivesOnALineThatDisclosesNothing` is the corpus for that case, and this comment first
-# said it CATCHES the case, which claimed more than it delivers. It plants one line -- `the host is
-# <an address>` -- so only an over-reach broad enough to match ordinary prose reddens it. Measured:
+# There, over-reach is LOUD in detection -- a false positive fails a run -- and SILENT in
+# suppression: a too-greedy pattern would quietly stop `--show-context` printing context across the
+# whole corpus, and every control asserting a value is ABSENT would stay green while it happened.
+#
+# `ContextSurvivesOnALineThatDisclosesNothing`, also on that branch, is the corpus for the case, and
+# this comment first said it CATCHES it, which claimed more than it delivers. It plants ONE line --
+# `the host is <an address>` -- so only an over-reach broad enough to match prose reddens. Measured:
 # a pattern widened to any claude.ai URL, to any run of hex and hyphens, or to any http URL leaves
 # it GREEN. Only `.` reddens it. A corpus of one chosen line, asserted as a general property.
 #
