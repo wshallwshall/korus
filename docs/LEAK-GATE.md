@@ -63,6 +63,11 @@ and a public repository is the last place it could live.
 with a digit or `_`, or a non-ASCII login, is not matched -- and no other detector covers the shape,
 so the miss is silent.
 
+**A URL broken across two lines is missed, and nothing says so.** The scanner reads one line at a
+time, so prose reflow defeats it. Measured 2026-09-05: the one-line form is caught; wrapped
+mid-UUID or after the last slash, it is not. These pages wrap near 100 characters, and the URL is
+longer.
+
 **The artifact-URL detector exists because the gate failed first.** Commit `a3df144` put two private
 artifact URLs in the tree: `roles/LANDER.md:4027` and `roles/retired/PM.md:200`. The gate scanned
 both and exited `0`, because no pattern covered the class. A reader caught them; PR #48 removed
