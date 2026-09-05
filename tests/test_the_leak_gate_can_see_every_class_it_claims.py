@@ -467,45 +467,90 @@ class NoHitEchoesALineThatCarriesADisclosure(unittest.TestCase):
 
 
 class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
-    """The other corpus for the suppression rule, and it was missing.
+    """The other corpus for the suppression rule, and one line of it was not enough.
 
-    Every control above asserts a value is ABSENT from the output. All of them pass against a gate
-    that suppresses context unconditionally -- `ctx = ""` with the branch deleted reddens nothing.
-    That is this file's own stated failure: a detector hard-wired to stay silent passes the silent
-    case perfectly, so only running both corpora rules it out.
+    WHY IT EXISTS. Every other control here asserts a value is ABSENT from the output. All of them
+    pass against a gate that suppresses context unconditionally -- `ctx = ""` with the branch
+    deleted reddens nothing. So this pins the COST of `_VALUE_IS_THE_DISCLOSURE` rather than its
+    benefit: a line carrying none of those classes keeps the context a person asked for.
 
-    So this pins the cost of `_VALUE_IS_THE_DISCLOSURE` rather than its benefit. Suppression is
-    scoped to lines that carry one of the three classes; a line that carries none keeps the context
-    a person asked for. Widen a pattern in that tuple until it matches ordinary text and this is
-    what reddens -- which matters because a pattern there now has TWO jobs, detection and
-    suppression, and over-reach is silent in the second one.
+    WHY IT IS A TABLE, and this is the measured part. The first version planted one line, `the host
+    is <address>`, and its docstring claimed "widen a pattern in that tuple until it matches
+    ordinary text and this is what reddens". That was false. Measured 2026-09-05: `re.IGNORECASE`
+    over the whole `_HOME_PATH` -- which newly matches `GET /users/me` and every other `/users/`
+    route -- reddened NOTHING in this file. The fixture carried no `/users/`, no drive letter and
+    nothing home-path shaped, so no widening of that pattern could reach it however far it went.
+
+    A pattern in the tuple has TWO jobs, detection and suppression. Over-reach is loud in the first
+    and SILENT in the second, so the bait has to be chosen per class: ordinary text that the
+    plausible widening of THAT pattern would newly match. One line cannot bait three classes.
+
+    Each row carries a co-occurring routable address, which is what produces a hit to inspect. The
+    address is that detector's own finding rather than a capability, so its line is not withheld.
     """
+
+    #: One row per suppression class: (which widening it baits, fragments of the ordinary line).
+    #: Fragments rather than literals for the reason the module docstring gives -- this file is
+    #: scanned by the gate it tests.
+    SUPPRESSION_BAIT: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "_HOME_PATH under re.IGNORECASE, which reaches every /users/ route. That is the "
+            "obvious repair for the lower-case drive path and the wrong one. NOT /users/me: "
+            "`me` is on the exemption list, so that route stays quiet under the widening too",
+            ("GET ", "/users", "/profile"),
+        ),
+        (
+            "_ARTIFACT_URL widened to bare UUIDs. The QUIET table records the decision NOT to "
+            "detect those, so it is the widening someone actually argues for",
+            ("an id like ", FAKE_UUID),
+        ),
+        (
+            "a credential pattern relaxed on length, which reaches the documented prefix rather "
+            "than a key",
+            ("the ", "sk-ant-", " prefix is documented"),
+        ),
+    )
+
+    CO_OCCURRING = " from " + "".join(("198.18.", "0.1"))
 
     def setUp(self):
         self.gate = load_gate()
-        #: A routable address discloses a host, so the branch prints it -- but the ADDRESS is that
-        #: detector's own finding rather than a capability, so its line is not withheld.
-        self.planted = "the host is " + "".join(("198.18.", "0.1"))
 
-    def test_show_context_still_prints_the_line(self):
-        hits = scan_line(self.gate, self.planted, show_context=True)
-        self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
-        self.assertIn(
-            "the host is",
-            hits[0],
-            "--show-context printed no context on a line that discloses nothing. Suppression is "
-            "meant to be scoped to the three value-is-the-disclosure classes. If it is now "
-            "unconditional, every control that asserts a value is ABSENT still passes and proves "
-            "nothing.",
-        )
+    def test_ordinary_text_keeps_its_context(self):
+        for baits, fragments in self.SUPPRESSION_BAIT:
+            planted = "".join(fragments) + self.CO_OCCURRING
+            with self.subTest(baits=baits):
+                hits = scan_line(self.gate, planted, show_context=True)
+                self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+                self.assertIn(
+                    "".join(fragments),
+                    hits[0],
+                    "--show-context printed no context on a line that discloses nothing. "
+                    f"Suppression has over-reached, and the pattern this baits is: {baits}.",
+                )
 
-    def test_the_default_still_prints_none(self):
-        hits = scan_line(self.gate, self.planted)
-        self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
-        self.assertNotIn(
-            "the host is",
-            hits[0],
-            "the DEFAULT output carried the line. That output is written to public CI logs.",
+    def test_the_default_prints_no_context(self):
+        for baits, fragments in self.SUPPRESSION_BAIT:
+            planted = "".join(fragments) + self.CO_OCCURRING
+            with self.subTest(baits=baits):
+                hits = scan_line(self.gate, planted)
+                self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+                self.assertNotIn(
+                    "".join(fragments),
+                    hits[0],
+                    "the DEFAULT output carried the line. That output goes to public CI logs.",
+                )
+
+    def test_every_suppression_class_has_a_bait_row(self):
+        """A class added to the tuple without bait is a silent failure mode with no control."""
+        gate = self.gate
+        self.assertEqual(
+            [gate._HOME_PATH, gate._ARTIFACT_URL, *(pat for pat, _label in gate._CREDENTIALS)],
+            list(gate._VALUE_IS_THE_DISCLOSURE),
+            "_VALUE_IS_THE_DISCLOSURE changed shape. Every class in it silences context on the "
+            "lines it matches, and a class with no row in SUPPRESSION_BAIT has nothing that "
+            "reddens when its pattern over-reaches -- which is the half nothing else here can "
+            "see. Add the bait row first, then update this assertion.",
         )
 
 
