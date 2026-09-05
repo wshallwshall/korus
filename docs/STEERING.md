@@ -27,9 +27,20 @@ this"; `bin/` means "you invoke this". The steer command is not a hook and does 
 
 ## The problem it works around
 
-No supported channel reaches a session between tool calls. But every tool call is a handoff to the
-harness, where a `PreToolUse` hook fires. That hook's `additionalContext` output lands in the
-model's context. So the path exists; what is missing is a way for another process to write into it.
+**A supported channel now reaches a session between tool calls.** Claude Code's cross-session
+messaging does: the receiving Claude reads a message between tool calls during an active turn, and
+never interrupts a running tool. Documented, from v2.1.224 and v2.1.234 on native Windows.
+
+What it needs is a **name**. `SendMessage` addresses by name, and draws those names from a roster
+that stops at the config root, so it cannot name a session under a second Claude account. See
+[Session mail](SESSION-MAIL.md#who-actually-needs-this) for the measurement.
+
+Claude Code also documents a session's inbox socket for a script or hook to post into. The auth line
+is published; the message line is not, so that route is not buildable from the docs today.
+
+This hook needs no name and no undocumented format. Every tool call is a handoff to the harness,
+where a `PreToolUse` hook fires, and that hook's `additionalContext` lands in the model's context.
+It is addressed by project directory, which you already know.
 
 ## How it works
 
