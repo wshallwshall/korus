@@ -108,8 +108,26 @@ _ALLOWED_IP = re.compile(
 # explicit set of stand-ins and treats everything else as a disclosure. Deliberately NOT extended
 # with every plausible placeholder: each addition is a hole, and a false positive costs one
 # allowlist line while a false negative costs a publication.
+#
+# CASE, AND THE ASYMMETRY IS DELIBERATE. The Windows drive branch is case-blind; `/home` and
+# `/Users` are not. Windows compares paths case-insensitively, so a drive path spelled in lower
+# case names the same file, and discloses the same account, as the canonical one. That spelling
+# arrives for real rather than in theory: PowerShell's own `Resolve-Path` normalises the drive
+# letter and leaves the rest of the path as typed, and a traceback echoes whatever the caller
+# wrote. Both are arrival vectors this module's docstring names by hand. Measured before the
+# fix: the canonical spelling exited 1, the lower-case one exited 0 under a healthy receipt.
+#
+# NOT re.IGNORECASE OVER THE WHOLE PATTERN, which is the obvious repair and the wrong one. It also
+# catches `GET /users/me` and every other `/users/` route, because the placeholder exemptions above
+# require a TRAILING separator and end-of-line supplies none -- so the flag turns a REST path into a
+# disclosure. `/users/` is one of the commonest segments in a URL; the bare alternatives stay
+# case-sensitive for that reason alone.
+#
+# KNOWN MISS, recorded rather than closed: the macOS lower-case form `/users/<name>/Library`. By
+# shape it is indistinguishable from the REST route above, and the route is far the commoner
+# string, so the gate takes the false negative. `docs/LEAK-GATE.md` states it as a limit.
 _HOME_PATH = re.compile(
-    r"(?:[A-Za-z]:[\\/]Users|/home|/Users)[\\/]"
+    r"(?:[A-Za-z]:[\\/][Uu][Ss][Ee][Rr][Ss]|/home|/Users)[\\/]"
     r"(?!<|\$|%|\{"
     r"|(?:Public|Default|All|ContainerAdministrator|runner|vsts"
     r"|me|you|user|username|example)[\\/\s\"'`]"
@@ -130,10 +148,174 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bsk-(?:ant-|proj-)?[A-Za-z0-9_-]{32,}"), "model API key"),
 )
 
+# Private artifact URLs. The UUID here is not a name, it is a CAPABILITY: whoever holds the URL can
+# fetch the artifact, so the string discloses the thing itself the way a token does rather than the
+# way a hostname does. It arrives the way every class in this file arrives -- pasted out of a session
+# into a note, a handoff, a role playbook -- and no other detector here can see it. It carries no
+# home path, no host address and no credential prefix.
+#
+# THIS ONE IS NOT HYPOTHETICAL, WHICH IS WHY IT IS COMPILED IN. Commit a3df144 brought two of these
+# into the tracked tree (roles/LANDER.md, roles/retired/PM.md) and this gate passed them both. They
+# came out again in PR #48 because a person happened to read the diff -- the exact review this gate
+# exists to make cheaper, doing the whole job unaided.
+#
+# THE UUID SHAPE IS REQUIRED ON PURPOSE, so the placeholder form the documentation has to print --
+# claude.ai/code/artifact/<uuid> -- is not a hit for the detector that documents it. The alternative
+# is a detector whose own manual trips it, which earns an allowlist line, and an allowlist line is a
+# per-line veto over every other detector as well.
+#
+# A publicly shared artifact does not match either: that path segment is plural (/public/artifacts/),
+# and a deliberately published URL is not a disclosure.
+#
+# NO BARE-UUID DETECTOR, and this is a decision rather than an oversight. A bare UUID names no host,
+# no account and no project -- it is an opaque 128-bit number, and every other structural detector
+# here recognises a shape that IS the disclosure. It becomes one only when something says what it
+# addresses, which is precisely what the URL form supplies. Measured 2026-09-05 over the scan scope
+# CI actually uses, a bare-UUID detector would have fired zero times:
+#
+#     find . -type f -not -path './.git/*' -print0 | xargs -0 grep -ohE '[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}' | wc -l   ->   0
+#
+# That zero argues against the detector rather than for it. It is a property of this tree on this
+# day, not of the class: a UUID is the most common opaque identifier in software, and this project's
+# own session ids are UUIDs. The first pasted session id, PowerShell New-Guid or hard-coded test GUID
+# fires it, gets an allowlist line, and that line vetoes every detector on the lines it covers. A
+# gate people mute is worth nothing.
+# A PRIVATE ARTIFACT HAS THREE ADDRESSES, AND THE FIRST VERSION OF THIS DETECTOR MATCHED ONE.
+# Corroborated against the shipped clients rather than reasoned about, each read with a negative
+# control that returned zero:
+#
+#     /^\/code\/(?:artifact|frame)\/(?:[A-Za-z0-9_-]<Q>-)?(<uuid>)$/
+#     [`*.frame.claudeusercontent.com`, `*.frame.staging.claudeusercontent.com`]
+#
+# THE QUANTIFIER `<Q>` IS NOT THE SAME IN EVERY PRODUCT, and reading one binary is how this gets
+# re-litigated. Measured on this machine:
+#
+#     CLI      claude 2.1.259        `*`   (a zero-length slug is addressable)
+#     desktop  app-1.40609.1         `+`   (it is not)
+#     desktop  app-1.37937.3         `+`
+#
+# Two sessions grepped different products, each read correctly, and each generalised to "the
+# vendor". The looser grammar is the NEWER one, which is the part neither would have guessed. So
+# the bound below is the UNION -- `{0,64}` addresses what either client can reach. DO NOT narrow it
+# back to `{1,64}` after grepping the desktop asar alone: that reading is true and insufficient.
+#
+# IF YOU RE-MEASURE, PRINT THE PATTERN BESIDE THE COUNT. Three sessions counted this in one binary
+# and got three answers, all correct, none comparable -- because each grepped a DIFFERENT STRING
+# while calling the result global:
+#
+#     grep -ao 'A-Za-z0-9_-\]\*-'  | wc -l    4    the slug group's shape
+#     grep -ao 'A-Za-z0-9_-\]\*'   | wc -l   23    the character class anywhere
+#     within 30 bytes of `artifact`           2    the route, which is the only one that decides
+#
+# The same spread holds for `+`: 2, 59, and 0. There is no "global tally" that settles it; the
+# number is a function of the pattern, and a count published without it cannot be reproduced or
+# contradicted. This note exists because that mistake was made three times here, twice inside
+# messages diagnosing it.
+#
+# AND THE PATTERN IS NOT THE ONLY HIDDEN INPUT. Two sessions read the same file's date, on the same
+# machine, with the same command, and got 2026-08-26 and 2026-08-27. Both correct: the file landed
+# at 00:07 UTC, and one reader used local time. Same artefact, same pattern, unstated timezone.
+#
+# So the rule is not a checklist of things to scope -- you cannot enumerate in advance the ways a
+# number can be relative. It is mechanical: print what you did beside what you got.
+#
+# WHEN THIS WAS READ, dates in UTC because the line above is what happens otherwise. Read
+# 2026-09-05, negative control 0 on each:
+#
+#     CLI      claude.exe 2.1.259     file dated 2026-09-05
+#     desktop  app-1.40609.1          file dated 2026-09-01
+#     desktop  app-1.37937.3          file dated 2026-08-27
+#
+# The counts, with the pattern and the window beside each:
+#
+#     A-Za-z0-9_-\]\*-  within 30 bytes of `artifact`     CLI 2, desktop 0
+#     A-Za-z0-9_-\]+-   within 30 bytes of `artifact`     CLI 0, desktop 2
+#
+# WHY `{0,64}` IS WORTH BUYING WHEN ONLY ONE CLIENT RESOLVES THE FORM IT ADDS. A gate covers what a
+# SHIPPED CLIENT WILL RESOLVE, not what most of them resolve. Matching a form the desktop build
+# cannot address costs a false positive at worst; missing one the CLI can address costs a
+# publication. The measured cost is zero in both directions -- population over the tracked tree is
+# 0 lines, so nothing is newly matched and nothing newly silenced under `--show-context`.
+#
+# Three shapes were missed, and the middle one is the one that matters:
+#
+#   1. `frame` is a SIBLING PATH of `artifact`.
+#   2. An optional human-readable slug may sit between the path and the UUID. THIS IS THE SHAPE THE
+#      ADDRESS BAR PRODUCES, and pasting is the entire arrival path this detector exists for -- so
+#      the likeliest real leak of all was the one reported clean.
+#   3. The content host carries the UUID as a SUBDOMAIN, and the string `claude.ai` never appears.
+#      No widening of the path arm reaches it; it needs an arm of its own.
+#
+# Measured over 13 forms that must fire and 9 near misses that must not: one arm failed 7, this
+# fails 0. The upper bound is 64 rather than unbounded because the clients' patterns are anchored
+# at both ends and this one is not. The lower bound is 0 because the CLI's `*` admits a zero-length
+# slug, which leaves a bare hyphen and still addresses the artifact -- `{1,64}` reported
+# `artifact/-<uuid>` clean.
+#
+# WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK ONCE `_VALUE_IS_THE_DISCLOSURE` EXISTS, which it
+# does NOT in this file -- it arrives with the branch that stacks above this one, and this pattern
+# joins it there. Stated in the future tense on purpose: the two paragraphs below were first
+# written in the present, describing a tuple and a control neither of which is in the file the
+# comment sits in. True of the branch above, read as true of this one, which is the same mistake
+# this whole comment block is about.
+#
+# There, over-reach is LOUD in detection -- a false positive fails a run -- and SILENT in
+# suppression: a too-greedy pattern would quietly stop `--show-context` printing context across the
+# whole corpus, and every control asserting a value is ABSENT would stay green while it happened.
+#
+# `ContextSurvivesOnALineThatDisclosesNothing`, also on that branch, is the corpus for the case.
+# This comment first said it CATCHES the case, which claimed more than the control THEN delivered:
+# it planted ONE line -- `the host is <an address>` -- so only an over-reach broad enough to match
+# ordinary prose reddened it. Measured then: widened to any claude.ai URL, to any run of hex and
+# hyphens, or to any http URL, all GREEN; only `.` reddened it. A corpus of one chosen line,
+# asserted as a general property.
+#
+# It is a bait table now, one row per plausible widening, and all four of those reden it.
+#
+# THAT IS THE LAST THING THIS COMMENT SAYS ABOUT THAT CONTROL, on purpose. The two sentences above
+# each had to be corrected because a comment HERE described the shape of a control THERE, and the
+# branch above kept moving -- twice, in both directions, each correction accurate when written. The
+# durable half is the risk and the name. For what the control covers today, read the control.
+#
+# THAT CONTROL IS NOW A TABLE, one bait row per suppression class, and the rows were chosen against
+# these very mutations. Re-measured after the change: hex-and-hyphens RED, any claude.ai URL RED,
+# any http URL RED, `.` RED. The correction above is kept rather than deleted because the reasoning
+# is the durable part -- a fixture a widening cannot reach cannot redden on it, whatever the
+# docstring claims.
+#
+# The population reading -- zero lines in the tracked tree match the widened pattern -- still stands
+# beside it, and is weaker in a specific way worth naming: it says nothing about lines that do not
+# exist yet.
+#: The UUID itself, shared by both arms so they cannot drift apart.
+_ARTIFACT_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+
+_ARTIFACT_URL = re.compile(
+    rf"claude\.ai/(?:code/)?(?:artifact|frame)/(?:[A-Za-z0-9_-]{{0,64}}-)?{_ARTIFACT_UUID}"
+    rf"|{_ARTIFACT_UUID}\.frame\.(?:staging\.)?claudeusercontent\.com",
+    re.IGNORECASE,
+)
+
 #: Every structural detector, for the count line. A caller cannot tell an armed run from a vacuous
 #: one unless the run says how many detectors it had, so this number is printed even though it is a
 #: constant: the day someone edits this file, the printed number is the receipt.
-_STRUCTURAL_COUNT = 2 + len(_CREDENTIALS)  # home path + routable IP + credential shapes
+#: Detectors whose MATCHED VALUE is itself the disclosure, rather than a pointer to one. A
+#: line carrying any of these must not be echoed by ANY hit on that line.
+#:
+#: BARE IS PER LINE, NOT PER HIT, and the gate shipped getting this wrong. Suppressing
+#: context only on the branch that matched leaves every OTHER detector on the same line free
+#: to print the value. Measured 2026-09-05: one line holding an artifact URL and a routable
+#: IP printed the whole capability in the IP hit's context, while the artifact hit beside it
+#: was correctly bare. Home paths and credentials measured the same way.
+#:
+#: NOT the same list as the branches that emit bare. Those stay bare on their own too, so
+#: removing a pattern here cannot silently re-open the branch it came from.
+_VALUE_IS_THE_DISCLOSURE: tuple[re.Pattern[str], ...] = (
+    _HOME_PATH,
+    _ARTIFACT_URL,
+    *(_pat for _pat, _label in _CREDENTIALS),
+)
+
+_STRUCTURAL_COUNT = 3 + len(_CREDENTIALS)  # home path + routable IP + artifact URL + credentials
 
 #: A pattern that can never match -- the "detector off" sentinel. ``(?!)`` is an always-failing
 #: assertion, so ``.search`` never fires while ``.pattern`` stays a valid string.
@@ -599,12 +781,65 @@ def _read_text(path: Path) -> str | None:
     return data.decode("utf-8", errors="replace")
 
 
+def _carries_a_disclosure(lines: list[str], lineno: int) -> bool:
+    """Does line ``lineno`` (1-based) hold a value-is-the-disclosure class, WRAPPED OR NOT?
+
+    THE DEFECT THIS EXISTS FOR, measured on the merge of #52 and #53. A wrapped artifact URL
+    matches NEITHER of the two raw lines it spans -- that is precisely what the join at the call
+    site exists for. So a suppression rule written against the raw line leaves both halves
+    printable, and any other detector on those two lines reassembles the capability for whoever
+    reads the log:
+
+        p.md:1: routable IP address (<addr>): ... /artifact/<the first half>
+        p.md:1: private artifact URL (capability, wrapped onto the next line)
+        p.md:2: <the second half> is the id, host <addr>
+
+    The gate detects the capability, refuses to print it, and then prints it in two pieces one line
+    apart. Default output was never affected; this is ``--show-context`` only.
+
+    THE NEIGHBOUR GUARD IS THE JOIN'S OWN, and it is not decoration. Without it this suppressed the
+    innocent line NEXT TO a disclosure that sits whole on one line: measured over the tracked tree,
+    4 lines of 65,781 lost context they should have kept, every one of them the neighbour of a line
+    already carrying a home path in full. A value that does not SPAN the boundary is suppressed on
+    its own line already. The detection join states the same rule as "a next line that carries a
+    whole URL reports itself, on its own number".
+
+    REACH MUST EQUAL THE JOIN'S REACH, not exceed it. The join deliberately misses a
+    marker-prefixed continuation and a three-line wrap. Suppressing those lines anyway would
+    withhold context for a disclosure the gate never reported, which is over-reach in the silent
+    direction. Using the join's own shape here is what keeps the two in step, and
+    ``SuppressionReachesExactlyWhatTheJoinReaches`` pins that as a property rather than a
+    coincidence.
+    """
+    line = lines[lineno - 1]
+    if any(p.search(line) for p in _VALUE_IS_THE_DISCLOSURE):
+        return True
+    if lineno < len(lines):
+        nxt = lines[lineno]
+        if not any(p.search(nxt) for p in _VALUE_IS_THE_DISCLOSURE) and any(
+            p.search(line.rstrip() + nxt.lstrip()) for p in _VALUE_IS_THE_DISCLOSURE
+        ):
+            return True
+    if lineno >= 2:
+        prv = lines[lineno - 2]
+        if not any(p.search(prv) for p in _VALUE_IS_THE_DISCLOSURE) and any(
+            p.search(prv.rstrip() + line.lstrip()) for p in _VALUE_IS_THE_DISCLOSURE
+        ):
+            return True
+    return False
+
+
 def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = False) -> list[str]:
     """Forbidden-content hits in one file, as ``path:line: reason`` strings.
 
     Reasons only by default -- location and category, never the matched value -- so a hit report is
     safe to print in a public CI log. ``show_context`` appends the matched value and the trimmed
     line, for local triage only.
+
+    THREE CLASSES IGNORE IT -- home paths, credentials and artifact URLs. For those the matched
+    value is the whole disclosure, so a hit that printed it would hand the log's reader the very
+    thing it is reporting. Bare there is the control, not a formatting choice, and it applies to
+    the whole LINE: a line carrying one of them silences context on every hit it produces.
     """
     posix = rel_posix if rel_posix is not None else path.as_posix()
     text = _read_text(path)
@@ -612,10 +847,17 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
         return []
     ip_scan = path.suffix not in _IP_SKIP_SUFFIXES and path.name not in _IP_SKIP_NAMES
     hits: list[str] = []
-    for lineno, line in enumerate(text.splitlines(), 1):
+    lines = text.splitlines()
+    for lineno, line in enumerate(lines, 1):
         if any(a.search(line) for a in ALLOWLIST):
             continue
-        ctx = f": {line.strip()[:120]}" if show_context else ""
+        # Bare is per LINE, not per hit -- see `_VALUE_IS_THE_DISCLOSURE`. A line carrying a
+        # disclosure gets no context on ANY of its hits, including detectors that found
+        # something else entirely, and including a disclosure BROKEN ACROSS two lines, which
+        # matches neither of them on its own. `_carries_a_disclosure` is where that is decided.
+        ctx = ""
+        if show_context and not _carries_a_disclosure(lines, lineno):
+            ctx = f": {line.strip()[:120]}"
         before = len(hits)
         # ``_`` is a word character, so a \b-anchored name pattern cannot see its token inside an
         # identifier. Scanning a shadow copy with identifier separators neutralised closes that for
@@ -632,9 +874,53 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
                     value = f" ({ip})" if show_context else ""
                     hits.append(f"{posix}:{lineno}: routable IP address{value}{ctx}")
         # Reason only, never the value: the account name IS the disclosure, so echoing it into a
-        # public log would publish exactly what the hit is reporting.
+        # public log would publish exactly what the hit is reporting. The context line IS the
+        # home path, so no trimmed form of it leaves the account name out -- which is why this
+        # branch ignores show_context rather than redacting under it. `_VALUE_IS_THE_DISCLOSURE`
+        # then silences the REST of the line's hits, which is the half this branch cannot reach.
+        #
+        # It appended `ctx` for the detector's whole life and contradicted this comment the
+        # whole time. `AHomePathHitNeverEchoesTheAccountName` runs the two against each other
+        # now, because a comment is not a control.
         if _HOME_PATH.search(line):
-            hits.append(f"{posix}:{lineno}: absolute user-home path (OS account name){ctx}")
+            hits.append(f"{posix}:{lineno}: absolute user-home path (OS account name)")
+        # Bare whatever the caller passed, like the home-path and credential hits either side.
+        # The URL IS the capability, so echoing the line into a log hands that log's reader the
+        # artifact -- publishing the thing the hit is reporting, to a wider audience than the tree.
+        if _ARTIFACT_URL.search(line):
+            hits.append(f"{posix}:{lineno}: private artifact URL (capability)")
+        # A URL WRAPPED ACROSS TWO LINES MATCHED NOTHING, AND THE RUN SAID NOTHING. Every detector
+        # here is line-based, so a URL a text formatter reflowed at a column limit -- mid-UUID, or
+        # after the last slash -- was invisible to a gate that reported the file clean. Prose reflow
+        # is not an exotic case: it is what a wrapping editor does to a pasted link in a Markdown
+        # paragraph, which is exactly how `a3df144` put two of these in the tree.
+        #
+        # SCOPED TO THIS DETECTOR ON PURPOSE, and joined here rather than by widening
+        # `_ARTIFACT_URL` itself. Both choices are containment. The pattern is a member of
+        # _VALUE_IS_THE_DISCLOSURE, so it has a second job -- suppressing `--show-context` on the
+        # lines it matches -- where over-reach is SILENT. Leaving the pattern alone means the join
+        # cannot widen what the gate refuses to print. Leaving the other detectors alone means a
+        # home path or a credential still needs no cross-line reasoning: their line model is
+        # unchanged, so nothing about their false-positive behaviour moves.
+        #
+        # Reported at the FIRST line, because that is where a reader starts looking, and the reason
+        # says `wrapped` because grepping that line alone will not show a URL.
+        #
+        # RESIDUALS, measured, not assumed. A wrap spanning THREE lines is still missed: only
+        # adjacent pairs are joined. A continuation line carrying a prefix -- `# `, `> `, `* ` --
+        # is still missed, because the join strips whitespace and nothing else; stripping comment
+        # markers would fabricate adjacency between lines that a reader sees as separate, and this
+        # detector's over-reach is the silent kind. Both are narrower than the hole they leave.
+        elif lineno < len(lines):
+            nxt = lines[lineno]
+            if (
+                # A next line that carries a whole URL reports itself, on its own number. Joining
+                # would file the same capability twice, under two line numbers.
+                not _ARTIFACT_URL.search(nxt)
+                and not any(a.search(nxt) for a in ALLOWLIST)
+                and _ARTIFACT_URL.search(line.rstrip() + nxt.lstrip())
+            ):
+                hits.append(f"{posix}:{lineno}: private artifact URL (capability, wrapped onto the next line)")
         for cred_pat, cred_label in _CREDENTIALS:
             if cred_pat.search(line):
                 hits.append(f"{posix}:{lineno}: {cred_label}")
