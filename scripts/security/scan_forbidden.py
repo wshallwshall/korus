@@ -181,6 +181,19 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # the bound below is the UNION -- `{0,64}` addresses what either client can reach. DO NOT narrow it
 # back to `{1,64}` after grepping the desktop asar alone: that reading is true and insufficient.
 #
+# IF YOU RE-MEASURE, PRINT THE PATTERN BESIDE THE COUNT. Three sessions counted this in one binary
+# and got three answers, all correct, none comparable -- because each grepped a DIFFERENT STRING
+# while calling the result global:
+#
+#     grep -ao 'A-Za-z0-9_-\]\*-'  | wc -l    4    the slug group's shape
+#     grep -ao 'A-Za-z0-9_-\]\*'   | wc -l   23    the character class anywhere
+#     within 30 bytes of `artifact`           2    the route, which is the only one that decides
+#
+# The same spread holds for `+`: 2, 59, and 0. There is no "global tally" that settles it; the
+# number is a function of the pattern, and a count published without it cannot be reproduced or
+# contradicted. This note exists because that mistake was made three times here, twice inside
+# messages diagnosing it.
+#
 # Three shapes were missed, and the middle one is the one that matters:
 #
 #   1. `frame` is a SIBLING PATH of `artifact`.
