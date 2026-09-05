@@ -7,35 +7,48 @@ it; `git log -p docs/PLAYBOOK-SIZE.md` carries the measurements, the sources and
 claimed the opposite until 2026-09-05. The retraction sits here, not in a footnote, because the
 false version ran for weeks and the claim was load-bearing.
 
-arXiv 2605.10039, McMillan, 11 May 2026: 1,650 Claude Code sessions, four manipulated
-file-structure variables. From the abstract: *"Size and conflict nulls are supported by
-affirmative-null Bayes factors (BF10 between 0.05 and 0.10)."* Evidence FOR the null, not a failure
-to reject. Its limits are real: one trivial compliance target, models a generation old, and no line
-range stated in the abstract.
+The study is arXiv 2605.10039, McMillan, 11 May 2026.
 
-**So keep files short for CONTEXT BUDGET, not adherence.** The budget cost is mechanical and
-documented; the file loads in full and occupies the window on every request. The adherence
-justification is asserted by the vendor with no experiment attached, and now has an affirmative
-null against it. Argue the rule on the ground that holds.
+- 1,650 Claude Code sessions, four manipulated file-structure variables.
+- From the abstract: *"Size and conflict nulls are supported by affirmative-null Bayes factors
+  (BF10 between 0.05 and 0.10)."*
+- That is evidence FOR the null on size, not a failure to reject.
+- Its limits are real: one trivial compliance target, models a generation old, and no line range
+  stated in the abstract.
 
-**The study's largest effect is not about files.** Compliance degrades as a session runs on. The
-abstract reports about 5.6 percent lower odds per generated function (OR = 0.944) but calls the
-relationship non-monotonic rather than a constant per-step effect, so the number does not
-extrapolate and forty functions does not mean halved. Exploratory, found during analysis, measured
-on one trivial annotation. Take the direction, not the dose: the lever it points at is session
-length and re-anchoring, not document shape.
+**Keep files short for CONTEXT BUDGET, not for adherence.** The budget cost is mechanical and
+documented: the file loads in full and occupies the window on every request.
 
-**"No study" and "no figure" are different sentences. Do not collapse them.** One length figure
-is product-enforced, and it is the only one here that is not a judgment: Claude Code warns when a
-single loaded memory file passes about 5 percent of the context window in characters, with a floor
-near 40,000. Measured 2026-09-05 on `origin/main`, the MessageFoundry engine `CLAUDE.md` is 59,648
-characters, so it trips that floor at 1.49x today.
+The adherence claim is a different kind of thing. The vendor asserts it on several of its own
+pages with no experiment attached, and it now has an affirmative null standing against it. Argue
+the rule on the ground that holds.
 
-**Count characters, not bytes, and read the shared ref, not your checkout.** `wc -c` returns bytes
-and the threshold is stated in characters; that file carries 299 multi-byte characters, so the two
-answers differ. A stale worktree copy differed by another 3,640. Both of my errors pushed the same
-way and I published 1.41x before either was caught. Read the threshold out of the CLI binary rather
-than trusting this line.
+**The study's largest effect is not about files at all.** Compliance degrades as a session runs on.
+
+- The abstract reports about 5.6 percent lower odds of compliance per generated function
+  (OR = 0.944).
+- The abstract calls it non-monotonic rather than a constant per-step effect, so it does not
+  extrapolate. Forty functions does not mean halved.
+- Exploratory: found during analysis, not pre-specified, and measured on one trivial annotation.
+- Take the direction, not the dose. The lever is session length and re-anchoring, not file shape.
+
+**"No study" and "no figure" are different sentences. Do not collapse them.** A null on adherence
+does not mean no length figure binds you.
+
+One figure is product-enforced and is the only one here that is not a judgment. Claude Code warns
+when a single loaded memory file passes about 5 percent of the context window in characters, with
+a floor near 40,000.
+
+Measured 2026-09-05 on `origin/main`, the MessageFoundry engine `CLAUDE.md` is 59,648 characters,
+so it trips that floor at 1.49x today.
+
+**Count characters, not bytes, and read the shared ref, not your checkout.**
+
+- `wc -c` returns bytes and the threshold is stated in characters. That file carries 299 multi-byte
+  characters, so the two answers differ.
+- A stale worktree copy differed by a further 3,640.
+- Both of my errors pushed the same way, and I published 1.41x before either was caught.
+- Read the threshold out of the CLI binary rather than trusting this line.
 
 ## The rules
 
