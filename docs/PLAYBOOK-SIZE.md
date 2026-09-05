@@ -3,9 +3,25 @@
 Rules for writing a seat playbook. The evidence for each rule is in the commit that introduced
 it; `git log -p docs/PLAYBOOK-SIZE.md` carries the measurements, the sources and their limits.
 
-**No published study varies instruction-document length as an independent variable.** So the
-length figures below are judgments, not measurements, and they are not the load-bearing part.
-The rules that are measured are about gates and order.
+**A published study varied instruction-file length and found no effect on adherence.** This page
+claimed the opposite until 2026-09-05. The retraction sits here, not in a footnote, because the
+false version ran for weeks and the claim was load-bearing.
+
+arXiv 2605.10039, McMillan, 11 May 2026: 1,650 Claude Code sessions, four manipulated
+file-structure variables. From the abstract: *"Size and conflict nulls are supported by
+affirmative-null Bayes factors (BF10 between 0.05 and 0.10)."* Evidence FOR the null, not a failure
+to reject. Its limits are real: one trivial compliance target, models a generation old, and no line
+range stated in the abstract.
+
+**So keep files short for CONTEXT BUDGET, not adherence.** The budget cost is mechanical and
+documented; the file loads in full and occupies the window on every request. The adherence
+justification is asserted by the vendor with no experiment attached, and now has an affirmative
+null against it. Argue the rule on the ground that holds.
+
+**The study's largest effect is not about files.** Each function an agent generates carries about
+5.6 percent lower odds of compliance within that session (OR = 0.944). The abstract calls it
+exploratory, found during analysis. If it holds, adherence decays with session progress, which
+argues for shorter sessions, not shorter files.
 
 **"No study" and "no figure" are different sentences. Do not collapse them.** One length figure
 is product-enforced, and it is the only one here that is not a judgment: Claude Code warns when a
@@ -30,7 +46,7 @@ than trusting this line.
 | Cross-references | By name. Never by section number, position, or line |
 | Repeating a rule across playbooks | A pointer, never a second summary |
 | Every number in a playbook | The command beside it, and the condition you did not vary |
-| Any length figure, here or anywhere | A judgment, except the one product-enforced threshold above |
+| Any length figure, here or anywhere | A judgment, except the one product-enforced threshold above. No length figure has adherence evidence behind it |
 | Moving a rule out to load lazily | Fine for reference. Never for a "never do X" rule, which must stay resident |
 | A rule you cannot gate and cannot explain | Delete it |
 | Debt you import | Record it in the ratchet. Never hide it behind an exemption |
