@@ -64,9 +64,28 @@ def load_gate():
     return module
 
 
-#: An obviously synthetic UUID: version-4 shaped, all-zero payload. Never a real artifact id, and
-#: deterministic, so a failure names a detector rather than a random draw.
-FAKE_UUID = "00000000-0000-4000-8000-000000000000"
+#: An obviously synthetic UUID: version-4 shaped, and deterministic, so a failure names a detector
+#: rather than a random draw.
+#:
+#: IT SPANS a-f ON PURPOSE, AND THE FIRST VERSION OF THIS FILE DID NOT. The fixture shipped as
+#: `00000000-0000-4000-8000-000000000000` -- every character a decimal digit. So the `a-f` half of
+#: the detector's `[0-9a-f]` class was exercised zero times, and narrowing the detector to `[0-9]`
+#: left all seven cases here green while the gate went blind to every real artifact URL. Measured:
+#: the narrowed gate catches the old fixture and MISSES a real-shaped id.
+#:
+#: Both URLs PR #48 removed contain hex letters, and an all-digit v4 UUID has a probability of
+#: roughly 1 in 2.7 million -- so the single input the control proved was the one input that never
+#: arrives. That is this file's own stated failure, committed inside the file that exists to
+#: prevent it: a green run that proves nothing about the class it names.
+#:
+#: `.upper()` must also CHANGE it, or the uppercase row is a duplicate of the row above it and
+#: `re.IGNORECASE` is unproven too. `TheFixtureSpansTheClassItProves` pins both properties, so the
+#: lesson survives the next person editing this constant.
+FAKE_UUID = "abcdefab-cdef-4abc-8def-abcdefabcdef"
+
+#: The other end of the same class, kept as its own planted form. Narrowing the detector to `[a-f]`
+#: is the mirror of the defect above, and this is what fails when someone does it.
+DIGIT_UUID = "00000000-0000-4000-8000-000000000000"
 
 #: One row per structural detector: (label, reason substring the hit must carry, line fragments).
 #: The fragments are joined to build the planted line. The module docstring says why they are
@@ -170,6 +189,7 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
             ("https://claude.ai/code/", "artifact/", FAKE_UUID),
             ("https://claude.ai/", "artifact/", FAKE_UUID),
             ("claude.ai/code/", "artifact/", FAKE_UUID.upper()),
+            ("https://claude.ai/code/", "artifact/", DIGIT_UUID),
             ("[the handoff](https://claude.ai/code/", "artifact/", FAKE_UUID + ")"),
         ):
             with self.subTest(form="".join(parts)[:36]):
@@ -178,6 +198,43 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
                     any("private artifact URL" in h for h in hits),
                     f"no artifact-URL hit on {''.join(parts)!r}. Hits: {hits!r}",
                 )
+
+
+class TheFixtureSpansTheClassItProves(unittest.TestCase):
+    """A fixture that exercises half a character class proves half a detector, and reads as proof.
+
+    This case exists because the first version of this file failed it. Everything else here can be
+    green while the detector is blind, if the planted value never reaches the part of the pattern
+    that matters -- and nothing about that is visible in a passing run.
+    """
+
+    def test_the_uuid_fixture_covers_the_letter_half_of_the_hex_class(self):
+        letters = set("abcdef") & set(FAKE_UUID.lower())
+        self.assertEqual(
+            set("abcdef"),
+            letters,
+            f"FAKE_UUID is {FAKE_UUID!r}, which does not use every hex letter. The detector matches "
+            "`[0-9a-f]`, so a fixture missing the letters proves only the digit half: narrowing the "
+            "pattern to `[0-9]` would keep this suite green while the gate went blind to real "
+            "artifact URLs, which is exactly what shipped once.",
+        )
+
+    def test_the_digit_fixture_covers_the_other_half(self):
+        self.assertTrue(
+            set("0123456789") & set(DIGIT_UUID),
+            f"DIGIT_UUID is {DIGIT_UUID!r} and carries no digits, so narrowing the detector to "
+            "`[a-f]` would go unnoticed.",
+        )
+
+    def test_uppercasing_the_fixture_changes_it(self):
+        self.assertNotEqual(
+            FAKE_UUID,
+            FAKE_UUID.upper(),
+            f"FAKE_UUID is {FAKE_UUID!r}, and uppercasing it is a no-op. The uppercase form in "
+            "`test_the_artifact_detector_sees_every_form_of_the_same_capability` is then a "
+            "duplicate of the row above it, and `re.IGNORECASE` on the detector is unproven -- "
+            "deleting the flag would leave this suite green.",
+        )
 
 
 class EveryDetectorStaysQuietOnItsNearMiss(unittest.TestCase):
