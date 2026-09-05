@@ -36,6 +36,8 @@ Liaison both. Nothing replaced the other five.
 | Regulator | [REGULATOR.md](REGULATOR.md) | Decides whose failure a red is: the PR's, `main`'s, a flake, or the queue's. Only the PR's own failure becomes work. **It starts with no memory, so its log is not optional.** |
 | Lander | [LANDER.md](LANDER.md) | **What enters the merge queue, and in what order.** Merge-forwards, made continuous by `strict: true` as `main` moves. The one-at-a-time ledger slot, since the queue builds each entry on the one ahead. Handing back PRs needing a ruling. |
 | Steward | [STEWARD.md](STEWARD.md) | **A cron, not a seat.** Zero model calls, so it needs no account. Reads usage and names the account with headroom. It cannot warn a running session, because nothing can interrupt one. |
+| Not a seat | [COMMON-STAGED.md](COMMON-STAGED.md) | **Staging, not a playbook.** Sections split out of COMMON.md on 2026-09-05 that belong to one seat or fire never. Unedited, awaiting a destination. |
+| Not a seat | [LANDER-ROUTED-OUT.md](LANDER-ROUTED-OUT.md) | **Staging, not a playbook.** Sections split out of LANDER.md on 2026-09-05 that belong to another seat. Unedited, and awaiting a destination. Do not read it as rules for any seat. |
 | Every seat | [COMMON.md](COMMON.md) | The rules and instrument failures that belong to no single seat. **Read this first, whichever seat you hold.** |
 
 ### 1b. The retired seats keep their files so a reader finds them retired, not absent
