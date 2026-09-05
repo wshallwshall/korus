@@ -3,9 +3,16 @@
 Rules for writing a seat playbook. The evidence for each rule is in the commit that introduced
 it; `git log -p docs/PLAYBOOK-SIZE.md` carries the measurements, the sources and their limits.
 
-**No published study varies instruction-document length as an independent variable.** So every
-length figure below is a judgment, not a measurement, and it is not the load-bearing part. The
-rules that are measured are about gates and order.
+**No published study varies instruction-document length as an independent variable.** So the
+length figures below are judgments, not measurements, and they are not the load-bearing part.
+The rules that are measured are about gates and order.
+
+**"No study" and "no figure" are different sentences. Do not collapse them.** One length figure
+is product-enforced, and it is the only one here that is not a judgment: Claude Code warns when a
+single loaded memory file passes about 5 percent of the context window in characters, with a floor
+near 40,000. Measured 2026-09-05, the MessageFoundry engine `CLAUDE.md` is 56,307 characters, so it
+trips that floor at 1.41x today. Verify it yourself with `wc -c`, and read the threshold out of the
+CLI binary rather than trusting this line.
 
 ## The rules
 
@@ -18,7 +25,8 @@ rules that are measured are about gates and order.
 | Cross-references | By name. Never by section number, position, or line |
 | Repeating a rule across playbooks | A pointer, never a second summary |
 | Every number in a playbook | The command beside it, and the condition you did not vary |
-| Any length figure, here or anywhere | A judgment. No study varies length |
+| Any length figure, here or anywhere | A judgment, except the one product-enforced threshold above |
+| Moving a rule out to load lazily | Fine for reference. Never for a "never do X" rule, which must stay resident |
 | A rule you cannot gate and cannot explain | Delete it |
 | Debt you import | Record it in the ratchet. Never hide it behind an exemption |
 
@@ -30,6 +38,7 @@ rules that are measured are about gates and order.
 | A rule cited by position | A stale pointer costs more than no pointer |
 | A second summary instead of a pointer | Two copies with no drift signal between them |
 | A number without its command | It cannot be checked, so it is believed until it is wrong |
+| A per-file size target | It cannot see a duplicate. Two identical 78-line files both load on this machine today |
 
 ## Where the durable line sits
 
