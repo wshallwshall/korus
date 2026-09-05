@@ -1,0 +1,133 @@
+name: required workflow state
+
+# Does branch protection actually require the checks this repository thinks it requires?
+#
+# THE DEFECT THIS EXISTS FOR, measured on this repository 2026-09-05. `review-gate.yml` was built so
+# that a refusal is legible -- the constitution's Article III turns on it, and the workflow's own
+# header explains that its three states exist because a reviewer who declines and applies nothing
+# looks exactly like a reviewer who never ran. Its job is called `gate`.
+#
+# `gate` was NOT among the required contexts on `main`. Those were:
+#
+#     gates (ubuntu-latest)
+#     gates (windows-latest)
+#
+# So a pull request could merge with the review gate RED, and CLAUDE.md's sentence "No PR merges
+# unlabelled" was false the day it was written. Nothing in the repository could have told anybody:
+# the workflow file exists, its job runs, and its result is simply not consulted.
+#
+# TWO FAILURE SHAPES, and this job reports both, because they need different fixes.
+#
+#   ORPHANED   a workflow job that looks like a gate and is required by nothing. The check runs, goes
+#              red, and merges happen anyway.
+#   UNBACKED   a required context with no workflow that can ever report it -- a renamed job, a
+#              deleted file, or a workflow disabled in the UI. Nothing dispatches, the context never
+#              arrives, and NO pull request can merge. That presents as "CI is stuck" rather than as
+#              "branch protection is misconfigured", which is why it goes unfound.
+#
+# A TEST OVER THE YAML CANNOT SEE EITHER ONE. A disabled workflow keeps its file and its job name on
+# disk, so resolving a context against the tree passes in the healthy case AND the broken one. The
+# live protection API is the only thing that answers this.
+#
+# IT REPORTS AND NEVER CHANGES PROTECTION. Editing branch protection from a scheduled job would let
+# a workflow widen what gates it, which is the same class of fault as a gate that can change what it
+# decides on. review-gate.yml already separates those two jobs for that reason.
+
+on:
+  schedule:
+    - cron: '30 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare live required contexts against the workflows on disk
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: main
+        run: |
+          set -euo pipefail
+
+          # A token without admin rights cannot read protection. Say so rather than reporting an
+          # empty required set, which would render as "nothing is required" and be believed.
+          if ! prot=$(gh api "repos/$REPO/branches/$BRANCH/protection" 2>/dev/null); then
+            {
+              echo "### Required workflow state"
+              echo
+              echo "**COULD NOT READ branch protection**, so nothing was audited. This is not a"
+              echo "clean result. The token needs admin:repo access to read protection settings."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          required=$(echo "$prot" | jq -r '.required_status_checks.contexts // [] | .[]' | sort -u)
+          strict=$(echo "$prot" | jq -r '.required_status_checks.strict // false')
+
+          # Job ids and their `name:` overrides, from every workflow in the tree.
+          jobs_on_disk=$(grep -rhoE '^  [a-zA-Z0-9_-]+:' .github/workflows/*.yml \
+                          | tr -d ' :' | sort -u || true)
+
+          {
+            echo "### Required workflow state"
+            echo
+            echo "Read at $(date -u +%Y-%m-%dT%H:%M:%SZ) against \`$BRANCH\`."
+            echo
+            echo "**Strict (branch must be up to date): \`$strict\`.**"
+            if [ "$strict" = "true" ]; then
+              echo "That is why an open PR goes BEHIND the moment anything else lands."
+              echo "\`stalled-prs.yml\` is the job that reports the consequence."
+            fi
+            echo
+            echo "#### Required contexts, live"
+            if [ -z "$required" ]; then
+              echo
+              echo "**NONE. Nothing gates a merge to \`$BRANCH\` at all.**"
+            else
+              echo
+              echo '```'
+              echo "$required"
+              echo '```'
+            fi
+            echo
+            echo "#### UNBACKED: required, but no job on disk could report it"
+            unbacked=0
+            while IFS= read -r ctx; do
+              [ -z "$ctx" ] && continue
+              # A matrix context reads as `job (leg)`. The job id is the part before the space.
+              base="${ctx%% (*}"
+              if ! echo "$jobs_on_disk" | grep -qx "$base"; then
+                echo "- \`$ctx\` -- no job \`$base\` in .github/workflows/. NOTHING CAN MERGE until"
+                echo "  this context reports, and it never will."
+                unbacked=$((unbacked + 1))
+              fi
+            done <<< "$required"
+            [ "$unbacked" -eq 0 ] && echo "- none"
+            echo
+            echo "#### ORPHANED: a gate-shaped job that gates nothing"
+            orphan=0
+            for wf in .github/workflows/*.yml; do
+              case "$(basename "$wf")" in
+                *gate*|*review*) : ;;
+                *) continue ;;
+              esac
+              for job in $(grep -oE '^  [a-zA-Z0-9_-]+:' "$wf" | tr -d ' :'); do
+                case "$job" in on|permissions|concurrency|env|defaults|jobs) continue ;; esac
+                if ! echo "$required" | grep -qE "^$job( \(|$)"; then
+                  echo "- \`$job\` in \`$(basename "$wf")\` is required by nothing, so a red result"
+                  echo "  there does not stop a merge."
+                  orphan=$((orphan + 1))
+                fi
+              done
+            done
+            [ "$orphan" -eq 0 ] && echo "- none"
+            echo
+            echo "This job READS. It never edits protection: a workflow that could widen what gates"
+            echo "it is the same fault as a gate that can change what it decides on."
+          } >> "$GITHUB_STEP_SUMMARY"
