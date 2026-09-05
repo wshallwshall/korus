@@ -53,6 +53,7 @@ rather than hosts. The other detectors still run there.
 | Absolute user-home path | `<drive>:\Users\<account>\...`, `/home/<account>/...`, `/Users/<account>/...`. Carries an OS login, usually a real person's name, often the internal project name below it. Exempt: placeholders (`<name>`, `$HOME`, `%USERPROFILE%`, `{home}`) and a few conventional stand-ins. Everything else reads as a real account |
 | Routable IPv4 | A free-standing quad that is not RFC1918, loopback, link-local, broadcast, `0.`-prefixed, multicast, or an RFC5737 documentation address. Naming a real host is a network disclosure, even a jump box. Look-arounds keep dotted OIDs, version strings and spec-section citations out. |
 | Credential shapes | Private-key block headers, and prefix-anchored token formats. It prints `private key block`, `cloud access key id`, `forge access token`, `chat platform token` and `model API key`. Prefix-anchored because an entropy heuristic over source produces a false-positive storm, and a muted gate is worth nothing. Run a real secret scanner too: this catches only copy-paste leaks riding with identifying content. |
+| Private artifact URL | `claude.ai/artifact/<uuid>`, with or without the `code/` segment. The UUID is a *capability*, not a name: whoever holds the URL can fetch the artifact. The UUID shape is required, so the placeholder form this row prints does not trip the detector that documents it, and a deliberately shared `/public/artifacts/` link does not either -- that segment is plural. Prints bare, like a credential hit. |
 
 **Token detectors** come from a file *you* supply and never commit: the literal names of the private
 projects, clients, vendors, hosts or people that must not appear. Nobody can ship that list for you,
@@ -61,6 +62,32 @@ and a public repository is the last place it could live.
 **The home-path detector only sees accounts that start with an ASCII letter.** A name beginning
 with a digit or `_`, or a non-ASCII login, is not matched -- and no other detector covers the shape,
 so the miss is silent.
+
+**A URL broken across two lines is missed, and nothing says so.** The scanner reads one line at a
+time, so prose reflow defeats it. Measured 2026-09-05: the one-line form is caught; wrapped
+mid-UUID or after the last slash, it is not. These pages wrap near 100 characters, and the URL is
+longer.
+
+**The artifact-URL detector exists because the gate failed first.** Commit `a3df144` put two private
+artifact URLs in the tree: `roles/LANDER.md:4027` and `roles/retired/PM.md:200`. The gate scanned
+both and exited `0`, because no pattern covered the class. A reader caught them; PR #48 removed
+them.
+
+That is the review this gate exists to make cheaper, doing the whole job unaided. The detector
+closes the pattern gap, and `tests/test_the_leak_gate_can_see_every_class_it_claims.py` plants a line
+per detector so a future green is a reading rather than a detector that is off.
+
+Out of the tree is not out of *history*. They stay reachable through `a3df144`, which no file scan
+reaches -- see [the ref store](#what-this-gate-never-looks-at-the-ref-store). Rotating the artifact
+revokes the capability. Rewriting history does not, and costs far more.
+
+**There is no bare-UUID detector, and that is a decision.** A UUID names no host, no account and no
+project. Every other structural detector here recognizes a shape that *is* the disclosure. A UUID
+becomes one only when something says what it addresses, which is what the URL supplies.
+
+Measured 2026-09-05 over the scope CI scans, it would have fired zero times. That zero describes this
+tree today, not the class. UUIDs are the commonest opaque identifier in code, and this project's own
+session ids are UUIDs. The first pasted earns an allowlist line, vetoing every detector on it.
 
 **What it never opens.** Ten directory names are skipped whether or not git tracks what is inside
 them: `.git`, `.venv`, `venv`, `node_modules`, `__pycache__`, `.mypy_cache`, `.ruff_cache`,
@@ -96,8 +123,15 @@ Read the exit code, not the output:
 echoing it into a CI log copies the leak into a public place. The default output is location and
 category, never the matched text.
 
-Credential-shape hits stay bare whatever you pass, and so does a home-path hit: the account name is
-itself the disclosure.
+Credential-shape hits stay bare whatever you pass, and so does an artifact-URL hit: the URL *is* the
+capability, so printing it hands whoever reads the log the artifact itself.
+
+**A home-path hit does not stay bare, though this page and the code both said it did.** Measured
+2026-09-05: under `--show-context` that branch appends the trimmed line, which *is* the home path, so
+the account name is echoed. The comment directly above it reads "Reason only, never the value".
+
+Recorded rather than quietly fixed: changing it changes a shipped detector's output, which is the
+call of whoever owns triage. Until then, do not pass `--show-context` in CI.
 
 ### Three behaviors worth knowing, because each one is a way a scanner lies
 
@@ -117,7 +151,7 @@ scan, pass or fail:
 
 <!-- no-copy -->
 ```
-ccx leak gate: loaded structural=8, names=0, literals=0, allowlist=1  [STRUCTURAL-ONLY: ...]
+ccx leak gate: loaded structural=9, names=0, literals=0, allowlist=1  [STRUCTURAL-ONLY: ...]
 ccx leak gate: scanned 412 file(s)  [STRUCTURAL-ONLY: ...]
 ```
 
