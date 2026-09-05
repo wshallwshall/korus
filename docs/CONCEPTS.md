@@ -174,6 +174,90 @@ Setting up a new worktree's environment is `setupHook`'s job, not `new.ps1`'s. I
 `CCX_WORKTREE_PATH`, `CCX_WORKTREE_NAME`, `CCX_PRIMARY_ROOT` and `CCX_BASE_REF` set. See
 [`examples/worktree-setup.ps1.example`](https://claude-multisession.pages.dev/examples/worktree-setup.ps1.example).
 
+### A worktree narrows the branch, not the file set
+
+> **NOT YET ADOPTED. This subsection is a design note, not a practice.** No seat here runs a
+> narrowed checkout and nothing below is installed. It records an idea from outside this project,
+> the nearest measurement of its cost, and the failure mode its source does not mention.
+
+A worktree is keyed by a **branch**. Its content is the whole repository. So a Reviewer that only
+reads pull requests still holds a checkout able to write every source file. The job needs none of
+that.
+
+`git sparse-checkout` narrows what a working tree **contains** without changing which branch it is
+on. The seat keeps its branch and loses the files it was never going to touch. The capability is
+then absent rather than forbidden.
+
+**Grade the source before you use it.** The idea is from an essay by one team at Every, on an
+operations folder that "has no app code, so it cannot accidentally modify production code". Behind
+it sits one operator, three months, almost no instrumented numbers. Read it as a hypothesis.
+
+**KORUS has the structure, not the insight.** The two-repository split is framed as privacy:
+`roles/COMMON.md` scopes the private repository to what "must never reach the public repository".
+That stops a leak OUT. Absent capability stops an agent reaching IN. Same shape, opposite
+direction.
+
+Measured at `1b6b7fc`, the commit before this subsection existed:
+
+```powershell
+(git grep -l -i "no app code" 1b6b7fc)     | Measure-Object -Line   # 0 files
+(git grep -l -i "cannot modify" 1b6b7fc)   | Measure-Object -Line   # 0 files
+(git grep -l -i "sparse-checkout" 1b6b7fc) | Measure-Object -Line   # 1 file, HOOKS.md, unrelated
+```
+
+> **Pin those greps to the sha, and here is why.** Run the same three against the working tree and
+> each returns one file more. That file is this subsection, which quotes the phrases and prints the
+> queries. The needle matched its own haystack on the first attempt at this paragraph. A count
+> without the ref it was taken at is not a measurement.
+
+**Four ways to implement a prohibition, ordered by the evidence each leaves.**
+
+| Item | Rule |
+| --- | --- |
+| Remove the data | Fails legibly. The error is "that file does not exist", which is true and names the real cause. Most evidence. |
+| Gate with a hook | Fails with a receipt. The denial is written down, so you can count the rule's false positives afterwards. |
+| Remove the tool | Fails, but may misattribute. The error names a cause, and that cause can be the wrong one. |
+| A rule in prose | Leaves no trace. Obedience and violation look identical from outside. [`KORUS-BUILD.md`](KORUS-BUILD.md#before-you-open-any-session) states the consequence: "Roles are advisory; the gates are not". |
+
+That ordering is about evidence, not strength. A prose rule can hold, and this project measured
+[how well one holds](WORKER-BRIEF.md#why-a-prohibition-rather-than-ask-if-you-are-unsure). It just
+cannot show you afterwards whether it did.
+
+> **The nuance the essay collapses.** Removing the DATA and removing the TOOL both read as "the
+> capability is absent". They fail in opposite directions, so they are not interchangeable.
+>
+> Missing data reports itself truthfully. The tool still runs, looks, and says the path is not
+> there. The first diagnosis is the right one.
+>
+> A missing or broken tool produces a confident wrong diagnosis. It cannot run, so its error
+> describes its own breakage. A reader takes that error for a fact about the world.
+
+Two cases, and only the first has an artifact in this tree:
+
+| Item | Rule |
+| --- | --- |
+| `roles/MANAGER.md` section 6a, "the careful, least-privilege tool grant is the broken one" | A command-scoped grant like `PowerShell(pwsh:*)` silently disables the tool. Every command then returns a parse error naming a cause that is not the real one. Nobody could tell from the error. |
+| A broken shell validator, reported 2026-09-04, with no artifact in this tree | An oversized environment broke a session's shell validator, so every command failed identically. It concluded "there is no nested-process check" when there was one. **Unmeasured.** `git grep -l -i "nested-process" 1b6b7fc` returns 0 files. |
+
+**Narrowing has a measured false-positive price.**
+
+| Item | Rule |
+| --- | --- |
+| The measurement | Over 30 days, **29 percent** of Edit and Write calls by primary-seated sessions wrote into a sibling worktree by absolute path. Those writes were already correct. A directory-keyed gate would have denied every one. |
+| Its scope | Writes by sessions sitting in the primary. Not all fleet traffic, and not a per-seat rate. |
+| What it actually measures | A cwd-keyed gate, not a sparse checkout. It bounds the cost of narrowing; it is not that cost. |
+| The condition it did not vary | The seat. One fleet, one machine, no per-role breakdown. |
+| Source of record | [Tips and tricks](TIPS-AND-TRICKS.md#4-when-you-write-a-guardrail) |
+
+**Nobody has measured which paths each seat actually writes.** That is the missing input, and it is
+why this stays a note. A sparse-checkout pattern for any seat here would be a guess today. The four
+ways say a guess implemented as absent data fails loudly, on correct work.
+
+> **Expiry.** This becomes actionable when someone publishes a per-seat census of Edit and Write
+> target paths over a fixed window. Adopt it for one seat only when that census shows the seat's
+> write set is a stable subset. Measure the denial rate against the 29 percent above before you
+> install anything.
+
 ---
 
 ## 2. The shared state root

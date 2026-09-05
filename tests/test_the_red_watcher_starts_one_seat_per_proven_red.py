@@ -128,6 +128,21 @@ Add-Content -LiteralPath $env:STUB_SPAWN_LOG -Value ($args -join ' ') -Encoding 
 Add-Content -LiteralPath $env:STUB_SEAT_JOURNAL -Value "`nThe seat wrote this from inside the spawn." -Encoding utf8
 """
 
+# The stub seat that REPORTS ITS OWN ENVIRONMENT. Reading the watcher's source would only show that
+# a Remove call is written; this is the child saying what it actually received, which is the only
+# reading that can contradict the claim. It writes JSON so an absent variable and an empty one stay
+# distinguishable -- $null and '' are the same thing in a text log, and one of them is the bug.
+REPORTING_SPAWNER_STUB = r"""
+Add-Content -LiteralPath $env:STUB_SPAWN_LOG -Value ($args -join ' ') -Encoding utf8
+$seen = [ordered]@{}
+foreach ($n in @('CLAUDE_CONFIG_DIR', 'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN',
+                 'ANTHROPIC_BASE_URL', 'CCX_CHILD_ENV_CONTROL')) {
+    $v = [Environment]::GetEnvironmentVariable($n)
+    $seen[$n] = if ($null -eq $v) { $null } else { [string]$v }
+}
+Set-Content -LiteralPath $env:STUB_SEAT_ENV_JSON -Value ($seen | ConvertTo-Json) -Encoding utf8
+"""
+
 
 def open_json(*numbers: int) -> str:
     return json.dumps([{"number": n} for n in numbers])
@@ -230,7 +245,13 @@ class WatcherCase(unittest.TestCase):
         env = dict(os.environ)
         # The operator's own coordination variables must not reach the fixture. CCX_CONFIG in
         # particular would point config discovery at the real repository.
-        for leak in ("CCX_CONFIG", "CCX_TRUNK"):
+        #
+        # The account variables are popped for a second reason: the cases below assert that the
+        # watcher strips them from a child, and an operator who happens to have CLAUDE_CONFIG_DIR
+        # set would otherwise hand the fixture its baseline. Each case that needs one sets it
+        # itself through env_overrides, so what the parent held is stated rather than inherited.
+        for leak in ("CCX_CONFIG", "CCX_TRUNK", "CLAUDE_CONFIG_DIR", "ANTHROPIC_API_KEY",
+                     "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CCX_CHILD_ENV_CONTROL"):
             env.pop(leak, None)
         env.update({
             "STUB_REPO_NAME": REPO,
@@ -1199,6 +1220,244 @@ class TheScanCanActuallyBite(unittest.TestCase):
             len(source), 2000,
             "the scans above all read this file. If it is missing or truncated, every 'assertNotIn' "
             "case passes for the wrong reason.",
+        )
+
+
+class TheSpawnedSeatDoesNotInheritTheWatchersAccount(WatcherCase):
+    """A fifth property, and it fails more quietly than the other four.
+
+    A spawn passes the parent's whole environment down. Measured 2026-09-04: 96 variables in the
+    parent, and the watcher's Start-Child set UseShellExecute = $false and never touched
+    $psi.Environment, so a seat received all of them. Two of those decide something the seat never
+    gets a say in:
+
+      * CLAUDE_CONFIG_DIR names the account the child bills. Inherited, every seat this watcher
+        starts bills the WATCHER'S account rather than its own, and any per-account routing is
+        defeated with no error anywhere.
+      * ANTHROPIC_API_KEY switches Claude Code onto the API, announcing nothing. A permitted spawn
+        -- a terminal agent on the Owner's subscription -- silently becomes a forbidden one against
+        pay-as-you-go credits nobody is reading.
+
+    THE READING IS TAKEN INSIDE THE CHILD, not from the watcher's source. A Remove call being
+    written in the file is not evidence that the child lost the variable: the collection could be
+    populated after the removal, the spawn could take a different path, and both render as a source
+    file that looks right.
+
+    BOTH ARMS, because a strip that is too WIDE passes every must-not-arrive case. A variable that
+    is not on the list must reach the child, or the fix has blanked the environment and the seat
+    will fail for reasons nobody connects to this change. The two arms must go red on different
+    mutations: deleting the Remove loop reds the strip cases only; replacing the inherited
+    environment with an empty one reds the control case only.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.open_file.write_text(open_json(42), encoding="utf-8")
+        self.red_file.write_text(red_json(42), encoding="utf-8")
+        self.seat.write_text(REPORTING_SPAWNER_STUB, encoding="utf-8")
+        self.seat_env = self.base / "seat-env.json"
+
+    def child_env(self, **parent: str) -> dict:
+        """Run one tick with `parent` set in the watcher's environment; return the child's reading."""
+        overrides = dict(parent)
+        overrides["STUB_SEAT_ENV_JSON"] = str(self.seat_env)
+        receipt, _, err = self.watch(env_overrides=overrides)
+        self.assertEqual(
+            "SPAWNED", receipt["red"][0]["decision"],
+            f"no seat was started, so this case read nothing at all. {err}",
+        )
+        self.assertTrue(
+            self.seat_env.exists(),
+            "the stub seat never wrote its environment report. Every assertion below would then "
+            f"be about a file that does not exist rather than about a child. {err}",
+        )
+        self.last_receipt = receipt
+        return json.loads(self.seat_env.read_text(encoding="utf-8"))
+
+    def test_the_child_does_not_receive_the_watchers_account_root(self):
+        seen = self.child_env(CLAUDE_CONFIG_DIR=str(self.base / "account-of-the-parent"))
+        self.assertIsNone(
+            seen["CLAUDE_CONFIG_DIR"],
+            "the seat inherited CLAUDE_CONFIG_DIR, so it bills the watcher's account and not its "
+            "own. Nothing reports this: measured 2026-08-31, a CLAUDE_CONFIG_DIR that does not "
+            "even exist makes `claude agents --json` return an empty list and exit 0.",
+        )
+
+    def test_the_child_does_not_receive_an_api_key(self):
+        seen = self.child_env(ANTHROPIC_API_KEY="sk-ant-not-a-real-key",
+                              ANTHROPIC_AUTH_TOKEN="also-not-real")
+        self.assertIsNone(
+            seen["ANTHROPIC_API_KEY"],
+            "the seat inherited ANTHROPIC_API_KEY. Claude Code uses a key if it finds one and says "
+            "nothing, so this spawn now bills pay-as-you-go credits instead of the subscription "
+            "the Owner assigned.",
+        )
+        self.assertIsNone(
+            seen["ANTHROPIC_AUTH_TOKEN"],
+            "the seat inherited ANTHROPIC_AUTH_TOKEN, the same billing switch under a second name. "
+            "Guarding only ANTHROPIC_API_KEY leaves this path live.",
+        )
+
+    def test_a_variable_that_is_not_an_account_variable_still_reaches_the_child(self):
+        """The other arm. Without it, blanking the child's whole environment passes both cases above."""
+        seen = self.child_env(CCX_CHILD_ENV_CONTROL="this must arrive",
+                              CLAUDE_CONFIG_DIR=str(self.base / "account-of-the-parent"))
+        self.assertEqual(
+            "this must arrive", seen["CCX_CHILD_ENV_CONTROL"],
+            "an ordinary variable did not reach the child, so the strip is removing more than it "
+            "was asked to. A seat with no PATH, no HOME and no temp directory fails for reasons "
+            "nobody will connect back to a billing fix.",
+        )
+        self.assertIsNone(
+            seen["CLAUDE_CONFIG_DIR"],
+            "the control arrived and the account root did too, so nothing was stripped at all.",
+        )
+
+    def test_the_proxy_variable_is_reported_rather_than_removed(self):
+        """ANTHROPIC_BASE_URL is a judgement call, and the judgement is recorded here.
+
+        It is SET on this machine (measured 2026-09-04), so it is plausibly a proxy somebody chose.
+        Removing a deliberate setting would break the spawn to fix a hazard that may not exist,
+        and a broken spawn is the loud failure -- this whole area exists because the quiet ones
+        cost more. So the watcher passes it through and says so.
+
+        UNMEASURED: what this machine's ANTHROPIC_BASE_URL actually points at, and whether a real
+        `claude -p` child honours it. If either is established, this case is the one to revisit.
+        """
+        seen = self.child_env(ANTHROPIC_BASE_URL="https://proxy.example.invalid")
+        self.assertEqual(
+            "https://proxy.example.invalid", seen["ANTHROPIC_BASE_URL"],
+            "ANTHROPIC_BASE_URL was stripped. That is a defensible choice, but it is not the one "
+            "this file records, and a deliberate proxy would now be silently bypassed.",
+        )
+        warnings = " ".join(self.last_receipt["scanned"]["childEnvWarnings"])
+        self.assertIn(
+            "ANTHROPIC_BASE_URL", warnings,
+            "the run passed ANTHROPIC_BASE_URL through and did not mention it. Passing it silently "
+            "is the state this property exists to end: the reader gets no chance to notice that "
+            "the seat is reaching a model they did not intend.",
+        )
+
+    def test_the_receipt_names_what_it_removed(self):
+        self.child_env(CLAUDE_CONFIG_DIR=str(self.base / "account-of-the-parent"),
+                       ANTHROPIC_API_KEY="sk-ant-not-a-real-key")
+        removed = self.last_receipt["scanned"]["childEnvRemoved"]
+        self.assertEqual(
+            ["CLAUDE_CONFIG_DIR", "ANTHROPIC_API_KEY"], removed,
+            "the receipt does not name what was taken out of the child's environment. A strip "
+            "nobody can see is a behaviour change that reads as no change at all.",
+        )
+
+    def test_an_empty_removal_list_means_nothing_was_set(self):
+        """The pair for the case above, and the reason this field is printed even when empty.
+
+        An empty list is what a working run over a clean parent produces AND what a run that never
+        performed the removal would produce. They are only distinguishable because the case above
+        sets the variables and gets a non-empty list back on the same fixture.
+        """
+        self.child_env()
+        self.assertEqual([], self.last_receipt["scanned"]["childEnvRemoved"])
+        self.assertEqual([], self.last_receipt["scanned"]["childEnvWarnings"])
+
+
+class TheParentReadsWhatItsChildrenSay(WatcherCase):
+    """A separate defect at the same function, unrelated to billing.
+
+    Start-Child drained both of a quiet child's streams into $null. Draining is required -- a child
+    that fills a pipe buffer while the parent waits on exit deadlocks -- but the content went
+    nowhere with it. So a spawned seat's entire answer was discarded, and every refusal claim.ps1
+    wrote to stderr with it. The caller had the exit code and nothing else, which makes "the key is
+    held by a peer" and "claim.ps1 crashed" the same number.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.open_file.write_text(open_json(42), encoding="utf-8")
+        self.red_file.write_text(red_json(42), encoding="utf-8")
+
+    def break_the_registry(self) -> None:
+        """Make claim.ps1 -Take fail for a reason that is NOT a peer holding the key.
+
+        A file where the claims DIRECTORY belongs. The watcher's own existence check passes -- there
+        is no claim file, because there is no directory to hold one -- so the run proceeds to -Take,
+        and -Take cannot create anything. That is the one branch where the child's text is the only
+        available evidence, and it is reached without stubbing claim.ps1, which would replace the
+        very thing under test with a second copy of it.
+        """
+        state = self.state_root()
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "claims").write_text("not a directory\n", encoding="utf-8")
+
+    def test_a_refusing_claim_scripts_own_words_reach_the_receipt(self):
+        self.break_the_registry()
+        receipt, _, err = self.watch()
+        detail = receipt["red"][0]["detail"]
+
+        # THE DISCRIMINATING READING. The exit code is identical whether a peer holds the key or the
+        # registry is broken, and the watcher's own sentence says "a peer session holds it" in both
+        # cases. Only the child's own text separates them, so a detail that carries the exit code
+        # and nothing else is a confident wrong answer -- the reader goes looking for a peer that
+        # does not exist while the registry stays broken on every future tick.
+        self.assertIn(
+            "It said:", detail,
+            "the receipt reports an exit code with no words behind it. claim.ps1 wrote to stderr "
+            "and the parent threw it away, so 'a peer holds the key' and 'the claim registry is "
+            f"broken' render identically. Detail was: {detail}. {err}",
+        )
+        self.assertGreater(
+            len(detail.split("It said:", 1)[1].strip()), 0,
+            "the receipt printed the label and captured no text behind it, which is worse than "
+            "printing nothing: it looks like the child was asked and had nothing to say.",
+        )
+        self.assertEqual(
+            [], self.spawns(),
+            "a seat was started even though the claim was never taken. Two seats on one red is the "
+            "failure the claim exists to prevent.",
+        )
+
+        # A REFUSAL MUST NOT NAME A CAUSE IT CANNOT ESTABLISH. This run's registry is broken and no
+        # peer exists, so the old sentence -- "a peer session holds it" -- was a confident wrong
+        # answer that sent the reader hunting for a session that was never there.
+        self.assertNotIn(
+            "a peer session holds it", detail,
+            "the run asserted that a peer holds the key. On this fixture nobody does: the claims "
+            "registry is a file where a directory belongs. A non-zero exit does not distinguish "
+            "the two, so it must not be reported as though it did.",
+        )
+
+    def test_the_quoted_text_is_fit_to_put_in_a_receipt(self):
+        """pwsh colours its error banner, and the raw capture carried the escape runs with it.
+
+        Measured against this fixture before the cleanup: stderr arrived with ESC[31;1m sequences
+        in it. They are not text. They corrupt a -Json receipt for anything parsing it, render as
+        garbage in a log, and are not ASCII.
+        """
+        self.break_the_registry()
+        receipt, _, _ = self.watch()
+        detail = receipt["red"][0]["detail"]
+        self.assertNotIn(
+            "\x1b", detail,
+            "an escape sequence reached the receipt. The child's words are worth carrying; its "
+            "terminal colouring is not.",
+        )
+        self.assertEqual(
+            detail, detail.replace("\n", " ").replace("\r", " "),
+            "the detail spans lines, so one red no longer renders as one row.",
+        )
+        self.assertLess(
+            len(detail), 800,
+            "a crashing child's stack trace filled the receipt. A receipt nobody can read is the "
+            "same as no receipt.",
+        )
+
+    def test_a_working_registry_produces_no_quoted_refusal(self):
+        """The pair. Without it, a detail that always says 'It said:' would pass the case above."""
+        receipt, _, err = self.watch()
+        self.assertEqual("SPAWNED", receipt["red"][0]["decision"], err)
+        self.assertNotIn(
+            "It said:", receipt["red"][0]["detail"],
+            "a healthy run quoted a refusal, so the quote above is boilerplate rather than a "
+            "reading taken from a child.",
         )
 
 

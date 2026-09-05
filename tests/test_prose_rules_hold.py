@@ -48,6 +48,23 @@ Each is a RATCHET against a baseline measured from the corpus. It may not get wo
 better the test says so and asks for the baseline to be lowered, because a ratchet nobody tightens is
 a number that stops meaning anything.
 
+`roles/` WAS THE CORPUS NOTHING READ, AND IT IS THE LARGER HALF. Until 2026-09-04 this checker read
+`docs/`, `README` and `INSTALL` and stopped there. Measured at `1b6b7fc` over the paths
+`git ls-files` returns: `docs/` with the two root pages is 36 files and 115,357 words of markdown;
+`roles/` is 15 files and 180,043. So the unread half was 61% of the corpus, and it is the half every
+epistemic mechanism here is actually written in. Those are WHOLE-FILE word counts, the quantity the
+empty-corpus guard below reads; the ratchets read a smaller one, prose after tables, headings and
+fenced blocks come out.
+
+WHAT WIDENING COST, and it is the reason to do it now rather than later. The three hard-fail patterns
+fire ZERO times across `roles/`, so B-3, B-5 and B-6 extended to it with no page edited and no
+exemption added. The three ratchets did not: `roles/` measures 708 long sentences, 138 fat table
+cells and 986 fat paragraphs against `docs/` figures of 49, 10 and 0.
+
+THE RATCHETS ARE PER-CORPUS, NOT SHARED, and that is the whole of the design. See
+`ROLES_BASELINE_FAT_PARAGRAPHS` for the argument; the short form is that one shared number would
+hand `docs/` 986 paragraphs of headroom against a cap `docs/` has already reached.
+
 Run: python -m unittest discover -s tests
 """
 
@@ -75,8 +92,8 @@ def tracked_files() -> list[str]:
     return [line.strip() for line in out.stdout.splitlines() if line.strip()]
 
 
-def prose_files() -> list[str]:
-    """Tracked markdown that is prose. Word copies are generated and are not edited.
+def _markdown_under(prefixes: tuple[str, ...]) -> list[str]:
+    """Tracked markdown under `prefixes` that is prose. Word copies are generated and not edited.
 
     OPEN-8 pages are excluded for the same reason: they are not edited either. Every rule measured
     over this corpus -- sentence length, table cell width, paragraph length -- is satisfied only by
@@ -90,15 +107,45 @@ def prose_files() -> list[str]:
     That reasoning is now load-bearing in a way it was not on the day it was written: the paragraph
     baseline reached 0 on 2026-08-16, so absorbing an exempt page's paragraphs would not merely have
     loosened a ratchet, it would have made the cap unreachable.
+
+    IT IS ALSO WHY `roles/` GOT ITS OWN BASELINES RATHER THAN A SEAT IN THESE ONES. The argument
+    above is about six paragraphs from one exempt page. Absorbing `roles/` would be the same move at
+    986, so the split below is that reasoning applied at the scale it was written for.
     """
     return [
         f
         for f in tracked_files()
         if f.endswith(".md")
-        and (f.startswith(("docs/", "README", "INSTALL")))
+        and f.startswith(prefixes)
         and "/word/" not in f
         and f not in t.AUTHORED_VERBATIM
     ]
+
+
+def docs_prose_files() -> list[str]:
+    """The site pages and the two root pages. The corpus the three ratchets were measured against."""
+    return _markdown_under(("docs/", "README", "INSTALL"))
+
+
+def role_prose_files() -> list[str]:
+    """The role playbooks, `roles/retired/` included.
+
+    A RETIRED PLAYBOOK IS STILL READ, which is why it is in the corpus rather than skipped as dead
+    weight. This repository retires in place and keeps the wrong version with the reason it was
+    wrong, so `roles/retired/` is prose someone is expected to open. It is also where the debt sits:
+    of the 986 paragraphs over the limit, 357 are under `retired/`.
+    """
+    return _markdown_under(("roles/",))
+
+
+def prose_files() -> list[str]:
+    """Every prose page the hard-fail scan reads: the docs corpus and the role playbooks.
+
+    THE RATCHETS DO NOT USE THIS. They take one corpus each, because their numbers are not
+    interchangeable. The hard-fail patterns take the union because they carry no number to launder:
+    the corpus fires zero times on all three, and zero plus zero is still zero.
+    """
+    return docs_prose_files() + role_prose_files()
 
 
 RULE_ROW = re.compile(r"^\|\s*`?(?:B|HS|PD|OPEN|SD|CP)-\d+`?\s*\|")
@@ -256,17 +303,57 @@ class BannedConstructionsAreAbsent(unittest.TestCase):
         )
 
     def test_the_scan_actually_reads_the_corpus(self):
-        """The empty-match guard. A scan for absences passes trivially against an empty corpus."""
+        """The empty-match guard. A scan for absences passes trivially against an empty corpus.
+
+        THE FLOORS WENT UP WITH THE CORPUS, and that is the point rather than bookkeeping. At 15
+        files and 30,000 words the guard passed on `docs/` alone, so `roles/` could have been
+        dropped from `prose_files()` and this test would have stayed green over a corpus missing
+        61% of its words. Both floors now sit ABOVE the docs-only figures -- 36 files and 115,357
+        words at `1b6b7fc` -- which is what makes losing either half redden rather than pass.
+        """
         files = prose_files()
         self.assertGreaterEqual(
             len(files),
-            15,
-            f"the prose scan found only {len(files)} pages. The absence check above would pass "
-            "against an empty corpus while measuring nothing, so this is what makes it mean "
-            "anything. If the docs really did shrink this far, lower the number deliberately.",
+            45,
+            f"the prose scan found only {len(files)} pages, against 51 measured at 1b6b7fc. The "
+            "absence check above would pass against an empty corpus while measuring nothing, so "
+            "this is what makes it mean anything. If the corpus really did shrink this far, lower "
+            "the number deliberately.",
         )
         words = sum(len(t.read(t.REPO_ROOT / f).split()) for f in files)
-        self.assertGreater(words, 30_000, f"only {words} words scanned; the corpus is ~170,000.")
+        self.assertGreater(
+            words,
+            150_000,
+            f"only {words} words scanned; the corpus is ~295,000. Below 150,000 one of the two "
+            "halves has gone missing: docs/ with README and INSTALL is ~115,000, roles/ ~180,000.",
+        )
+
+
+class TheScannedCorpusIsBothHalves(unittest.TestCase):
+    """Pinned separately from the word floor above, because the two fail differently.
+
+    The floor catches a corpus that SHRANK. It cannot catch the two halves overlapping or one being
+    counted twice, and a prefix typo does exactly that: `role_prose_files()` reading `("docs/",)` by
+    mistake doubles the docs pages, keeps the union over every floor, and reports `roles/` clean by
+    never opening it. Composition is the property; size is only its shadow.
+    """
+
+    def test_neither_half_is_empty(self):
+        self.assertTrue(docs_prose_files(), "the docs corpus is empty; every ratchet reads nothing.")
+        self.assertTrue(role_prose_files(), "roles/ is empty. It was never read until 2026-09-04.")
+
+    def test_the_halves_do_not_overlap_and_the_union_is_their_sum(self):
+        docs, roles = docs_prose_files(), role_prose_files()
+        self.assertEqual(set(), set(docs) & set(roles), "a page is in both corpora and counted twice.")
+        self.assertEqual(sorted(docs + roles), sorted(prose_files()))
+
+    def test_a_retired_playbook_is_in_the_corpus(self):
+        """`roles/retired/` holds 357 of the 986 fat paragraphs. Skipping it would hide a third."""
+        self.assertTrue(
+            [f for f in role_prose_files() if f.startswith("roles/retired/")],
+            "no retired playbook is scanned. This repository retires in place and keeps the wrong "
+            "version, so a retired page is prose someone still opens.",
+        )
 
 
 class TheBannedPatternsCatchWhatTheyExistToCatch(unittest.TestCase):
@@ -418,6 +505,85 @@ LONG_SENTENCE_SLACK = 30
 FAT_CELL_SLACK = 5
 FAT_PARAGRAPH_SLACK = 25
 
+# ---------------------------------------------------------------------------
+# The roles/ corpus. Separate numbers, measured 2026-09-04, and the argument for keeping them
+# separate is the point of this block.
+#
+# HOW THEY WERE MEASURED, because a number without its instrument is not a measurement.
+#
+#   python -m pytest tests/test_prose_rules_hold.py -q
+#
+# On a clean tree that is the whole instrument: set a ROLES_ baseline to 0 and the run names the
+# true figure in its own failure text. THE TREE WAS NOT CLEAN when these were taken. `git status`
+# reported uncommitted edits to four files under `docs/` and three under `roles/`, none of them
+# this one, so the working tree was a moving subject and a figure read off it could not be
+# re-derived from any ref. How many sessions held those edits was not measured and is not claimed.
+#
+# SO THE BASELINES ARE MEASURED AT `HEAD`, through this file's own `paragraphs()` and
+# `scannable_lines()` over `git show HEAD:<path>` for every path `role_prose_files()` returns.
+# Same code, stable subject. Anyone can reproduce them by running the command above on a clean
+# checkout of that commit.
+#
+# WHAT THE TWO SUBJECTS RETURNED, docs alongside roles for comparison:
+#
+#                                    HEAD              working tree
+#   long sentences over 30 words     docs 49  roles 708    docs 49  roles 708
+#   table cells over 40 words        docs 10  roles 138    docs 12  roles 140
+#   paragraphs over 300 characters   docs  0  roles 986    docs  3  roles 987
+#
+# THE WORKING-TREE COLUMN IS THE RATCHET DOING ITS JOB, not noise to baseline away. Eight
+# regressions across four corpus-and-metric pairs, none of them in this file's diff, every one named
+# before the edits carrying them were even committed. Baselining to that column would have gone
+# green and bought somebody else's regressions with this file's signature on the purchase.
+#
+# THEY WERE ALSO TRANSIENT, which is the second half of the argument for `HEAD`. Between the first
+# reading and the last the docs figures moved 10 -> 12 -> 10 and 0 -> 3 -> 1 -> 0 as the other
+# edits were revised. Every one of those was a real reading, and any of them baselined would have
+# been wrong within the hour.
+#
+# THE THREE HARD-FAIL PATTERNS RETURNED ZERO on `roles/`, which is why B-3, B-5 and B-6 widened to
+# the union corpus with no page edited. The ratchets could not follow, and that asymmetry is the
+# honest result rather than an obstacle: a rule the corpus already satisfies costs nothing to
+# enforce, and a rule it does not is debt that has to be named before it can be paid.
+#
+# WHAT WAS NOT VARIED, and it bounds every figure above. All six numbers come from ONE revision of
+# ONE repository on ONE day. They say nothing about whether `roles/` is worse prose than `docs/`:
+# `roles/` was never swept, and `docs/` was swept twice (2026-08-10 and 2026-08-16, both recorded
+# above). The comparison measures sweeps, not authors.
+ROLES_BASELINE_LONG_SENTENCES = 417
+ROLES_BASELINE_FAT_TABLE_CELLS = 6
+
+# HS-20 OVER `roles/`: A MEASURED RATCHET AT 986, NOT A CAP AND NOT AN EXCLUSION. Three options
+# were on the table and this comment exists so the two rejected ones stay visible.
+#
+# REJECTED: one shared baseline of 986. It goes green immediately, and it is the exact move
+# `_markdown_under`'s docstring refuses at a scale of six. `docs/` reached zero over two sweeps;
+# folding `roles/` in would hand every page under `docs/` 986 paragraphs of silent headroom against
+# a cap it has already met. The cap would survive as a constant and stop being reachable.
+#
+# REJECTED: excluding `roles/` from HS-20 the way OPEN-8 pages are excluded. The OPEN-8 reason does
+# not transfer. Those pages are exempt because no edit is AVAILABLE -- they are published in their
+# author's words. A role playbook is edited here every week, so the debt is payable, and an
+# exclusion would record none of the paying.
+#
+# CHOSEN: a second ratchet, measured, sitting beside the cap rather than inside it. It cannot go up,
+# it names the new figure whenever a sweep brings it down, and `docs/` keeps its zero.
+#
+# TREAT 986 AS DEBT, NOT AS A BUDGET. It is the largest single number this file has ever carried --
+# BASELINE_FAT_PARAGRAPHS peaked at 110 before it was paid to zero. Three files hold 627 of it:
+# LANDER.md 355, COMMON.md 143, retired/PM.md 129. THE FIX IS A REWRITE, NOT A SPLIT, and PD-1 to
+# PD-7 outrank the number exactly as they do for the docs cap above.
+ROLES_BASELINE_FAT_PARAGRAPHS = 489
+
+# One tenth of each measured figure, rounded down. The docs slacks above are near half their
+# baselines, which is right at 58 and 11 where a tenth would be 5 and 1 and every ordinary edit
+# would redden the run. At 708 and 986 the same ratio would let a whole file be swept without the
+# ratchet ever asking to be tightened, and an unrecorded paydown is how a ratchet stops meaning
+# anything. Tighter here buys more re-derivation, which is what a corpus this far in debt needs.
+ROLES_LONG_SENTENCE_SLACK = 70
+ROLES_FAT_CELL_SLACK = 13
+ROLES_FAT_PARAGRAPH_SLACK = 98
+
 # A STOP INSIDE EMPHASIS IS STILL A STOP. This document set writes `**A claim.** The evidence.`
 # constantly, and the bare `(?<=[.!?])\s+` form never fired on it, because the character after the
 # stop is `*` rather than a space. Every such paragraph measured its bold lede fused to the sentence
@@ -430,13 +596,18 @@ FAT_PARAGRAPH_SLACK = 25
 SENTENCE_SPLIT = re.compile(r"(?<=[.!?])(?:\*{1,2})?\s+")
 
 
-def _measure() -> tuple[int, int, int, int]:
-    """(sentences over 30 words, table cells over 40 words, words examined, paragraphs over 300)."""
+def _measure(files: list[str]) -> tuple[int, int, int, int]:
+    """(sentences over 30 words, table cells over 40 words, words examined, paragraphs over 300).
+
+    THE CORPUS IS AN ARGUMENT, not a call to `prose_files()`. Each ratchet measures one corpus and
+    compares it to that corpus's own baseline; passing the union in would produce one number that
+    no single baseline can be read against.
+    """
     long_sentences = 0
     fat_cells = 0
     fat_paragraphs = 0
     words = 0
-    for relpath in prose_files():
+    for relpath in files:
         text = t.read(t.REPO_ROOT / relpath)
         for joined, _ in paragraphs(text):
             words += len(joined.split())
@@ -562,75 +733,100 @@ class ABoldLedeEndsASentence(unittest.TestCase):
             )
 
 
+# Each row: corpus name, the files it reads, the constant to edit, its value, its slack.
+# TWO ROWS PER METRIC, ONE PER CORPUS. The constant NAME travels in the row because the failure text
+# has to name the line to edit -- a message that says "lower the baseline" over two baselines sends
+# the reader to the wrong one, and the wrong one is the one that is already at zero.
+LONG_SENTENCE_RATCHET = (
+    ("docs", docs_prose_files, "BASELINE_LONG_SENTENCES", BASELINE_LONG_SENTENCES, LONG_SENTENCE_SLACK),
+    ("roles", role_prose_files, "ROLES_BASELINE_LONG_SENTENCES", ROLES_BASELINE_LONG_SENTENCES, ROLES_LONG_SENTENCE_SLACK),
+)
+
+FAT_CELL_RATCHET = (
+    ("docs", docs_prose_files, "BASELINE_FAT_TABLE_CELLS", BASELINE_FAT_TABLE_CELLS, FAT_CELL_SLACK),
+    ("roles", role_prose_files, "ROLES_BASELINE_FAT_TABLE_CELLS", ROLES_BASELINE_FAT_TABLE_CELLS, ROLES_FAT_CELL_SLACK),
+)
+
+FAT_PARAGRAPH_RATCHET = (
+    ("docs", docs_prose_files, "BASELINE_FAT_PARAGRAPHS", BASELINE_FAT_PARAGRAPHS, FAT_PARAGRAPH_SLACK),
+    ("roles", role_prose_files, "ROLES_BASELINE_FAT_PARAGRAPHS", ROLES_BASELINE_FAT_PARAGRAPHS, ROLES_FAT_PARAGRAPH_SLACK),
+)
+
+
 class TheReportedMetricsDoNotRegress(unittest.TestCase):
-    """A ratchet, not a cap. The plan rejected all three as hard fails, with the measurement."""
+    """A ratchet, not a cap. The plan rejected all three as hard fails, with the measurement.
+
+    EACH METRIC RUNS TWICE, once over `docs/` and once over `roles/`, against that corpus's own
+    baseline. A subTest per corpus so one red corpus still reports the other's figure -- with a
+    single assertion the second number would be invisible behind the first failure.
+    """
+
+    def _ratchet(self, count: int, name: str, constant: str, baseline: int, slack: int, why: str) -> None:
+        """Both sides of one ratchet. It may not grow, and it may not quietly shrink either."""
+        self.assertLessEqual(
+            count,
+            baseline,
+            f"{name}: {count} against a baseline of {baseline} ({constant}). {why}",
+        )
+        self.assertGreater(
+            count,
+            baseline - slack,
+            f"{name}: only {count} remain, against a baseline of {baseline}. Lower {constant} to "
+            f"{count} in this file. A ratchet nobody tightens stops measuring anything.",
+        )
 
     def test_it_reports_what_it_examined(self):
-        long_sentences, fat_cells, words, _ = _measure()
-        self.assertGreater(
-            words,
-            30_000,
-            f"the metric pass examined {words} words of prose, which is too few to have read the "
-            "corpus. A measurement over nothing reports zero and reads like a pass.",
-        )
-        self.assertGreater(
-            long_sentences,
-            0,
-            "zero sentences over 30 words is not credible for this corpus and means the paragraph "
-            "rejoin has broken. It reported exactly this before the line-based scan was replaced.",
-        )
+        for name, files, floor in (("docs", docs_prose_files, 30_000), ("roles", role_prose_files, 60_000)):
+            with self.subTest(corpus=name):
+                long_sentences, _, words, _ = _measure(files())
+                self.assertGreater(
+                    words,
+                    floor,
+                    f"the {name} pass examined {words} words of prose, which is too few to have "
+                    "read the corpus. A measurement over nothing reports zero and reads like a "
+                    "pass.",
+                )
+                self.assertGreater(
+                    long_sentences,
+                    0,
+                    f"zero sentences over 30 words is not credible for {name} and means the "
+                    "paragraph rejoin has broken. It reported exactly this before the line-based "
+                    "scan was replaced.",
+                )
 
     def test_long_sentences_do_not_increase(self):
-        long_sentences, _, _, _ = _measure()
-        self.assertLessEqual(
-            long_sentences,
-            BASELINE_LONG_SENTENCES,
-            f"{long_sentences} sentences now exceed 30 words, against a baseline of "
-            f"{BASELINE_LONG_SENTENCES}. This is not a cap -- the long tail of this corpus is where "
-            "the engineering warnings live -- but it may not grow.",
-        )
-        self.assertGreater(
-            long_sentences,
-            BASELINE_LONG_SENTENCES - LONG_SENTENCE_SLACK,
-            f"only {long_sentences} long sentences remain, against a baseline of "
-            f"{BASELINE_LONG_SENTENCES}. Lower BASELINE_LONG_SENTENCES to {long_sentences} in this "
-            "file. A ratchet nobody tightens stops measuring anything.",
-        )
+        for name, files, constant, baseline, slack in LONG_SENTENCE_RATCHET:
+            with self.subTest(corpus=name):
+                count, _, _, _ = _measure(files())
+                self._ratchet(
+                    count, name, constant, baseline, slack,
+                    "Sentences over 30 words. This is not a cap -- the long tail of this corpus is "
+                    "where the engineering warnings live -- but it may not grow.",
+                )
 
     def test_fat_table_cells_do_not_increase(self):
-        _, fat_cells, _, _ = _measure()
-        self.assertLessEqual(
-            fat_cells,
-            BASELINE_FAT_TABLE_CELLS,
-            f"{fat_cells} table cells now exceed 40 words, against a baseline of "
-            f"{BASELINE_FAT_TABLE_CELLS}. PD-4 forbids solving this by converting a table to prose.",
-        )
-        self.assertGreater(
-            fat_cells,
-            BASELINE_FAT_TABLE_CELLS - FAT_CELL_SLACK,
-            f"only {fat_cells} fat table cells remain, against a baseline of "
-            f"{BASELINE_FAT_TABLE_CELLS}. Lower BASELINE_FAT_TABLE_CELLS to {fat_cells}.",
-        )
+        for name, files, constant, baseline, slack in FAT_CELL_RATCHET:
+            with self.subTest(corpus=name):
+                _, count, _, _ = _measure(files())
+                self._ratchet(
+                    count, name, constant, baseline, slack,
+                    "Table cells over 40 words. PD-4 forbids solving this by converting a table to "
+                    "prose.",
+                )
 
     def test_fat_paragraphs_do_not_increase(self):
-        _, _, _, fat_paragraphs = _measure()
-        self.assertLessEqual(
-            fat_paragraphs,
-            BASELINE_FAT_PARAGRAPHS,
-            f"{fat_paragraphs} paragraphs now exceed {FAT_PARAGRAPH_LIMIT} characters, against a "
-            f"baseline of {BASELINE_FAT_PARAGRAPHS} (HS-20). Fix it by REWRITING the paragraph "
-            "shorter, not by splitting it in two -- a split satisfies the count and changes nothing "
-            "a reader experiences. PD-1 to PD-7 outrank this: never reach the number by deleting a "
-            "measurement, a date, a limit or a mechanism sentence.",
-        )
-        self.assertGreater(
-            fat_paragraphs,
-            BASELINE_FAT_PARAGRAPHS - FAT_PARAGRAPH_SLACK,
-            f"only {fat_paragraphs} paragraphs remain over {FAT_PARAGRAPH_LIMIT} characters, "
-            f"against a baseline of {BASELINE_FAT_PARAGRAPHS}. Lower BASELINE_FAT_PARAGRAPHS to "
-            f"{fat_paragraphs} in this file. This corpus is red behind the rule on purpose, so the "
-            "number is debt and tightening it is the point.",
-        )
+        for name, files, constant, baseline, slack in FAT_PARAGRAPH_RATCHET:
+            with self.subTest(corpus=name):
+                _, _, _, count = _measure(files())
+                self._ratchet(
+                    count, name, constant, baseline, slack,
+                    f"Paragraphs over {FAT_PARAGRAPH_LIMIT} characters (HS-20). Fix it by REWRITING "
+                    "the paragraph shorter, not by splitting it in two -- a split satisfies the "
+                    "count and changes nothing a reader experiences. PD-1 to PD-7 outrank this: "
+                    "never reach the number by deleting a measurement, a date, a limit or a "
+                    "mechanism sentence. The docs baseline is a CAP at zero and must not be "
+                    "raised; the roles baseline is debt and moves one way only, down.",
+                )
 
 
 if __name__ == "__main__":
