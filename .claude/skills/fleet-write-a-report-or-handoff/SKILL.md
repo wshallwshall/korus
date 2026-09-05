@@ -21,7 +21,7 @@ standing column binds the Console too.
 | The useful answer | "No" or "Mixed", with a reason. A standing "yes" means the column has stopped working -- the same failure as a gate that cannot report its own absence. |
 | The real health test | A column has stopped working when its cells stop being contradictable, not when they stop saying "no". |
 | Keep it to ten words | A verdict plus one load-bearing fact. Owner correction 2026-08-28: those cells become text walls. The reasoning goes in the prose beside the table. A dashboard that has to be read is not a dashboard. |
-| Report concurrency, not occupancy | [BUILDER.md](BUILDER.md) owns the rule. Name what is running right now. |
+| Report concurrency, not occupancy | [BUILDER.md](../../../roles/BUILDER.md) owns the rule. Name what is running right now. |
 | What does not generalise | A per-builder relay layout, and "are you maximizing the weekly allocation". |
 | What DOES generalise, and an earlier version of this row wrongly excluded it | A seat reporting its own concurrency. |
 
@@ -31,7 +31,7 @@ inefficiency, so "Mixed, `<fresh-sounding reason>`" passes forever.
 Require the fact to name something another artifact could disagree with: a claim list, a git log, a
 lane level, a timestamp. Never a self-assessment of effort.
 
-**Why a slot count is not concurrency.** [BUILDER.md](BUILDER.md): *"Report concurrency, not
+**Why a slot count is not concurrency.** [BUILDER.md](../../../roles/BUILDER.md): *"Report concurrency, not
 occupancy. 'Idle 0, 4 held' counts slots and is blind to this."* A lane running one thing at a time
 reports four held.
 
@@ -39,7 +39,7 @@ reports four held.
 
 **Why the weekly question does not travel.** The pool is global, so eleven such cells are one reading
 rendered eleven times, and a seat cannot lower its own state by working less
-([STEWARD.md](STEWARD.md), the shared-pool section).
+([STEWARD.md](../../../roles/STEWARD.md), the shared-pool section).
 
 **Why the concurrency exclusion was wrong.** It once read "the count presupposes lanes you supply",
 which describes the layout and was written as a property of the quantity.

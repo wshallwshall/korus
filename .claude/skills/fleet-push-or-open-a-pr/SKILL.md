@@ -24,7 +24,7 @@ merges. Creating the pull request means pushing your own branch, and that needs 
 | Do not spend a turn on it | `reviewed` now carries no machine meaning. Do not apply it, wait on it, or read a pull request as blocked for want of it. |
 | What that label proved, kept | That a step happened, not that a party looked. A seat could label a pull request it wrote itself and satisfy the machine. Any gate keyed on a self-appliable mark has this shape. |
 | Direct pushes to `main` | Still blocked by the harness. Branch and pull request is the path. |
-| RETIRED 2026-08-31, the fallback | The old route around an absent Reviewer. See [REVIEWER.md](REVIEWER.md), *You sit in the pull request path*. |
+| RETIRED 2026-08-31, the fallback | The old route around an absent Reviewer. See [REVIEWER.md](../../../roles/REVIEWER.md), *You sit in the pull request path*. |
 
 **What the retired rows used to say**, kept because seats still quote them.
 

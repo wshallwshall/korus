@@ -98,6 +98,6 @@ different for each, and each playbook owns its own bound.** These rows are the p
 | The outside ladder is a shape to copy, not a size to adopt | Anthropic's write-up of its multi-agent research system keeps the sizing rule in the orchestrator. It calls the lack of one a common failure mode, and records fifty subagents spawned for one simple query. |
 | Its integers do not come with it | The ladder runs from one agent for simple fact-finding, through two to four for a direct comparison, to ten or more for complex research. |
 | The condition that stops them transferring | **Those were measured on research tasks, and the same post says coding parallelises worse.** No number in that ladder has been measured on this fleet. |
-| What bounds YOUR number is in your own playbook | [CONSOLE.md](CONSOLE.md), *A Console's fan-out is bounded by accounts and by what the Lander can land*. [MANAGER.md](MANAGER.md), *A Manager's fan-out is bounded by one window and by shared runners*. Read the one you are sitting in. |
+| What bounds YOUR number is in your own playbook | [CONSOLE.md](../../../roles/CONSOLE.md), *A Console's fan-out is bounded by accounts and by what the Lander can land*. [MANAGER.md](../../../roles/MANAGER.md), *A Manager's fan-out is bounded by one window and by shared runners*. Read the one you are sitting in. |
 
 ---
