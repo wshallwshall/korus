@@ -1,0 +1,73 @@
+{
+  "_comment": [
+    "The seat roster, the alias map, and the retired seats with the reason each was retired.",
+    "CLAUDE.md's seat table GOVERNS. This file must agree with it, and tests/test_role_cards.py",
+    "fails if the two drift apart. roles/README.md came across from a private vault and still",
+    "lists every retired seat below as live, so it is not a source for this file.",
+    "An unmapped label resolves to NOTHING. The hook never guesses."
+  ],
+
+  "live": [
+    "console",
+    "manager",
+    "builder",
+    "reviewer",
+    "regulator",
+    "steward",
+    "lander"
+  ],
+
+  "_aliases_comment": [
+    "Observed and near-miss spellings, collapsed onto the canonical seat. A canonical name is",
+    "never a key here: it resolves to itself. Numbered spellings exist because several sessions",
+    "hold the same seat at once and the number was appended to tell them apart, which turned one",
+    "seat into eight labels and made grouping by seat impossible."
+  ],
+  "aliases": {
+    "builder1": "builder",
+    "builder2": "builder",
+    "builder3": "builder",
+    "builder-1": "builder",
+    "builder-2": "builder",
+    "builder-3": "builder",
+    "build": "builder",
+    "reviewer1": "reviewer",
+    "reviewer2": "reviewer",
+    "reviewer-1": "reviewer",
+    "review": "reviewer",
+    "reviewers": "reviewer",
+    "console1": "console",
+    "console-1": "console",
+    "consul": "console",
+    "lander1": "lander",
+    "lander-1": "lander",
+    "land": "lander",
+    "landing": "lander",
+    "regulator1": "regulator",
+    "regulator-1": "regulator",
+    "reg": "regulator",
+    "steward1": "steward",
+    "steward-1": "steward",
+    "stewart": "steward",
+    "manager1": "manager",
+    "manager-1": "manager",
+    "mgr": "manager",
+    "owner-manager": "manager"
+  },
+
+  "_retired_comment": [
+    "A retired label resolves to NO CARD, and the hook says it was retired rather than staying",
+    "silent. Silence would send the reader looking for a card that was deliberately removed.",
+    "Their playbooks stay in roles/retired/ as the record of what each seat did.",
+    "Nothing replaced the PM, the Cleaner, the Role manager or the Process improvement seat."
+  ],
+  "retired": {
+    "dispatcher": "Retired 2026-09-01. The Console replaces it: it reads the record, picks the work and spawns a Builder.",
+    "liaison": "Retired 2026-09-01. The Console replaces it and is the only seat the Owner talks to.",
+    "pm": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",
+    "project-manager": "Retired 2026-09-01 by Owner decision. Nothing replaced it. See roles/retired/PM.md.",
+    "cleaner": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",
+    "role-manager": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",
+    "process-improvement": "Retired 2026-09-01 by Owner decision. Nothing replaced it."
+  }
+}
