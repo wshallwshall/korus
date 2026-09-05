@@ -194,6 +194,31 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # contradicted. This note exists because that mistake was made three times here, twice inside
 # messages diagnosing it.
 #
+# AND THE PATTERN IS NOT THE ONLY HIDDEN INPUT. Two sessions read the same file's date, on the same
+# machine, with the same command, and got 2026-08-26 and 2026-08-27. Both correct: the file landed
+# at 00:07 UTC, and one reader used local time. Same artefact, same pattern, unstated timezone.
+#
+# So the rule is not a checklist of things to scope -- you cannot enumerate in advance the ways a
+# number can be relative. It is mechanical: print what you did beside what you got.
+#
+# WHEN THIS WAS READ, dates in UTC because the line above is what happens otherwise. Read
+# 2026-09-05, negative control 0 on each:
+#
+#     CLI      claude.exe 2.1.259     file dated 2026-09-05
+#     desktop  app-1.40609.1          file dated 2026-09-01
+#     desktop  app-1.37937.3          file dated 2026-08-27
+#
+# The counts, with the pattern and the window beside each:
+#
+#     A-Za-z0-9_-\]\*-  within 30 bytes of `artifact`     CLI 2, desktop 0
+#     A-Za-z0-9_-\]+-   within 30 bytes of `artifact`     CLI 0, desktop 2
+#
+# WHY `{0,64}` IS WORTH BUYING WHEN ONLY ONE CLIENT RESOLVES THE FORM IT ADDS. A gate covers what a
+# SHIPPED CLIENT WILL RESOLVE, not what most of them resolve. Matching a form the desktop build
+# cannot address costs a false positive at worst; missing one the CLI can address costs a
+# publication. The measured cost is zero in both directions -- population over the tracked tree is
+# 0 lines, so nothing is newly matched and nothing newly silenced under `--show-context`.
+#
 # Three shapes were missed, and the middle one is the one that matters:
 #
 #   1. `frame` is a SIBLING PATH of `artifact`.
