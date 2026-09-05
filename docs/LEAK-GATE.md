@@ -63,30 +63,26 @@ and a public repository is the last place it could live.
 with a digit or `_`, or a non-ASCII login, is not matched -- and no other detector covers the shape,
 so the miss is silent.
 
-**The artifact-URL detector exists because the gate failed first.** Commit `a3df144` brought two
-private artifact URLs into the tracked tree, at `roles/LANDER.md:4027` and `roles/retired/PM.md:200`.
-This gate scanned both and exited `0`: there was no pattern for the class. A person caught them
-reading the diff, and PR #48 took them out of the tree.
+**The artifact-URL detector exists because the gate failed first.** Commit `a3df144` put two private
+artifact URLs in the tree: `roles/LANDER.md:4027` and `roles/retired/PM.md:200`. The gate scanned
+both and exited `0`, because no pattern covered the class. A reader caught them; PR #48 removed
+them.
 
 That is the review this gate exists to make cheaper, doing the whole job unaided. The detector
 closes the pattern gap, and `tests/test_the_leak_gate_can_see_every_class_it_claims.py` plants a line
 per detector so a future green is a reading rather than a detector that is off.
 
-Removing them from the tree is not removing them from *history*. They remain reachable through
-`a3df144`, which no file scan reaches -- see [the ref store](#what-this-gate-never-looks-at-the-ref-store).
-Rotating an exposed artifact is cheaper than rewriting history, and it is the fix that actually
-revokes the capability.
+Out of the tree is not out of *history*. They stay reachable through `a3df144`, which no file scan
+reaches -- see [the ref store](#what-this-gate-never-looks-at-the-ref-store). Rotating the artifact
+revokes the capability. Rewriting history does not, and costs far more.
 
-**There is no bare-UUID detector, and that is a decision rather than an oversight.** A UUID names no
-host, no account and no project. It is an opaque 128-bit number, where every other structural
-detector here recognizes a shape that *is* the disclosure; it becomes one only when something says
-what it addresses, which is what the URL form supplies.
+**There is no bare-UUID detector, and that is a decision.** A UUID names no host, no account and no
+project. Every other structural detector here recognizes a shape that *is* the disclosure. A UUID
+becomes one only when something says what it addresses, which is what the URL supplies.
 
-Measured on 2026-09-05 over the scan scope CI actually uses, a bare-UUID detector would have fired
-zero times. That zero argues against it. It is a property of this tree on that day, not of the
-class: a UUID is the commonest opaque identifier in software, and this project's own session ids are
-UUIDs. The first pasted session id, `New-Guid` output or hard-coded test GUID fires it and earns an
-allowlist line -- and an allowlist line vetoes every detector on the lines it covers.
+Measured 2026-09-05 over the scope CI scans, it would have fired zero times. That zero describes this
+tree today, not the class. UUIDs are the commonest opaque identifier in code, and this project's own
+session ids are UUIDs. The first pasted earns an allowlist line, vetoing every detector on it.
 
 **What it never opens.** Ten directory names are skipped whether or not git tracks what is inside
 them: `.git`, `.venv`, `venv`, `node_modules`, `__pycache__`, `.mypy_cache`, `.ruff_cache`,
@@ -125,15 +121,12 @@ category, never the matched text.
 Credential-shape hits stay bare whatever you pass, and so does an artifact-URL hit: the URL *is* the
 capability, so printing it hands whoever reads the log the artifact itself.
 
-**A home-path hit does not stay bare, and both this page and the code's own comment said it did.**
-Measured 2026-09-05: under `--show-context` the home-path branch appends the trimmed line, and that
-line is the home path, so the OS account name is echoed. The comment above it in `scan_forbidden.py`
-reads "Reason only, never the value". Intent and behavior disagree, and the page documented the
-intent.
+**A home-path hit does not stay bare, though this page and the code both said it did.** Measured
+2026-09-05: under `--show-context` that branch appends the trimmed line, which *is* the home path, so
+the account name is echoed. The comment directly above it reads "Reason only, never the value".
 
-It is recorded rather than quietly fixed because changing it changes an existing detector's output,
-which is a decision for whoever owns the triage workflow. Until then: do not pass `--show-context`
-in CI.
+Recorded rather than quietly fixed: changing it changes a shipped detector's output, which is the
+call of whoever owns triage. Until then, do not pass `--show-context` in CI.
 
 ### Three behaviors worth knowing, because each one is a way a scanner lies
 
