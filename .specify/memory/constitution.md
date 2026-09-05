@@ -540,6 +540,30 @@ The first shows the assignment and no filter, the second returns **nothing anywh
 **What was not varied:** one script, one machine, one moment. No spawned child was probed to
 confirm what it actually received.
 
+**CLOSED at that one site, 2026-09-04.** The reading above is kept because it is what the gap
+looked like, and because the commands still reproduce the shape anywhere else. `Start-Child` now
+removes `CLAUDE_CONFIG_DIR`, `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` from every child before
+`Process.Start`, with no parameter to skip it -- that function is the only spawn in the file, so a
+name on the list cannot reach a child by any route the script has. `ANTHROPIC_BASE_URL` is passed
+through and **warned about** rather than stripped, because it is set on this machine and may be a
+proxy somebody chose; removing a deliberate setting to fix a hazard that may not be there is the
+worse trade, and a broken spawn is the loud failure.
+
+**The child was probed this time, which the reading above could not claim.** A stub seat reports
+its own environment from inside the spawned process, so the evidence is what the child received
+rather than what the parent's source says it does. Both arms are pinned and they red on different
+mutations: deleting the removal loop reds the three must-not-inherit cases and leaves the control
+green, while adding one variable too many to the list reds only the control. The receipt names what
+it removed on every run, because a strip nobody can see is a behaviour change that reads as no
+change at all.
+
+**The gate is owed for the REST of the fleet, and this does not discharge it.** One spawn site is
+guarded. Nothing stops the next one from being written without the strip, and
+`bin/ccx-doctor.ps1`'s `Invoke-Probe` -- the repository's other `ProcessStartInfo` caller -- takes
+an `-Environment` parameter but strips nothing by default. **Unmeasured:** whether any probe it
+runs is affected, and whether a `claude -p` child with no `CLAUDE_CONFIG_DIR` authenticates against
+the default root on this machine.
+
 **One outside tool implements this rule, which is how the mechanism was found.** Vibe Kanban
 reads `apiKeySource` out of Claude Code's own init message and warns *"ANTHROPIC_API_KEY env
 variable detected, your Anthropic subscription is not being used"*, with a toggle that removes
@@ -549,8 +573,11 @@ the variable before spawning. It is the only tool in a ten-tool survey that chec
 `claude.rs` returns zero matches for `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` or any
 `CLAUDE_CODE_*`. It guards one variable.
 
-**So this article is currently a rule with no gate behind it** -- exactly the shape *Playbook
-size and format* says decays. The rule stands because the Owner set it. The gate is owed.
+**This article had no gate behind it at all** -- exactly the shape *Playbook size and format* says
+decays. It now has one at the fleet's only agent spawn, and prose everywhere else. That split is
+the point rather than an oversight: measured 2026-09-04 across this fleet, the same house rule held
+at **0** violations where a gate refuses and **93** where it was prose alone. The rule stands
+because the Owner set it. The remaining gates are owed.
 
 **Expiry.** This stops being right if the Owner moves billing to the API deliberately, or if
 subscription authentication becomes reachable without running Claude Code. Either would be an

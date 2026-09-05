@@ -188,6 +188,37 @@ A check that reads back nothing makes the whole run **CANNOT-LOOK**, exit 2, and
 run prints what it scanned: the repository, the label, where each came from, and how many open pull
 requests it examined.
 
+## The seat does not inherit your account
+
+A spawn hands the child the parent's whole environment. Measured 2026-09-04: 96 variables in the
+parent, and this watcher passed all of them down.
+
+Two of those decide something the seat never gets a say in, and both fail without saying so.
+
+| Variable | What it does to a seat that inherits it | What the watcher does |
+|---|---|---|
+| `CLAUDE_CONFIG_DIR` | Names the account the child bills, so every seat bills the watcher's account instead of its own | Removed |
+| `ANTHROPIC_API_KEY` | Switches Claude Code onto pay-as-you-go API billing, announcing nothing | Removed |
+| `ANTHROPIC_AUTH_TOKEN` | The same switch under a second name | Removed |
+| `ANTHROPIC_BASE_URL` | Points the child at a different host | Passed through, and named in a warning |
+
+The last row is deliberate. `ANTHROPIC_BASE_URL` is set on this machine, so it may be a proxy
+somebody chose. Removing it would break a working spawn to fix a hazard that may not be there, so
+the run reports it and leaves the call to you.
+
+Every run prints what it removed, even when the answer is nothing:
+
+```
+           child env: removed CLAUDE_CONFIG_DIR
+           WARNING: ANTHROPIC_BASE_URL is set in this process and is passed through to every child
+```
+
+That line is printed on an empty result too. Otherwise "no account variable was set here" and "the
+removal never ran" are the same silence, and only one of them is safe.
+
+**To point a seat at a specific account, set it deliberately.** `Start-Child` takes a `-ChildEnv`
+hashtable applied after the removal. What is gone is the accident, not the ability.
+
 ### The three exit codes
 
 | Code | Status | What it means |
