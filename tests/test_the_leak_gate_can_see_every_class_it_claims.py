@@ -83,6 +83,12 @@ def load_gate():
 #: lesson survives the next person editing this constant.
 FAKE_UUID = "abcdefab-cdef-4abc-8def-abcdefabcdef"
 
+#: The OS account name planted in the home-path fixture, shared with `FIRES` so the control
+#: that proves the hit stays bare asserts on the value the fixture actually plants. A second
+#: copy here could drift out of step with the table and still pass, which is the exact shape
+#: of failure this file exists to refuse.
+FAKE_ACCOUNT = "ccxleak"
+
 #: The other end of the same class, kept as its own planted form. Narrowing the detector to `[a-f]`
 #: is the mirror of the defect above, and this is what fails when someone does it.
 DIGIT_UUID = "00000000-0000-4000-8000-000000000000"
@@ -99,7 +105,7 @@ FIRES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
         "absolute user-home path",
         "absolute user-home path",
-        ("C:", r"\Users", r"\ccxleak", r"\notes.md"),
+        ("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"),
     ),
     (
         "routable IPv4",
@@ -371,6 +377,93 @@ class AnArtifactHitNeverEchoesTheCapability(unittest.TestCase):
                 "can then fetch the artifact, so the report would publish the capability it exists "
                 "to report, to a wider audience than the tree it was found in.",
             )
+
+
+class AHomePathHitNeverEchoesTheAccountName(unittest.TestCase):
+    """The account name is the disclosure. Printing it into a log publishes what the hit reports.
+
+    Same rule as the artifact hit above, and the harder one to keep. This branch appended the
+    trimmed line under `--show-context` for as long as the detector existed, while the comment
+    directly over it read "Reason only, never the value" -- so the code and its own comment
+    disagreed in the tree, and `docs/LEAK-GATE.md` sided with the comment. Nothing ran the two
+    against each other. This is that comparison, run.
+    """
+
+    def test_show_context_does_not_print_the_account_name(self):
+        gate = load_gate()
+        planted = "".join(("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"))
+        hits = scan_line(gate, planted, show_context=True)
+        home_hits = [h for h in hits if "absolute user-home path" in h]
+        self.assertTrue(home_hits, f"no home-path hit to check. Hits: {hits!r}")
+        for hit in home_hits:
+            self.assertNotIn(
+                FAKE_ACCOUNT,
+                hit,
+                "--show-context echoed the OS account name into the hit line. That name is the "
+                "whole disclosure the hit reports, so the triage output becomes a second copy "
+                "of the leak -- in a log, a ticket or a pull request comment, each a wider "
+                "audience than the tree it was found in.",
+            )
+
+
+class NoHitEchoesALineThatCarriesADisclosure(unittest.TestCase):
+    """Bare is a property of the LINE, not of the branch that matched the value.
+
+    THE TWO CONTROLS ABOVE CANNOT SEE THIS, and that is the point of adding a third. Each filters to
+    its own hit and asserts THAT one is clean -- true, and unfalsifiable against this failure.
+    Measured 2026-09-05 on `f1a0e8b`: one line holding an artifact URL and a routable IP printed the
+    whole capability in the IP hit's context, while the artifact hit beside it was correctly bare.
+
+        p.md:1: routable IP address (<the address>): ... /artifact/<the whole uuid> on <the address>
+        p.md:1: private artifact URL (capability)
+
+    Suppressing context only on the branch that matched leaves every OTHER detector on that line
+    free to publish the value. Home paths and credentials measured the same way. So the rule the
+    gate has to keep is per line, and `_VALUE_IS_THE_DISCLOSURE` is where it keeps it.
+
+    EACH CASE ASSERTS BOTH DETECTORS FIRED before it inspects the output. Without that, a case
+    passes when neither runs -- the same hole this file exists to refuse, in a new place.
+    """
+
+    #: A routable address dropped onto the same line as the co-occurring hit. It is chosen because
+    #: its branch appends context, so it is the one that would print the value it sits beside.
+    CO_OCCURRING = " on " + "".join(("198.18.", "0.1"))
+
+    def setUp(self):
+        self.gate = load_gate()
+
+    def assert_no_hit_echoes(self, planted, secret, reason):
+        hits = scan_line(self.gate, planted, show_context=True)
+        self.assertTrue(
+            any("routable IP" in h for h in hits),
+            f"the co-occurring IP detector did not fire, so this case proves nothing: {hits!r}",
+        )
+        self.assertTrue(
+            any(reason in h for h in hits),
+            f"the {reason!r} detector did not fire, so this case proves nothing: {hits!r}",
+        )
+        for hit in hits:
+            self.assertNotIn(
+                secret,
+                hit,
+                f"a hit on this line printed the value it was meant to withhold: {hit!r}. Bare has "
+                "to hold for the whole LINE. A detector that suppresses context only on its own "
+                "branch leaves every other detector on that line free to publish what it hid.",
+            )
+
+    def test_no_hit_echoes_a_home_path(self):
+        planted = "".join(("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"))
+        self.assert_no_hit_echoes(
+            planted + self.CO_OCCURRING, FAKE_ACCOUNT, "absolute user-home path"
+        )
+
+    def test_no_hit_echoes_an_artifact_url(self):
+        planted = "".join(("https://claude.ai/code/", "artifact/", FAKE_UUID))
+        self.assert_no_hit_echoes(planted + self.CO_OCCURRING, FAKE_UUID, "private artifact URL")
+
+    def test_no_hit_echoes_a_credential(self):
+        planted = "".join(("sk-ant-", "A" * 32))
+        self.assert_no_hit_echoes(planted + self.CO_OCCURRING, planted, "model API key")
 
 
 class TheGateExitsNonZeroOverAPlantedFile(unittest.TestCase):
