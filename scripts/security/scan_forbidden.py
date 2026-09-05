@@ -163,11 +163,23 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 # fires it, gets an allowlist line, and that line vetoes every detector on the lines it covers. A
 # gate people mute is worth nothing.
 # A PRIVATE ARTIFACT HAS THREE ADDRESSES, AND THE FIRST VERSION OF THIS DETECTOR MATCHED ONE.
-# Corroborated against the vendor's own client rather than reasoned about -- `resources/app.asar`,
-# Claude 1.40609.1, read with a negative control that returned zero:
+# Corroborated against the shipped clients rather than reasoned about, each read with a negative
+# control that returned zero:
 #
-#     /^\/code\/(?:artifact|frame)\/(?:[A-Za-z0-9_-]+-)?(<uuid>)$/
+#     /^\/code\/(?:artifact|frame)\/(?:[A-Za-z0-9_-]<Q>-)?(<uuid>)$/
 #     [`*.frame.claudeusercontent.com`, `*.frame.staging.claudeusercontent.com`]
+#
+# THE QUANTIFIER `<Q>` IS NOT THE SAME IN EVERY PRODUCT, and reading one binary is how this gets
+# re-litigated. Measured on this machine:
+#
+#     CLI      claude 2.1.259        `*`   (a zero-length slug is addressable)
+#     desktop  app-1.40609.1         `+`   (it is not)
+#     desktop  app-1.37937.3         `+`
+#
+# Two sessions grepped different products, each read correctly, and each generalised to "the
+# vendor". The looser grammar is the NEWER one, which is the part neither would have guessed. So
+# the bound below is the UNION -- `{0,64}` addresses what either client can reach. DO NOT narrow it
+# back to `{1,64}` after grepping the desktop asar alone: that reading is true and insufficient.
 #
 # Three shapes were missed, and the middle one is the one that matters:
 #
@@ -179,10 +191,10 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
 #      No widening of the path arm reaches it; it needs an arm of its own.
 #
 # Measured over 13 forms that must fire and 9 near misses that must not: one arm failed 7, this
-# fails 0. The slug is bounded at 64 rather than the vendor's unbounded `*`, because their pattern
-# is anchored at both ends and this one is not. The lower bound is 0, not 1, because the vendor
-# writes the slug `[A-Za-z0-9_-]*` -- a zero-length one is in their grammar, and it addresses the
-# same artifact as every other form here. `{1,64}` reported `artifact/-<uuid>` clean.
+# fails 0. The upper bound is 64 rather than unbounded because the clients' patterns are anchored
+# at both ends and this one is not. The lower bound is 0 because the CLI's `*` admits a zero-length
+# slug, which leaves a bare hyphen and still addresses the artifact -- `{1,64}` reported
+# `artifact/-<uuid>` clean.
 #
 # WIDENING THIS PATTERN IS NOT A ONE-SIDED RISK, because it is also a member of
 # _VALUE_IS_THE_DISCLOSURE. Over-reach is LOUD in detection -- a false positive fails a run -- and
