@@ -418,3 +418,157 @@ class TheGateExitsNonZeroOverAPlantedFile(unittest.TestCase):
                 "detector could not be committed.\n"
                 f"stdout:\n{passed.stdout}\nstderr:\n{passed.stderr}",
             )
+
+
+def scan_lines(gate, *lines: str) -> list[str]:
+    """`scan_line` for more than one line. The wrap cases need a real line boundary, not a longer
+    string: the defect they pin is that the boundary is where the detector stopped looking."""
+    with tempfile.TemporaryDirectory(prefix="ccx-leakgate-wrap-") as tmp:
+        planted = Path(tmp) / "planted.md"
+        planted.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return gate.scan_file(planted)
+
+
+class AWrappedUrlIsStillTheCapability(unittest.TestCase):
+    """A text formatter that reflows a pasted link does not make the artifact unreachable.
+
+    Every detector in the gate is line-based, so a URL broken at a column limit matched nothing and
+    the run said nothing -- the worst shape a gate can have, because it is indistinguishable from
+    clean. Markdown prose is where `a3df144` put two of these, and Markdown prose is exactly what a
+    wrapping editor reflows.
+    """
+
+    def setUp(self):
+        self.gate = load_gate()
+
+    def test_a_url_broken_across_two_lines_still_fires(self):
+        for label, first, second in (
+            # Mid-UUID: what a hard column limit does to a 36-character token.
+            ("mid-UUID", "see https://claude.ai/code/" + "artifact/" + FAKE_UUID[:9], FAKE_UUID[9:] + " for the plan"),
+            # After the last slash, which is where a wrapper that breaks on punctuation lands.
+            ("after the last slash", "see https://claude.ai/code/" + "artifact/", FAKE_UUID + " for the plan"),
+            ("mid-vanity-slug", "see https://claude.ai/code/" + "artifact/q4-migration-", "plan-" + FAKE_UUID),
+            ("frame path", "see https://claude.ai/" + "frame/", FAKE_UUID + " ok"),
+            # The content host wraps too, and its arm shares none of the path arm's text.
+            ("content host", "see https://" + FAKE_UUID, ".frame." + "claudeusercontent.com/ ok"),
+            # An indented continuation is the common Markdown case, so the join strips whitespace.
+            ("indented continuation", "see https://claude.ai/code/" + "artifact/", "    " + FAKE_UUID + " ok"),
+        ):
+            with self.subTest(wrap=label):
+                hits = scan_lines(self.gate, first, second)
+                self.assertTrue(
+                    any("private artifact URL" in h for h in hits),
+                    f"a URL wrapped {label} was reported clean. Hits: {hits!r}",
+                )
+
+    def test_the_wrapped_hit_names_the_first_line_and_says_it_wrapped(self):
+        """A reader who greps the reported line must be told why no URL is on it."""
+        hits = scan_lines(
+            self.gate,
+            "intro paragraph with nothing in it",
+            "see https://claude.ai/code/" + "artifact/",
+            FAKE_UUID + " for the plan",
+        )
+        artifact = [h for h in hits if "private artifact URL" in h]
+        self.assertEqual(1, len(artifact), f"expected exactly one hit. Hits: {hits!r}")
+        self.assertIn(":2:", artifact[0], f"the hit did not name the line the URL starts on: {artifact[0]!r}")
+        self.assertIn("wrapped", artifact[0], f"the hit did not say it wrapped: {artifact[0]!r}")
+
+    def test_the_wrapped_hit_stays_as_bare_as_the_unwrapped_one(self):
+        """The URL is the capability whether or not a formatter broke it."""
+        hits = scan_lines(self.gate, "see https://claude.ai/code/" + "artifact/", FAKE_UUID + " ok")
+        for hit in (h for h in hits if "private artifact URL" in h):
+            self.assertNotIn(FAKE_UUID, hit, f"the wrapped hit echoed the UUID: {hit!r}")
+            self.assertNotIn(FAKE_UUID[:8], hit, f"the wrapped hit echoed part of the UUID: {hit!r}")
+
+    def test_joining_lines_does_not_fabricate_a_hit(self):
+        """The join is over-reach's cheapest opportunity, so the near misses are re-run across it.
+
+        WHAT THESE SIX ROWS DO AND DO NOT PROVE, measured rather than asserted, because "17 tests,
+        all green" averages them together with rows that are pinned. Five mutants, and the tests
+        each one reds:
+
+            A  delete the wrap branch          the 6 firing forms, and the line-number test
+            B  drop the double-report guard    the report-once test
+            C  join a three-line window        the three-line residual, and the line-number test
+            D  strip markers in the join       the marker residual, and ONLY that
+            E  widen _ARTIFACT_URL to any      THESE SIX -- and their line-level twins in
+               non-space run                   EveryDetectorStaysQuietOnItsNearMiss, together
+
+        So these rows are red under exactly one mutant, and that mutant reds the line-level table
+        in the same run. They add NO INDEPENDENT SIGNAL against pattern over-reach; what they add
+        is that the same near misses survive a line boundary. No join-level mutant reds them --
+        the join direction is guarded by the marker test below, not by these.
+        """
+        for label, first, second in (
+            # The self-documentation property has to survive wrapping too, or this file and
+            # docs/LEAK-GATE.md stop being committable the moment a formatter touches them.
+            ("the placeholder form", "see https://claude.ai/code/" + "artifact/", "<uuid> for the shape"),
+            ("the placeholder frame form", "see https://claude.ai/code/" + "frame/", "<uuid> for the shape"),
+            ("a deliberately shared link", "see https://claude.ai/public/" + "artifacts/", FAKE_UUID + " ok"),
+            ("a lookalike content host", "see https://" + FAKE_UUID, ".frame." + "example.com/ ok"),
+            ("two unrelated paragraphs", "the release notes end here", "and the next paragraph starts"),
+            ("a bare session id and prose", "session " + FAKE_UUID, "finished cleanly"),
+        ):
+            with self.subTest(near_miss=label):
+                hits = scan_lines(self.gate, first, second)
+                self.assertEqual(
+                    [], [h for h in hits if "private artifact URL" in h],
+                    f"joining lines fabricated an artifact hit on {label}.",
+                )
+
+    def test_a_whole_url_on_the_second_line_is_reported_once_not_twice(self):
+        """Otherwise one capability is filed under two line numbers and the count stops meaning
+        anything."""
+        hits = scan_lines(
+            self.gate,
+            "intro paragraph with nothing in it",
+            "see https://claude.ai/code/" + "artifact/" + FAKE_UUID + " ok",
+        )
+        artifact = [h for h in hits if "private artifact URL" in h]
+        self.assertEqual(1, len(artifact), f"one URL produced {len(artifact)} hits: {artifact!r}")
+        self.assertIn(":2:", artifact[0])
+        self.assertNotIn("wrapped", artifact[0], "an unwrapped URL was reported as wrapped")
+
+    def test_a_wrap_across_three_lines_is_a_documented_residual_not_a_claim(self):
+        """Only adjacent pairs are joined. Pinning the residual keeps the next reader from
+        believing the class is closed, which is the mistake that produced the one-arm pattern."""
+        hits = scan_lines(
+            self.gate,
+            "https://claude.ai/code/" + "artifact/" + FAKE_UUID[:9],
+            FAKE_UUID[9:22],
+            FAKE_UUID[22:],
+        )
+        self.assertEqual(
+            [], [h for h in hits if "private artifact URL" in h],
+            "a three-line wrap now fires. That is an improvement -- delete this test and say so in "
+            "docs/LEAK-GATE.md, which currently records it as a known miss.",
+        )
+
+    def test_a_marker_prefixed_continuation_is_a_documented_residual_not_a_claim(self):
+        """The join strips whitespace and nothing else, and that is a DECISION, not an oversight.
+
+        It is the one residual whose "fix" is a one-line change somebody will reach for on purpose,
+        because catching a URL wrapped inside a list item or a blockquote sounds like a straight
+        improvement. Measured: adding `.lstrip("|->*# ")` to the join turns all three markers below
+        from quiet to firing, and every other test in this file stays green. So without this row a
+        deliberate call is reversible by accident, which is the shape of defect this whole file
+        exists to catch -- and it is the argument for pinning a decision, not only a behaviour.
+
+        IT IS THE ONLY GUARD ON THE JOIN'S GREED. That mutant reds this test and nothing else --
+        not one of the six near-miss rows above, which are re-runs of the line-level table across
+        a boundary and cannot see a change to how the boundary is crossed.
+        """
+        for marker in ("> ", "# ", "* "):
+            with self.subTest(marker=marker):
+                hits = scan_lines(
+                    self.gate,
+                    "https://claude.ai/code/" + "artifact/" + FAKE_UUID[:12],
+                    marker + FAKE_UUID[12:],
+                )
+                self.assertEqual(
+                    [], [h for h in hits if "private artifact URL" in h],
+                    f"a {marker!r} continuation now fires. If that was deliberate, delete this test "
+                    "and update docs/LEAK-GATE.md, which records it as a known miss. Stripping "
+                    "markers fabricates adjacency between lines a reader sees as separate.",
+                )
