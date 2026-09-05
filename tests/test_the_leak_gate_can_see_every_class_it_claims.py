@@ -466,6 +466,49 @@ class NoHitEchoesALineThatCarriesADisclosure(unittest.TestCase):
         self.assert_no_hit_echoes(planted + self.CO_OCCURRING, planted, "model API key")
 
 
+class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
+    """The other corpus for the suppression rule, and it was missing.
+
+    Every control above asserts a value is ABSENT from the output. All of them pass against a gate
+    that suppresses context unconditionally -- `ctx = ""` with the branch deleted reddens nothing.
+    That is this file's own stated failure: a detector hard-wired to stay silent passes the silent
+    case perfectly, so only running both corpora rules it out.
+
+    So this pins the cost of `_VALUE_IS_THE_DISCLOSURE` rather than its benefit. Suppression is
+    scoped to lines that carry one of the three classes; a line that carries none keeps the context
+    a person asked for. Widen a pattern in that tuple until it matches ordinary text and this is
+    what reddens -- which matters because a pattern there now has TWO jobs, detection and
+    suppression, and over-reach is silent in the second one.
+    """
+
+    def setUp(self):
+        self.gate = load_gate()
+        #: A routable address discloses a host, so the branch prints it -- but the ADDRESS is that
+        #: detector's own finding rather than a capability, so its line is not withheld.
+        self.planted = "the host is " + "".join(("198.18.", "0.1"))
+
+    def test_show_context_still_prints_the_line(self):
+        hits = scan_line(self.gate, self.planted, show_context=True)
+        self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+        self.assertIn(
+            "the host is",
+            hits[0],
+            "--show-context printed no context on a line that discloses nothing. Suppression is "
+            "meant to be scoped to the three value-is-the-disclosure classes. If it is now "
+            "unconditional, every control that asserts a value is ABSENT still passes and proves "
+            "nothing.",
+        )
+
+    def test_the_default_still_prints_none(self):
+        hits = scan_line(self.gate, self.planted)
+        self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+        self.assertNotIn(
+            "the host is",
+            hits[0],
+            "the DEFAULT output carried the line. That output is written to public CI logs.",
+        )
+
+
 class TheGateExitsNonZeroOverAPlantedFile(unittest.TestCase):
     """End to end. `scan_file` returning hits proves nothing if the exit code stays 0."""
 
