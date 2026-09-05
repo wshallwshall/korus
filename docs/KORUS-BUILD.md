@@ -22,7 +22,7 @@ role flag, and no routing. The roles are a convention you establish in each sess
 and in your `CLAUDE.md`.
 
 <figure role="group">
-<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The KORUS build shape. The record feeds a console that writes one brief and spawns a builder, which edits in its own worktree on its own branch behind a dashed collision gate, then pushes its branch and opens a pull request; a reviewer reads the diff and either posts findings back on that pull request or hands it to the lander with a reviewed label, the lander enqueues it and the merge queue merges it into the trunk, and a red check on the pull request goes to a regulator that returns only the pull request's own red to the console.">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The KORUS build shape. The record feeds a console that writes one brief and spawns a builder, which edits in its own worktree on its own branch behind a dashed collision gate, then pushes its branch and opens a pull request; a reviewer reads the diff and either posts findings back on that pull request or hands it to the lander, the lander enqueues it and the merge queue merges it into the trunk, and a red check on the pull request goes to a regulator that returns only the pull request's own red to the console.">
   <defs>
     <marker id="korus-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
@@ -56,11 +56,11 @@ and in your `CLAUDE.md`.
   <text x="517" y="136" font-size="10" font-style="italic" text-anchor="end" fill="currentColor">the diff</text>
   <rect x="475" y="44" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
   <text x="565" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Reviewer</text>
-  <text x="565" y="84" font-size="11" text-anchor="middle" fill="currentColor">labels, or posts findings</text>
+  <text x="565" y="84" font-size="11" text-anchor="middle" fill="currentColor">passes it on, or posts findings</text>
   <line x1="605" y1="100" x2="605" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
   <text x="613" y="136" font-size="10" font-style="italic" fill="currentColor">findings on a fail</text>
   <line x1="655" y1="72" x2="698" y2="72" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="676" y="36" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">reviewed label</text>
+  <text x="676" y="36" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">once it is read</text>
   <rect x="700" y="44" width="160" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
   <text x="780" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Lander</text>
   <text x="780" y="84" font-size="11" text-anchor="middle" fill="currentColor">sets the merge order</text>
@@ -92,9 +92,16 @@ seat.</figcaption>
 |---|---|---|
 | **Console** | The plan, the backlog, and which task gets briefed next | Write application code |
 | **Builder** | The change, the commit, the push, and the pull request for one brief | Guess at what the brief left open, or wait for an answer |
-| **Reviewer** | Reading the diff on one pull request, and the reviewed label | Merge, or label a pull request it did not read |
+| **Reviewer** | Reading the diff on one pull request, and the findings it posts there | Merge, or pass on a pull request it did not read |
 | **Regulator** | Deciding whose failure a red is: the pull request's, the trunk's, a flake's, or the queue's | Assume it remembers an earlier red |
-| **Lander** | What enters the merge queue and in what order | Merge a pull request with no reviewed label |
+| **Lander** | What enters the merge queue and in what order | Merge a pull request the reviewer has not returned |
+
+**Nothing enforces that route any more.** A required check called `gate` read a `reviewed` label
+until 2026-09-04. The owner removed it. The label is now inert, so the reviewer step holds only as
+far as the seats keep it.
+
+**This page used to say the label was the block.** It told the lander to check for it and told the
+reviewer to apply it. Following that today costs a turn waiting on a check that will never answer.
 
 **The ASVS monitor session is retired.** It ran as a fifth session whose only job was keeping a
 security register current as the build sessions landed work. That seat ended on 2026-09-01.
@@ -111,12 +118,17 @@ method for that case.
 | Do this | Why | Where |
 |---|---|---|
 | Install and prove the gates | Roles are advisory; the gates are not | [Quickstart](QUICKSTART.md) |
+| Run one task end to end, by hand | You cannot size the queue until you know how long one task takes to land | [Coordination](COORDINATION.md#a-clean-merge-is-not-evidence-that-nobody-duplicated-your-work) |
 | Give each session its own worktree | Two sessions in one tree overwrite each other | [Worktrees](WORKTREES.md) |
 | Check the config root your console runs on can spawn a session | Spawning is granted per config root, not per machine, and a root without the grant refuses | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
 | Wire the steering hook | It only takes effect in sessions started afterwards | [Steering](STEERING.md) |
 | Write the working agreement | It only reaches sessions that start later | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Turn on Ultracode and pick Opus 5 in every session | The build shape assumes workflows and adversarial review | [The KORUS framework](KORUS.md) |
 | Be on Max 20x, and expect to need more than one account | This shape spends a weekly window in about two days. Check current plan terms yourself; that page dates from 2026-08 | [The KORUS framework](KORUS.md) |
+
+**That row is one operator's experience, not a measurement here.** The Every team ran a flow by hand
+until it was predictable before automating it. Skipping that gave them agents opening pull requests
+for finished work, and duplicate issues. **It expires** once you can predict the flow.
 
 **Plan on more than one account rather than treating it as a wrinkle.** Set them up before you start:
 one desktop instance per account, and each one adds a config root the installers have to reach
@@ -211,8 +223,10 @@ is worth, and what a month of it costs at published API rates.
 You are the lander. You decide what enters the merge queue and in what order, and you
 merge-forward. Builders push their own branches and open their own pull requests.
 
-Do not merge a pull request that has no reviewed label. Keep one ledger-appending pull
-request in the queue at a time.
+Do not merge a pull request the reviewer has not read and returned to you. No check
+enforces this: the required check that read a reviewed label was removed on 2026-09-04,
+so the label blocks nothing. Do not wait on it. Keep one ledger-appending pull request in
+the queue at a time.
 
 Read state rather than being told it:
   pwsh -NoProfile -File scripts/coord/presence.ps1   # who is live
@@ -225,7 +239,11 @@ You arbitrate and land. You do not build.
 **What happens next.** It reads the branches rather than waiting to be told about them.
 
 **A pushed branch is the signal here**, because builders push their own. The lander reads the open
-pull requests and takes the ones carrying a reviewed label.
+pull requests and takes the ones the reviewer has returned to it.
+
+**Read the pull request, not a label.** The reviewer's findings are comments on the pull request.
+Two required checks remain, `gates (ubuntu-latest)` and `gates (windows-latest)`, and neither
+knows whether anybody read the diff.
 
 **Read the role page before you rely on it.** The authority is not transferable, the route is
 absolute, and a worker that cannot reach the lander is blocked rather than promoted.

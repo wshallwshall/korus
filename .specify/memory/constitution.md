@@ -46,8 +46,8 @@ scope silently, and the changed version is what later work encodes.
 ### III. A gate that cannot check identity must make refusal legible
 
 Every session pushes as one account, so the platform's own protection against an author
-approving their own change is unavailable. The review gate is therefore **a process gate,
-not an identity gate**, and it is that by necessity rather than by choice.
+approving their own change is unavailable. Any review gate built on top of that is therefore
+**a process gate, not an identity gate**, and it is that by necessity rather than by choice.
 
 **A process gate can be satisfied by the party it is meant to check.** So the only signal
 it carries that cannot be faked is a **refusal**. Refusal must therefore be recorded, and
@@ -61,9 +61,21 @@ nothing.** The careful reviewer's signal was its refusal, and the gate had no wa
 one: a reviewer that declines to pass looks exactly like one that never ran.
 
 This article does not require a human to judge. A reviewer may be a process that runs
-checks and applies a label when they pass, and that is what the Owner has specified. The
-requirement is narrower and it survives either design: **whatever refuses must leave a mark
-the gate can read.**
+checks and applies a label when they pass, which is what the Owner specified for the gate
+described above. The requirement is narrower and it survives either design: **whatever
+refuses must leave a mark the gate can read.**
+
+**The gate this article was written about was removed on 2026-09-04.** The Owner dropped it
+as a required check on `main`, leaving `gates (ubuntu-latest)` and `gates (windows-latest)`,
+and `.github/workflows/review-gate.yml` was deleted. **The evidence above is kept because the
+incident happened and the reasoning drawn from it did not depend on that gate's design.**
+
+**The article stands, and its subject is now any future gate.** Nothing that produced it
+changed: every session still pushes as one account, so no process gate KORUS can build is
+able to tell an author from a reviewer. **KORUS has no gate meeting this requirement today**,
+and anything proposed to replace one must record refusal as legibly as approval before it is
+worth building. Whether the Reviewer seat outlives the gate it fed is an Owner decision and is
+not settled here.
 
 ### IV. Every claim names the condition it did not vary
 
@@ -199,7 +211,7 @@ Three structural facts, each of which outlives whatever the current count is:
   until it is, and a design that assumes headroom is visible is assuming an instrument that
   may not exist.
 
-### IX. Built for Claude Code, and no design may require a particular surface
+### IX. Claude Code is the foundation; every other tool is an enhancement
 
 KORUS is built for **Claude Code**. It is not agent-agnostic and does not need to be. A
 design may depend on Claude Code's own mechanics: its hooks, its skills, its settings
@@ -210,6 +222,30 @@ for the Owner**, because that is where a person can watch work and interrupt it.
 preference, not a requirement. **The command line is legitimate wherever it is the better
 tool, including as the Owner's own front end.** No design, seat definition or gate may
 require a particular surface, and none may assume the Owner is on one.
+
+**Outside tools are welcome, as enhancement rather than foundation.** The desktop application
+or the command line is the floor every design stands on. Anything else sits above it.
+
+| Item | Rule |
+| --- | --- |
+| The foundation | Claude Code, desktop or CLI. A seat, a gate or a spec may assume that and nothing more |
+| An outside tool | Welcome. Use it for what it is good at, and expect to enjoy it |
+| The test that decides | **Remove the tool. Does the method still run?** If yes it is an enhancement. If no it has become foundation, and that is the line |
+| What may depend on one | A person's own comfort and speed. Never a seat definition, a gate, a spec, or a rule another session must follow |
+| Where a tool earns its place | A harness that spawns sessions, watches a fleet, reads quota or annotates a diff is doing work KORUS has not built and need not build |
+
+**Why the line sits there rather than at "no outside tools".** A tool the Owner enjoys using is
+worth having, and refusing one on principle costs real convenience for no gain. The cost only
+arrives when a rule cannot be followed without it. At that point every session lacking the tool
+is locked out of the method, and the method has silently narrowed to whoever installed it.
+
+**This is Article XII's reasoning applied to tooling.** The shared write surface binds because
+everyone touches it. A rule that needs a particular tool creates a second such surface, with a
+smaller membership and no measurement of who is inside it.
+
+**How to tell the difference in practice.** An enhancement makes the same work faster or nicer
+for whoever runs it. A foundation is something a later reader must install before a written rule
+makes sense to them.
 
 **But the surfaces are not equivalent, and a capability measured on one does not transfer
 to another.** This is Article IV applied to a standing condition rather than to a single
@@ -320,6 +356,46 @@ It also matches the cost model. Article VII says an ended session spends nothing
 waiting one spends the most. A seat that must stay awake to relay is the expensive shape;
 a seat that writes and exits is the cheap one.
 
+**Written down is measured. Read is not, and the first reading is thin.** This method
+accumulates context on an assumption nobody here has stated: that a fuller playbook makes the
+next seat better. Nothing bounds how large one may grow. In this repository at commit
+`1b6b7fc`, `roles/COMMON.md` is 145,758 bytes and the largest, `roles/LANDER.md`, is 288,883.
+
+**Evidence, 2026-09-04, and it is a floor rather than a rate.** Across 401 session transcripts
+on this machine, **25 issued a Read against any role playbook**. Reads of `COMMON.md` numbered
+**84: five whole-file, and 79 with an explicit offset or limit.** A transcript records every
+Read with its `file_path`, `offset` and `limit`, so read depth is recoverable afterwards.
+
+```powershell
+$roots = "$env:USERPROFILE\.claude\projects", "$env:USERPROFILE\.claude-account-1\projects"
+$t = Get-ChildItem $roots -Recurse -Depth 1 -Filter *.jsonl -File
+$t.Count
+($t | Select-String -Pattern '"name":"Read","input":\{"file_path":"[^"]*roles..[A-Z][A-Z]' -List).Count
+$m = ($t | Select-String -Pattern '"name":"Read","input":\{"file_path":"[^"]*roles..COMMON\.md"(,"(offset|limit)")?' -AllMatches).Matches
+$m.Count
+($m | Where-Object { $_.Value -notmatch 'offset|limit' }).Count
+
+# The two sizes, from this repository.
+git cat-file -s HEAD:roles/COMMON.md; git cat-file -s HEAD:roles/LANDER.md
+```
+
+**What this instrument cannot say.** Each line is a way the number is too low, or the wrong
+shape:
+
+- **It is not a compliance rate.** The 401 transcripts include many sessions that were never
+  seats, so 25 is a floor over a mixed population.
+- **It counts one tool.** A playbook reached by Grep, by a Bash `cat`, or injected by a hook is
+  invisible to it.
+- **It counts two config roots.** Four more exist on this machine and are outside the corpus.
+- **An earlier hand count of the same corpus read 22 sessions**, and split the same 84 as six
+  and 78. The command above returns 25, five and 79. I could not recover the definition behind
+  the smaller figures, and neither reading moves the finding.
+
+**So playbooks are read rarely, and read in pieces when they are read.** That is one
+measurement on one machine. It settles nothing about whether a larger playbook helps, and it is
+why **no rule here caps playbook size**: Article V forbids a prohibition nobody has tried and
+recorded. Testing the hypothesis is what would earn one.
+
 **Numbering is not priority.** This article was added after the first ten and appended
 rather than inserted, because renumbering would break every reference made to the document
 in between.
@@ -339,6 +415,39 @@ two to five an hour.
 Not by accident and not by carelessness: **every item's pull request updates the ledger by
 construction**, so the contention is a property of the design rather than of any worker's
 behaviour.
+
+**The instrument, because Article VI binds this article too.** The four figures above were
+counted by hand during the run and carried a date but no command, which is the shape this
+document discounts when an outside source does it. These are the commands, and what they
+return now:
+
+```powershell
+# Pull requests opened, and landed, in the window. Both return a SUPERSET of the run.
+gh pr list --repo MEFORORG/MessageFoundry --state all --limit 300 --search "created:2026-09-03" --json number,createdAt
+gh pr list --repo MEFORORG/MessageFoundry --state merged --limit 300 --search "created:2026-09-03" --json number,mergedAt
+
+# The merge rate, bucketed by the hour of mergedAt.
+gh pr list --repo MEFORORG/MessageFoundry --state merged --limit 300 --search "created:2026-09-03" --json mergedAt --jq '.[].mergedAt' | ForEach-Object { $_.Substring(0,13) } | Group-Object | Sort-Object Name
+
+# Which file the landed commits contended for. This NAMES the file rather than assuming it.
+# Run it inside the MessageFoundry checkout, after a fetch.
+git log origin/main --since=2026-09-03 --until=2026-09-05 --format= --name-only | Where-Object { $_ } | Group-Object | Sort-Object Count -Descending | Select-Object -First 5 Count,Name
+```
+
+**Run 2026-09-04, and the gap is the finding.** The day window returns **74 opened and 53
+merged**, against the 46 and 34 recorded during the run. The commands are right and the window
+is wider than the run. **The run's own subset cannot be recovered.** Every seat pushes as one
+account, so no author filter separates the five controllers from the rest of that day's work.
+Article III names the same missing distinction for review.
+
+**The two figures the article rests on do reproduce.** Merges bucketed by hour read two to six
+an hour across the drain on 2026-09-04, against the two to five recorded at the time. And **51
+of the 53 commits in that window touched `docs/BACKLOG.md`**, against 33 of 34: a different
+count over a wider window, and the same ratio.
+
+So **46, 34 and three and a half hours were recorded by hand and are not now reproducible.**
+Treat them as an anecdote about one evening. What is measured is the ratio, and the ratio is
+what the three consequences below need.
 
 The merge queue rebases and revalidates each entry against the branch the previous entry just
 changed. So the queue is serial in exactly the dimension the fleet was parallel in, and
@@ -377,6 +486,75 @@ I reported 46 open against 3 landed and called it a structural throughput ceilin
 burst measured at its worst moment. The queue drained. **The contention was real and my
 conclusion from it was wrong**, and the difference between those two is the difference between
 a snapshot and a rate.
+
+### XIII. Work reaches the model through Claude Code, never through the API
+
+Every seat, every harness and every orchestrator reaches the model by running **Claude Code** --
+the CLI or the desktop application. **No design may call the Anthropic API directly.**
+
+This is not Article IX restated. Article IX governs the **surface** a design may require. This
+one governs the **path to the model**, and the two fail differently: a design that requires a
+GUI is visibly narrow, while a design that reaches the API is invisibly expensive.
+
+**The reason is the roster.** Article VIII establishes that the accounts are assigned by the
+Owner. Those accounts are **subscriptions**. An API call does not touch them. It bills
+pay-as-you-go credits against a different balance, so the roster the Owner assigned goes unspent
+while a bill accrues somewhere nobody is reading.
+
+| Item | Rule |
+| --- | --- |
+| What is permitted | Anything that runs `claude`, or drives the desktop application. A harness that spawns a terminal agent inherits Claude Code's own subscription authentication by construction |
+| What is forbidden | An orchestrator that holds an API key and calls the model itself. The SDK-based category is the one this rules out, not the terminal-harness category |
+| The failure mode | Not a design choosing the API. **A permitted design silently becoming a forbidden one through the environment it inherits** |
+| What to check | Whether `ANTHROPIC_API_KEY` is set in the environment a session inherits, and what `ANTHROPIC_BASE_URL` points at |
+| Who is responsible | The seat that spawns. A parent passes its whole environment down, so a clean parent is the only control that reaches every child |
+
+**The mechanism, and it is the part worth knowing.** Claude Code will use `ANTHROPIC_API_KEY` if
+it finds one. Nothing announces the switch. So the risk is never a tool deciding to use the API;
+it is a correct tool inheriting an environment that has already decided.
+
+**Evidence, measured 2026-09-04 on this machine.** `ANTHROPIC_API_KEY` is unset, and
+`ANTHROPIC_BASE_URL` is set. Command:
+
+```
+python -c "import os; print({k: bool(os.environ.get(k)) for k in ('ANTHROPIC_API_KEY','ANTHROPIC_AUTH_TOKEN','ANTHROPIC_BASE_URL')})"
+```
+
+**What was not varied:** one machine, one session's inherited environment, one moment. A spawned
+child was not probed, and a settings root may pin a value this command cannot see. So this is a
+reading about the parent, not a proof about the fleet.
+
+**KORUS's own spawn inherits everything, and this is the measured gap.**
+`scripts/cron/watch-ci-red.ps1` is the fleet's only agent spawn. It sets
+`$psi.UseShellExecute = $false` and never touches `$psi.Environment`, so the child receives the
+parent's whole environment. Commands:
+
+```
+grep -nE 'UseShellExecute|\$psi\.Environment' scripts/cron/watch-ci-red.ps1
+git grep -c 'ANTHROPIC_API_KEY|env_remove|Environment.Remove' -- scripts/
+python -c "import os; print(len(os.environ))"
+```
+
+The first shows the assignment and no filter, the second returns **nothing anywhere in
+`scripts/`**, and the third returned **96** variables in the parent at the time of writing.
+**What was not varied:** one script, one machine, one moment. No spawned child was probed to
+confirm what it actually received.
+
+**One outside tool implements this rule, which is how the mechanism was found.** Vibe Kanban
+reads `apiKeySource` out of Claude Code's own init message and warns *"ANTHROPIC_API_KEY env
+variable detected, your Anthropic subscription is not being used"*, with a toggle that removes
+the variable before spawning. It is the only tool in a ten-tool survey that checks.
+
+**Do not copy its coverage, only its idea.** A search of all 3,284 lines of its
+`claude.rs` returns zero matches for `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` or any
+`CLAUDE_CODE_*`. It guards one variable.
+
+**So this article is currently a rule with no gate behind it** -- exactly the shape *Playbook
+size and format* says decays. The rule stands because the Owner set it. The gate is owed.
+
+**Expiry.** This stops being right if the Owner moves billing to the API deliberately, or if
+subscription authentication becomes reachable without running Claude Code. Either would be an
+Owner decision, and neither has happened.
 
 ## The execution environment
 
@@ -429,22 +607,32 @@ in the sentence around them. Say the word.
 **One coherent change per commit**, with a message saying what was measured and what it
 changes.
 
-**Nothing merges on its author's own approval.** See Article III.
+**Nothing merges on its author's own approval.** See Article III. **No gate has enforced this
+since 2026-09-04**, when the review gate was removed, so it is a standing norm and not a check.
 
 **The operational sequence lives in one place and this is not it.** It is
 `roles/COMMON.md`, section "Your pull request has to survive your own exit", at commit
 `3143b0ec`. Read it there rather than from a summary here, because a second copy drifts and
 the drift is invisible until someone follows the wrong one.
 
-The one thing worth stating twice, because omitting it is what the sequence exists to
-prevent: **wait for the branch's gate run to complete before applying the label, then read
-the label back.** The gate strips the label when its run executes, which is after the push
-command returns, so labelling immediately after a push is a race you lose silently. Measured
-by the seat that lost it: **fifteen of sixteen pull requests ended with no label while every
-command reported success.** The read-back step exists because the apply step reports success
-either way.
+One step from that sequence is repeated here, and **on 2026-09-04 it stopped being an
+instruction and became a finding.** The label it names belonged to the review gate, which was
+removed that day, so there is now nothing to label and no run to wait for. **Do not do this,
+and do not delete it**: the finding generalises to any gate with the same property.
 
-That section reached a commit only on 2026-09-04. Before that it, and two others beside it,
+The retired instruction read: wait for the branch's gate run to complete before applying the
+label, then read the label back. The gate stripped the label when its run executed, which is
+after the push command returns, so labelling immediately after a push was a race you lost
+silently. Measured by the seat that lost it: **fifteen of sixteen pull requests ended with no
+label while every command reported success.**
+
+**The general shape, which outlives that gate.** When a check invalidates on an event, the
+event is **the gate's own run**, not your command returning. So wait for the run, then read
+the result back. A step that reports success either way has not been measured until something
+reads it back, which is Article VI applied to a write.
+
+That `roles/COMMON.md` section reached a commit only on 2026-09-04. Before that it, and two
+others beside it,
 **existed in no commit anywhere** -- one uncommitted file in a checkout fifty-two commits
 behind. The fleet's merge procedure had no durable home while being the procedure whose
 missing step cost those fifteen labels.
@@ -475,10 +663,93 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.10.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-02
+**Version**: 1.14.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.14.0 2026-09-04  The review gate was removed by the Owner, and this document described it as
+       live in three places. Verified against the live GitHub API: the review check is no longer
+       required on main, which now requires gates (ubuntu-latest) and gates (windows-latest), and
+       .github/workflows/review-gate.yml is deleted.
+
+       ARTICLE III IS NOT RETIRED and its evidence is untouched. The 2026-09-02 incident happened:
+       a pull request drew two reviews eight minutes apart, the first found four defects and
+       withheld its approval, the second found nothing and labelled it, and the change merged on
+       the commit the first reviewer had refused. What changed is only that the article's worked
+       example describes a gate that no longer runs. The condition underneath it did not change --
+       every session still pushes as one account, so no process gate KORUS can build can tell an
+       author from a reviewer -- so the article now states a requirement for ANY such gate, and it
+       records that KORUS has none meeting it today. The opening sentence's "The review gate is
+       therefore" became "Any review gate built on top of that is therefore", which is the same
+       claim without asserting a live gate.
+
+       Whether the Reviewer SEAT survives the loss of its gate is an Owner decision. It is not
+       answered here, and the article says so rather than leaving the question implied.
+
+       HOW A CHANGE LANDS: the wait-then-label-then-read-back step is now marked as a retired
+       INSTRUCTION and kept as a FINDING. A seat following it today would wait on a run that will
+       never come. The measurement stays verbatim -- fifteen of sixteen pull requests ended with no
+       label while every command reported success -- with the general shape stated beside it: when
+       a check invalidates on an event, the event is the gate's own run and not your command
+       returning, so wait for the run and read the result back. That recurs on the next gate with
+       the same property, which is why deleting it would cost a real lesson. "Nothing merges on its
+       author's own approval" is kept and marked as a norm with no check behind it.
+
+1.13.1 2026-09-04  Article IX's HEADING now states the finding the body already states. It read
+       "Built for Claude Code, and no design may require a particular surface", which is the
+       prohibition; the body has said since 1.13.0 that outside tools are welcome as enhancement,
+       which is the permission. A reader scanning the article list met the refusal and never
+       reached the table. Renaming was free: every citation in the corpus is by NUMBER, and a
+       grep for the old heading text across roles/ and docs/ returns zero, so nothing broke.
+       No body text changed.
+
+1.13.0 2026-09-04  Article IX widened: outside tools are welcome as ENHANCEMENT, never as
+       FOUNDATION. Owner instruction. The article already said no design may require a particular
+       surface, which read as hostility to outside tooling and was not meant to. The floor is
+       Claude Code, desktop or CLI; anything above it is welcome and the Owner should use what
+       they enjoy. The test is one sentence: remove the tool, does the method still run. An
+       enhancement makes the same work faster for whoever runs it; a foundation is something a
+       later reader must install before a written rule makes sense. This is Article XII's
+       reasoning applied to tooling -- a rule needing a particular tool creates a second shared
+       surface with a smaller membership and no measurement of who is inside it. Prompted by a
+       survey of ten agent harnesses, where the useful ones are GUIs and the old wording would
+       have refused them all rather than bounding what they may carry.
+
+1.12.0 2026-09-04  Added Article XIII: work reaches the model through Claude Code, never
+       through the API. Owner instruction. It is deliberately NOT Article IX restated -- IX
+       governs which SURFACE a design may require, XIII governs the PATH to the model, and the
+       two fail differently: requiring a GUI is visibly narrow, reaching the API is invisibly
+       expensive. The reason is Article VIII's roster: those accounts are subscriptions, and an
+       API call bills a different balance, so the assigned roster goes unspent while a bill
+       accrues where nobody is reading. The article's real content is the failure mode, which is
+       not a design choosing the API but a permitted design inheriting an environment that
+       already did. Measured the same day: ANTHROPIC_API_KEY unset, ANTHROPIC_BASE_URL set, on
+       the parent only -- no spawned child was probed. The article states plainly that KORUS has
+       no gate behind this rule, so by its own Playbook size and format it is a rule that decays.
+
+1.11.0 2026-09-04  Two repairs, both defects this document commits against its own articles.
+
+       ARTICLE XII FAILED ARTICLE VI. Its four headline figures -- 46 pull requests, 34 landed,
+       33 of 34 touching one file, two to five an hour -- carried a date and no command, which
+       is the shape this document discounts in an outside source. The article now prints the gh
+       and git commands beside them, and what those commands return: 74 opened and 53 merged
+       over the day window, because the window is wider than the run and the run's own subset
+       cannot be recovered when every seat pushes as one account. The ratio does reproduce, at
+       51 of 53 commits touching docs/BACKLOG.md, and the rate at two to six an hour. So 46, 34
+       and three and a half hours are marked as recorded by hand and not now reproducible,
+       rather than left standing as measurements.
+
+       ARTICLE XI records the first readership measurement. The method accumulates context on an
+       assumption never stated here: that a fuller playbook makes the next seat better. Measured
+       2026-09-04 over 401 session transcripts under two config roots, 25 issued a Read against
+       any role playbook, and COMMON.md drew 84 reads -- five whole-file, 79 with an explicit
+       offset or limit. It is a floor over a mixed population, not a compliance rate, and it
+       counts one tool. Recorded with its command and its limits, and with no size cap attached,
+       because Article V forbids a prohibition nobody has tried.
+
+       Also corrects the Last Amended date. It read 2026-09-02 through the four amendments
+       1.7.0 to 1.10.0, all of which are dated later in this log.
 
 1.10.0 2026-09-04  Article VIII: the account boundary is also a CONTROL, not only an obstacle.
 

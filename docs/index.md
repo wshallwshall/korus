@@ -13,9 +13,9 @@ accounts cost, what to write down, and running several sessions without collisio
 
 `claude-multisession` is the tooling that enforces that last part.
 
-**Why you should care.** Several sessions at once is how a build gets dramatically faster. The only
-thing in the way is them conflicting, and the conflicts that cost you are the ones git cannot report:
-every branch merges clean, and the loss lands later.
+**Why you should care.** Several sessions at once raise how fast work arrives, and the shared write
+surface caps what lands ([measured](FAQ.md#how-many-sessions-should-i-run)). The conflicts that cost
+you are the ones git cannot report: every branch merges clean, and the loss lands later.
 
 Not for you if Claude Code is an occasional convenience rather than how the project gets built.
 KORUS also assumes Claude Code for Desktop throughout.
