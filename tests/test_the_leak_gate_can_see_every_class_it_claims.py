@@ -42,6 +42,7 @@ Run: python -m unittest discover -s tests
 from __future__ import annotations
 
 import importlib.util
+import re
 import subprocess
 import sys
 import tempfile
@@ -83,6 +84,12 @@ def load_gate():
 #: lesson survives the next person editing this constant.
 FAKE_UUID = "abcdefab-cdef-4abc-8def-abcdefabcdef"
 
+#: The OS account name planted in the home-path fixture, shared with `FIRES` so the control
+#: that proves the hit stays bare asserts on the value the fixture actually plants. A second
+#: copy here could drift out of step with the table and still pass, which is the exact shape
+#: of failure this file exists to refuse.
+FAKE_ACCOUNT = "ccxleak"
+
 #: The other end of the same class, kept as its own planted form. Narrowing the detector to `[a-f]`
 #: is the mirror of the defect above, and this is what fails when someone does it.
 DIGIT_UUID = "00000000-0000-4000-8000-000000000000"
@@ -99,7 +106,7 @@ FIRES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
         "absolute user-home path",
         "absolute user-home path",
-        ("C:", r"\Users", r"\ccxleak", r"\notes.md"),
+        ("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"),
     ),
     (
         "routable IPv4",
@@ -371,6 +378,220 @@ class AnArtifactHitNeverEchoesTheCapability(unittest.TestCase):
                 "can then fetch the artifact, so the report would publish the capability it exists "
                 "to report, to a wider audience than the tree it was found in.",
             )
+
+
+class AHomePathHitNeverEchoesTheAccountName(unittest.TestCase):
+    """The account name is the disclosure. Printing it into a log publishes what the hit reports.
+
+    Same rule as the artifact hit above, and the harder one to keep. This branch appended the
+    trimmed line under `--show-context` for as long as the detector existed, while the comment
+    directly over it read "Reason only, never the value" -- so the code and its own comment
+    disagreed in the tree, and `docs/LEAK-GATE.md` sided with the comment. Nothing ran the two
+    against each other. This is that comparison, run.
+    """
+
+    def test_show_context_does_not_print_the_account_name(self):
+        gate = load_gate()
+        planted = "".join(("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"))
+        hits = scan_line(gate, planted, show_context=True)
+        home_hits = [h for h in hits if "absolute user-home path" in h]
+        self.assertTrue(home_hits, f"no home-path hit to check. Hits: {hits!r}")
+        for hit in home_hits:
+            self.assertNotIn(
+                FAKE_ACCOUNT,
+                hit,
+                "--show-context echoed the OS account name into the hit line. That name is the "
+                "whole disclosure the hit reports, so the triage output becomes a second copy "
+                "of the leak -- in a log, a ticket or a pull request comment, each a wider "
+                "audience than the tree it was found in.",
+            )
+
+
+class NoHitEchoesALineThatCarriesADisclosure(unittest.TestCase):
+    """Bare is a property of the LINE, not of the branch that matched the value.
+
+    THE TWO CONTROLS ABOVE CANNOT SEE THIS, and that is the point of adding a third. Each filters to
+    its own hit and asserts THAT one is clean -- true, and unfalsifiable against this failure.
+    Measured 2026-09-05 on `f1a0e8b`: one line holding an artifact URL and a routable IP printed the
+    whole capability in the IP hit's context, while the artifact hit beside it was correctly bare.
+
+        p.md:1: routable IP address (<the address>): ... /artifact/<the whole uuid> on <the address>
+        p.md:1: private artifact URL (capability)
+
+    Suppressing context only on the branch that matched leaves every OTHER detector on that line
+    free to publish the value. Home paths and credentials measured the same way. So the rule the
+    gate has to keep is per line, and `_VALUE_IS_THE_DISCLOSURE` is where it keeps it.
+
+    EACH CASE ASSERTS BOTH DETECTORS FIRED before it inspects the output. Without that, a case
+    passes when neither runs -- the same hole this file exists to refuse, in a new place.
+    """
+
+    #: A routable address dropped onto the same line as the co-occurring hit. It is chosen because
+    #: its branch appends context, so it is the one that would print the value it sits beside.
+    CO_OCCURRING = " on " + "".join(("198.18.", "0.1"))
+
+    def setUp(self):
+        self.gate = load_gate()
+
+    def assert_no_hit_echoes(self, planted, secret, reason):
+        hits = scan_line(self.gate, planted, show_context=True)
+        self.assertTrue(
+            any("routable IP" in h for h in hits),
+            f"the co-occurring IP detector did not fire, so this case proves nothing: {hits!r}",
+        )
+        self.assertTrue(
+            any(reason in h for h in hits),
+            f"the {reason!r} detector did not fire, so this case proves nothing: {hits!r}",
+        )
+        for hit in hits:
+            self.assertNotIn(
+                secret,
+                hit,
+                f"a hit on this line printed the value it was meant to withhold: {hit!r}. Bare has "
+                "to hold for the whole LINE. A detector that suppresses context only on its own "
+                "branch leaves every other detector on that line free to publish what it hid.",
+            )
+
+    def test_no_hit_echoes_a_home_path(self):
+        planted = "".join(("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\notes.md"))
+        self.assert_no_hit_echoes(
+            planted + self.CO_OCCURRING, FAKE_ACCOUNT, "absolute user-home path"
+        )
+
+    def test_no_hit_echoes_an_artifact_url(self):
+        planted = "".join(("https://claude.ai/code/", "artifact/", FAKE_UUID))
+        self.assert_no_hit_echoes(planted + self.CO_OCCURRING, FAKE_UUID, "private artifact URL")
+
+    def test_no_hit_echoes_a_credential(self):
+        planted = "".join(("sk-ant-", "A" * 32))
+        self.assert_no_hit_echoes(planted + self.CO_OCCURRING, planted, "model API key")
+
+
+class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
+    """The other corpus for the suppression rule, and one line of it was not enough.
+
+    WHY IT EXISTS. Every other control here asserts a value is ABSENT from the output. All of them
+    pass against a gate that suppresses context unconditionally -- `ctx = ""` with the branch
+    deleted reddens nothing. So this pins the COST of `_VALUE_IS_THE_DISCLOSURE` rather than its
+    benefit: a line carrying none of those classes keeps the context a person asked for.
+
+    WHY IT IS A TABLE, and this is the measured part. The first version planted one line, `the host
+    is <address>`, and its docstring claimed "widen a pattern in that tuple until it matches
+    ordinary text and this is what reddens". That was false. Measured 2026-09-05: `re.IGNORECASE`
+    over the whole `_HOME_PATH` -- which newly matches `GET /users/me` and every other `/users/`
+    route -- reddened NOTHING in this file. The fixture carried no `/users/`, no drive letter and
+    nothing home-path shaped, so no widening of that pattern could reach it however far it went.
+
+    A pattern in the tuple has TWO jobs, detection and suppression. Over-reach is loud in the first
+    and SILENT in the second, so the bait has to be chosen per class: ordinary text that the
+    plausible widening of THAT pattern would newly match. One line cannot bait three classes.
+
+    Each row carries a co-occurring routable address, which is what produces a hit to inspect. The
+    address is that detector's own finding rather than a capability, so its line is not withheld.
+    """
+
+    #: One row per suppression class: (which widening it baits, fragments of the ordinary line).
+    #: Fragments rather than literals for the reason the module docstring gives -- this file is
+    #: scanned by the gate it tests.
+    SUPPRESSION_BAIT: tuple[tuple[str, tuple[str, ...]], ...] = (
+        (
+            "_HOME_PATH under re.IGNORECASE, which reaches a /users/ route. That is the "
+            "obvious repair for the lower-case drive path, and the wrong one. `profile` is "
+            "chosen over `me` on purpose, and NOT because `me` is simply exempt: the "
+            "exemption needs a SEPARATOR after the name, so `/users/me` at end of line "
+            "FIRES while `/users/me ` and `/users/me HTTP/1.1` stay quiet. Same six "
+            "characters, opposite behaviour, decided by what follows them. Bait must not "
+            "depend on where the line happens to end; `profile` fires either way",
+            ("GET ", "/users", "/profile"),
+        ),
+        (
+            "_ARTIFACT_URL widened to bare UUIDs. The QUIET table records the decision NOT to "
+            "detect those, so it is the widening someone actually argues for",
+            ("an id like ", FAKE_UUID),
+        ),
+        (
+            "a credential pattern relaxed on length, which reaches the documented prefix rather "
+            "than a key",
+            ("the ", "sk-ant-", " prefix is documented"),
+        ),
+        (
+            "_ARTIFACT_URL widened to any claude.ai link, or to any URL at all. Measured against "
+            "#51's own mutations: the bare-UUID row above does NOT redden on either, because it "
+            "carries no URL. One class can need more than one bait",
+            ("see ", "https://claude.ai/", "code", " for the docs"),
+        ),
+    )
+
+    CO_OCCURRING = " from " + "".join(("198.18.", "0.1"))
+
+    def setUp(self):
+        self.gate = load_gate()
+
+    def test_ordinary_text_keeps_its_context(self):
+        for baits, fragments in self.SUPPRESSION_BAIT:
+            planted = "".join(fragments) + self.CO_OCCURRING
+            with self.subTest(baits=baits):
+                hits = scan_line(self.gate, planted, show_context=True)
+                self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+                self.assertIn(
+                    "".join(fragments),
+                    hits[0],
+                    "--show-context printed no context on a line that discloses nothing. "
+                    f"Suppression has over-reached, and the pattern this baits is: {baits}.",
+                )
+
+    def test_the_default_prints_no_context(self):
+        for baits, fragments in self.SUPPRESSION_BAIT:
+            planted = "".join(fragments) + self.CO_OCCURRING
+            with self.subTest(baits=baits):
+                hits = scan_line(self.gate, planted)
+                self.assertEqual(1, len(hits), f"expected exactly one hit to inspect: {hits!r}")
+                self.assertNotIn(
+                    "".join(fragments),
+                    hits[0],
+                    "the DEFAULT output carried the line. That output goes to public CI logs.",
+                )
+
+    def test_the_home_path_bait_does_not_depend_on_where_the_line_ends(self):
+        """The bait row's comment claims four behaviours. This is what makes them checkable.
+
+        The comment says `profile` was chosen over `me` because the exemption needs a separator
+        after the name, so `me` bait works only at end of line. Prose, until now -- and prose about
+        a fixture's teeth is the thing that goes stale silently, because nothing re-reads it.
+
+        The widened pattern is derived from the gate's own source rather than retyped, so it cannot
+        drift away from the pattern it is meant to mirror.
+        """
+        widened = re.compile(self.gate._HOME_PATH.pattern, re.IGNORECASE)
+        route = "".join(("GET ", "/users", "/"))
+        cases = (
+            (f"{route}profile", True, "the bait name is not exempt, so it fires"),
+            (f"{route}profile ", True, "and it fires with a separator after it too"),
+            (f"{route}me", True, "`me` at END OF LINE has no separator, so it is NOT exempt"),
+            (f"{route}me ", False, "one trailing space exempts it -- this is why bait 1 failed"),
+            (f"{route}me HTTP/1.1", False, "and tidying it into a log line exempts it as well"),
+        )
+        for line, should_fire, why in cases:
+            with self.subTest(line=line):
+                self.assertEqual(
+                    should_fire,
+                    bool(widened.search(line)),
+                    f"{line!r}: expected fire={should_fire}. {why}. The bait row's comment states "
+                    "this behaviour; if the exemption list or its separator class changed, the "
+                    "comment is now wrong and the bait may no longer reach the over-reach.",
+                )
+
+    def test_every_suppression_class_has_a_bait_row(self):
+        """A class added to the tuple without bait is a silent failure mode with no control."""
+        gate = self.gate
+        self.assertEqual(
+            [gate._HOME_PATH, gate._ARTIFACT_URL, *(pat for pat, _label in gate._CREDENTIALS)],
+            list(gate._VALUE_IS_THE_DISCLOSURE),
+            "_VALUE_IS_THE_DISCLOSURE changed shape. Every class in it silences context on the "
+            "lines it matches, and a class with no row in SUPPRESSION_BAIT has nothing that "
+            "reddens when its pattern over-reaches -- which is the half nothing else here can "
+            "see. Add the bait row first, then update this assertion.",
+        )
 
 
 class TheGateExitsNonZeroOverAPlantedFile(unittest.TestCase):

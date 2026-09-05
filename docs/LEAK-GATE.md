@@ -151,15 +151,21 @@ Read the exit code, not the output:
 echoing it into a CI log copies the leak into a public place. The default output is location and
 category, never the matched text.
 
-Credential-shape hits stay bare whatever you pass, and so does an artifact-URL hit: the URL *is* the
-capability, so printing it hands whoever reads the log the artifact itself.
+**Three classes stay bare whatever you pass: home paths, credentials and artifact URLs.** For each,
+the matched value is the whole disclosure. Printing it hands the log's reader the account name, the
+credential or the artifact itself.
 
-**A home-path hit does not stay bare, though this page and the code both said it did.** Measured
-2026-09-05: under `--show-context` that branch appends the trimmed line, which *is* the home path, so
-the account name is echoed. The comment directly above it reads "Reason only, never the value".
+**Bare is per line, not per hit.** A line carrying one of the three silences context on every hit
+it produces, including a detector that found something else. Until 2026-09-05 it did not: a
+routable-IP hit echoed a home path, an artifact URL and a credential in full.
 
-Recorded rather than quietly fixed: changing it changes a shipped detector's output, which is the
-call of whoever owns triage. Until then, do not pass `--show-context` in CI.
+Two controls hold that now, `AHomePathHitNeverEchoesTheAccountName` and
+`NoHitEchoesALineThatCarriesADisclosure`. The second exists because the first cannot see this
+failure: a control that inspects only its own hit is clean and unfalsifiable while the hit beside it
+publishes the value.
+
+Still never pass `--show-context` in CI. It prints the matched IP address, and any token you
+configure, in full.
 
 ### Three behaviors worth knowing, because each one is a way a scanner lies
 
