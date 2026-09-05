@@ -10,9 +10,14 @@ The rules that are measured are about gates and order.
 **"No study" and "no figure" are different sentences. Do not collapse them.** One length figure
 is product-enforced, and it is the only one here that is not a judgment: Claude Code warns when a
 single loaded memory file passes about 5 percent of the context window in characters, with a floor
-near 40,000. Measured 2026-09-05, the MessageFoundry engine `CLAUDE.md` is 56,307 characters, so it
-trips that floor at 1.41x today. Verify it yourself with `wc -c`, and read the threshold out of the
-CLI binary rather than trusting this line.
+near 40,000. Measured 2026-09-05 on `origin/main`, the MessageFoundry engine `CLAUDE.md` is 59,648
+characters, so it trips that floor at 1.49x today.
+
+**Count characters, not bytes, and read the shared ref, not your checkout.** `wc -c` returns bytes
+and the threshold is stated in characters; that file carries 299 multi-byte characters, so the two
+answers differ. A stale worktree copy differed by another 3,640. Both of my errors pushed the same
+way and I published 1.41x before either was caught. Read the threshold out of the CLI binary rather
+than trusting this line.
 
 ## The rules
 
