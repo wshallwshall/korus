@@ -1360,5 +1360,106 @@ class TheSpawnedSeatDoesNotInheritTheWatchersAccount(WatcherCase):
         self.assertEqual([], self.last_receipt["scanned"]["childEnvWarnings"])
 
 
+class TheParentReadsWhatItsChildrenSay(WatcherCase):
+    """A separate defect at the same function, unrelated to billing.
+
+    Start-Child drained both of a quiet child's streams into $null. Draining is required -- a child
+    that fills a pipe buffer while the parent waits on exit deadlocks -- but the content went
+    nowhere with it. So a spawned seat's entire answer was discarded, and every refusal claim.ps1
+    wrote to stderr with it. The caller had the exit code and nothing else, which makes "the key is
+    held by a peer" and "claim.ps1 crashed" the same number.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.open_file.write_text(open_json(42), encoding="utf-8")
+        self.red_file.write_text(red_json(42), encoding="utf-8")
+
+    def break_the_registry(self) -> None:
+        """Make claim.ps1 -Take fail for a reason that is NOT a peer holding the key.
+
+        A file where the claims DIRECTORY belongs. The watcher's own existence check passes -- there
+        is no claim file, because there is no directory to hold one -- so the run proceeds to -Take,
+        and -Take cannot create anything. That is the one branch where the child's text is the only
+        available evidence, and it is reached without stubbing claim.ps1, which would replace the
+        very thing under test with a second copy of it.
+        """
+        state = self.state_root()
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "claims").write_text("not a directory\n", encoding="utf-8")
+
+    def test_a_refusing_claim_scripts_own_words_reach_the_receipt(self):
+        self.break_the_registry()
+        receipt, _, err = self.watch()
+        detail = receipt["red"][0]["detail"]
+
+        # THE DISCRIMINATING READING. The exit code is identical whether a peer holds the key or the
+        # registry is broken, and the watcher's own sentence says "a peer session holds it" in both
+        # cases. Only the child's own text separates them, so a detail that carries the exit code
+        # and nothing else is a confident wrong answer -- the reader goes looking for a peer that
+        # does not exist while the registry stays broken on every future tick.
+        self.assertIn(
+            "It said:", detail,
+            "the receipt reports an exit code with no words behind it. claim.ps1 wrote to stderr "
+            "and the parent threw it away, so 'a peer holds the key' and 'the claim registry is "
+            f"broken' render identically. Detail was: {detail}. {err}",
+        )
+        self.assertGreater(
+            len(detail.split("It said:", 1)[1].strip()), 0,
+            "the receipt printed the label and captured no text behind it, which is worse than "
+            "printing nothing: it looks like the child was asked and had nothing to say.",
+        )
+        self.assertEqual(
+            [], self.spawns(),
+            "a seat was started even though the claim was never taken. Two seats on one red is the "
+            "failure the claim exists to prevent.",
+        )
+
+        # A REFUSAL MUST NOT NAME A CAUSE IT CANNOT ESTABLISH. This run's registry is broken and no
+        # peer exists, so the old sentence -- "a peer session holds it" -- was a confident wrong
+        # answer that sent the reader hunting for a session that was never there.
+        self.assertNotIn(
+            "a peer session holds it", detail,
+            "the run asserted that a peer holds the key. On this fixture nobody does: the claims "
+            "registry is a file where a directory belongs. A non-zero exit does not distinguish "
+            "the two, so it must not be reported as though it did.",
+        )
+
+    def test_the_quoted_text_is_fit_to_put_in_a_receipt(self):
+        """pwsh colours its error banner, and the raw capture carried the escape runs with it.
+
+        Measured against this fixture before the cleanup: stderr arrived with ESC[31;1m sequences
+        in it. They are not text. They corrupt a -Json receipt for anything parsing it, render as
+        garbage in a log, and are not ASCII.
+        """
+        self.break_the_registry()
+        receipt, _, _ = self.watch()
+        detail = receipt["red"][0]["detail"]
+        self.assertNotIn(
+            "\x1b", detail,
+            "an escape sequence reached the receipt. The child's words are worth carrying; its "
+            "terminal colouring is not.",
+        )
+        self.assertEqual(
+            detail, detail.replace("\n", " ").replace("\r", " "),
+            "the detail spans lines, so one red no longer renders as one row.",
+        )
+        self.assertLess(
+            len(detail), 800,
+            "a crashing child's stack trace filled the receipt. A receipt nobody can read is the "
+            "same as no receipt.",
+        )
+
+    def test_a_working_registry_produces_no_quoted_refusal(self):
+        """The pair. Without it, a detail that always says 'It said:' would pass the case above."""
+        receipt, _, err = self.watch()
+        self.assertEqual("SPAWNED", receipt["red"][0]["decision"], err)
+        self.assertNotIn(
+            "It said:", receipt["red"][0]["detail"],
+            "a healthy run quoted a refusal, so the quote above is boilerplate rather than a "
+            "reading taken from a child.",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

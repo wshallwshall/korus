@@ -378,11 +378,59 @@ function Start-Child {
     if ($Quiet) {
         # Drain both pipes before waiting. A child that fills a pipe buffer while the parent waits on
         # exit deadlocks, and claim.ps1 prints a block of text on every path.
-        $null = $proc.StandardOutput.ReadToEndAsync()
-        $null = $proc.StandardError.ReadToEndAsync()
+        #
+        # THE TASK HANDLES ARE KEPT NOW. They used to be assigned to $null, which drained the pipes
+        # and threw the content away -- so a spawned seat's entire answer, and every diagnostic a
+        # refusing child wrote to stderr, went nowhere. The caller could read the exit code and
+        # nothing else, which makes "claim.ps1 refused" and "claim.ps1 crashed" the same number with
+        # no text to tell them apart.
+        $outTask = $proc.StandardOutput.ReadToEndAsync()
+        $errTask = $proc.StandardError.ReadToEndAsync()
+        $proc | Add-Member -NotePropertyName CcxStdOutTask -NotePropertyValue $outTask -Force
+        $proc | Add-Member -NotePropertyName CcxStdErrTask -NotePropertyValue $errTask -Force
     }
     if ($Wait) { $proc.WaitForExit() }
+    if ($Quiet -and $Wait) {
+        # ONLY AFTER WaitForExit, and only when we waited. Both reads complete at end-of-file, which
+        # for a detached seat arrives when the seat does -- so resolving these without having waited
+        # would block this tick on a session that runs for an hour, which is the thing -WaitForSpawn
+        # exists to keep off the production path. A caller that did not wait still gets the handles
+        # above and may resolve them itself.
+        $proc | Add-Member -NotePropertyName CcxStdOut `
+            -NotePropertyValue ([string]$proc.CcxStdOutTask.GetAwaiter().GetResult()) -Force
+        $proc | Add-Member -NotePropertyName CcxStdErr `
+            -NotePropertyValue ([string]$proc.CcxStdErrTask.GetAwaiter().GetResult()) -Force
+    }
     return $proc
+}
+
+# What a quiet child said, flattened to one line a receipt can carry.
+#
+# THREE THINGS ARE DONE TO IT, AND NONE OF THEM MAY DROP THE MESSAGE. Escape sequences are removed:
+# pwsh writes a coloured error banner, and measured against a claims registry broken on purpose the
+# raw stderr arrived carrying ESC[31;1m runs. Those are not text -- they corrupt a -Json receipt for
+# anything parsing it and render as garbage in a log. Newlines become spaces so one row stays one
+# row. The result is capped, because a crashing child can produce a stack trace longer than the
+# whole receipt, and a receipt nobody can read is the same as no receipt.
+#
+# THE CAP SAYS WHEN IT BIT. Truncating silently would hand a reader a sentence that looks complete
+# and ends before the part that mattered.
+function Get-ChildSaid {
+    [CmdletBinding()]
+    param($Process, [int]$MaxLength = 500)
+    $parts = @($Process.CcxStdErr, $Process.CcxStdOut) |
+        Where-Object { $_ -and "$_".Trim() } | ForEach-Object { "$_".Trim() }
+    if (-not $parts) { return '' }
+    $text = ($parts -join ' ')
+    # ESC is written as the char code rather than a literal escape byte, so this file stays plain
+    # ASCII and greps cleanly.
+    $esc = [char]27
+    $text = [regex]::Replace($text, "$esc\[[0-9;]*[A-Za-z]", '')
+    $text = [regex]::Replace($text, '\s+', ' ').Trim()
+    if ($text.Length -gt $MaxLength) {
+        $text = $text.Substring(0, $MaxLength) + " [truncated at $MaxLength characters]"
+    }
+    return $text
 }
 
 # The interpreter running this file, so a child pwsh cannot be a different build from its parent.
@@ -977,10 +1025,27 @@ try {
             -ArgumentList @('-NoProfile', '-File', $claimScript, '-Take', $key,
                 '-Note', "ci-red on $repoName pull request $number")
         if ($claimProc.ExitCode -ne 0) {
-            # A peer took it in the instant between our existence check and our -Take. The exclusive
-            # create is what caught it, and skipping is the right answer.
+            # The usual cause is a peer taking the key in the instant between our existence check
+            # and our -Take; the exclusive create is what caught it, and skipping is right either
+            # way, because a key we do not hold is not ours to spawn on.
+            #
+            # THE CHILD'S OWN WORDS ARE QUOTED NOW, and this sentence stopped asserting the cause.
+            # The branch used to report an exit code alone -- Start-Child discarded both streams --
+            # and then name a peer, which was an INFERENCE from a non-zero exit. Driven against a
+            # claims registry broken on purpose (a file where the directory belongs), the old text
+            # read in full: "claim.ps1 refused the key (exit 1); a peer session holds it." A reader
+            # goes looking for a peer that does not exist while the registry stays broken on every
+            # future tick. The quote is what tells the two apart, so the run no longer guesses.
+            $said = Get-ChildSaid $claimProc
             $row.decision = 'ALREADY-CLAIMED'
-            $row.detail = "claim.ps1 refused the key (exit $($claimProc.ExitCode)); a peer session holds it."
+            $row.detail = "claim.ps1 refused the key (exit $($claimProc.ExitCode)), so this run does not hold it."
+            $row.detail = if ($said) { "$($row.detail) It said: $said" }
+            else {
+                # NOT "a peer holds it". The child said nothing, so the cause is unestablished, and
+                # the word for that is not the name of the likeliest case.
+                "$($row.detail) It said nothing, so why it refused is not established here -- " +
+                "usually a peer holds the key, but a broken registry exits the same way."
+            }
             $receipt.red += [pscustomobject]$row
             continue
         }
