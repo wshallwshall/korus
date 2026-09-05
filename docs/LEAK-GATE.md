@@ -53,7 +53,7 @@ rather than hosts. The other detectors still run there.
 | Absolute user-home path | `<drive>:\Users\<account>\...`, `/home/<account>/...`, `/Users/<account>/...`. Carries an OS login, usually a real person's name, often the internal project name below it. Exempt: placeholders (`<name>`, `$HOME`, `%USERPROFILE%`, `{home}`) and a few conventional stand-ins. Everything else reads as a real account |
 | Routable IPv4 | A free-standing quad that is not RFC1918, loopback, link-local, broadcast, `0.`-prefixed, multicast, or an RFC5737 documentation address. Naming a real host is a network disclosure, even a jump box. Look-arounds keep dotted OIDs, version strings and spec-section citations out. |
 | Credential shapes | Private-key block headers, and prefix-anchored token formats. It prints `private key block`, `cloud access key id`, `forge access token`, `chat platform token` and `model API key`. Prefix-anchored because an entropy heuristic over source produces a false-positive storm, and a muted gate is worth nothing. Run a real secret scanner too: this catches only copy-paste leaks riding with identifying content. |
-| Private artifact URL | All three addresses one artifact has: `claude.ai/artifact/<uuid>` and `claude.ai/code/artifact/<uuid>`; the same with `frame` in place of `artifact`; an optional readable slug before the UUID, as in `claude.ai/code/artifact/q4-plan-<uuid>`; and the content host `<uuid>.frame.claudeusercontent.com`, plus its `.staging.` variant, where `claude.ai` never appears. The UUID is a *capability*, not a name: whoever holds the URL can fetch the artifact. The UUID shape is required, so the placeholder forms this row prints do not trip the detector that documents them, and a deliberately shared `/public/artifacts/` link does not either -- that segment is plural. Prints bare, like a credential hit. |
+| Private artifact URL | All three addresses one artifact has: `claude.ai/artifact/<uuid>` and `claude.ai/code/artifact/<uuid>`; the same with `frame` in place of `artifact`; an optional readable slug before the UUID, as in `claude.ai/code/artifact/q4-plan-<uuid>`; and the content host `<uuid>.frame.claudeusercontent.com`, plus its `.staging.` variant, where `claude.ai` never appears. The UUID is a *capability*, not a name: whoever holds the URL can fetch the artifact. The UUID shape is required, so the placeholder forms this row prints do not trip the detector that documents them, and a deliberately shared `/public/artifacts/` link does not either -- that segment is plural. Also caught when prose reflow breaks the URL across two lines, reported at the first line. Prints bare, like a credential hit. |
 
 **Token detectors** come from a file *you* supply and never commit: the literal names of the private
 projects, clients, vendors, hosts or people that must not appear. Nobody can ship that list for you,
@@ -63,10 +63,22 @@ and a public repository is the last place it could live.
 with a digit or `_`, or a non-ASCII login, is not matched -- and no other detector covers the shape,
 so the miss is silent.
 
-**A URL broken across two lines is missed, and nothing says so.** The scanner reads one line at a
-time, so prose reflow defeats it. Measured 2026-09-05: the one-line form is caught; wrapped
-mid-UUID or after the last slash, it is not. These pages wrap near 100 characters, and the URL is
-longer.
+**A URL broken across two lines is caught, for the artifact detector only.** Measured 2026-09-05:
+the one-line form was caught, the wrapped form was not. These pages wrap near 100 characters, and
+the URL is longer.
+
+The fix joins each line to the next and strips the whitespace at the seam. It reports at the first
+line, with `wrapped` in the reason, because grepping that line shows no URL.
+
+Two residuals stand, both pinned by tests rather than assumed:
+
+- **A wrap across three lines is still missed.** Only adjacent pairs are joined.
+- **A prefixed continuation line is still missed** -- `# `, `> `, `* `. The join strips whitespace
+  and nothing else. Stripping comment markers would fabricate adjacency a reader does not see.
+
+**Every other detector is still line-based.** A wrapped home path or credential is missed, and
+nothing says so. The join was scoped to the artifact arm because that pattern measures zero
+population, so widening it silences nothing. The home-path detector fires in practice.
 
 **The artifact-URL detector exists because the gate failed first.** Commit `a3df144` put two private
 artifact URLs in the tree: `roles/LANDER.md:4027` and `roles/retired/PM.md:200`. The gate scanned
