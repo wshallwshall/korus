@@ -223,6 +223,23 @@ _ARTIFACT_URL = re.compile(
 #: Every structural detector, for the count line. A caller cannot tell an armed run from a vacuous
 #: one unless the run says how many detectors it had, so this number is printed even though it is a
 #: constant: the day someone edits this file, the printed number is the receipt.
+#: Detectors whose MATCHED VALUE is itself the disclosure, rather than a pointer to one. A
+#: line carrying any of these must not be echoed by ANY hit on that line.
+#:
+#: BARE IS PER LINE, NOT PER HIT, and the gate shipped getting this wrong. Suppressing
+#: context only on the branch that matched leaves every OTHER detector on the same line free
+#: to print the value. Measured 2026-09-05: one line holding an artifact URL and a routable
+#: IP printed the whole capability in the IP hit's context, while the artifact hit beside it
+#: was correctly bare. Home paths and credentials measured the same way.
+#:
+#: NOT the same list as the branches that emit bare. Those stay bare on their own too, so
+#: removing a pattern here cannot silently re-open the branch it came from.
+_VALUE_IS_THE_DISCLOSURE: tuple[re.Pattern[str], ...] = (
+    _HOME_PATH,
+    _ARTIFACT_URL,
+    *(_pat for _pat, _label in _CREDENTIALS),
+)
+
 _STRUCTURAL_COUNT = 3 + len(_CREDENTIALS)  # home path + routable IP + artifact URL + credentials
 
 #: A pattern that can never match -- the "detector off" sentinel. ``(?!)`` is an always-failing
@@ -695,6 +712,11 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
     Reasons only by default -- location and category, never the matched value -- so a hit report is
     safe to print in a public CI log. ``show_context`` appends the matched value and the trimmed
     line, for local triage only.
+
+    THREE CLASSES IGNORE IT -- home paths, credentials and artifact URLs. For those the matched
+    value is the whole disclosure, so a hit that printed it would hand the log's reader the very
+    thing it is reporting. Bare there is the control, not a formatting choice, and it applies to
+    the whole LINE: a line carrying one of them silences context on every hit it produces.
     """
     posix = rel_posix if rel_posix is not None else path.as_posix()
     text = _read_text(path)
@@ -705,7 +727,12 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
     for lineno, line in enumerate(text.splitlines(), 1):
         if any(a.search(line) for a in ALLOWLIST):
             continue
-        ctx = f": {line.strip()[:120]}" if show_context else ""
+        # Bare is per LINE, not per hit -- see `_VALUE_IS_THE_DISCLOSURE`. A line carrying a
+        # disclosure gets no context on ANY of its hits, including detectors that found
+        # something else entirely.
+        ctx = ""
+        if show_context and not any(p.search(line) for p in _VALUE_IS_THE_DISCLOSURE):
+            ctx = f": {line.strip()[:120]}"
         before = len(hits)
         # ``_`` is a word character, so a \b-anchored name pattern cannot see its token inside an
         # identifier. Scanning a shadow copy with identifier separators neutralised closes that for
@@ -722,10 +749,17 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
                     value = f" ({ip})" if show_context else ""
                     hits.append(f"{posix}:{lineno}: routable IP address{value}{ctx}")
         # Reason only, never the value: the account name IS the disclosure, so echoing it into a
-        # public log would publish exactly what the hit is reporting.
+        # public log would publish exactly what the hit is reporting. The context line IS the
+        # home path, so no trimmed form of it leaves the account name out -- which is why this
+        # branch ignores show_context rather than redacting under it. `_VALUE_IS_THE_DISCLOSURE`
+        # then silences the REST of the line's hits, which is the half this branch cannot reach.
+        #
+        # It appended `ctx` for the detector's whole life and contradicted this comment the
+        # whole time. `AHomePathHitNeverEchoesTheAccountName` runs the two against each other
+        # now, because a comment is not a control.
         if _HOME_PATH.search(line):
-            hits.append(f"{posix}:{lineno}: absolute user-home path (OS account name){ctx}")
-        # Bare whatever the caller passed, like a credential hit and unlike every other branch here.
+            hits.append(f"{posix}:{lineno}: absolute user-home path (OS account name)")
+        # Bare whatever the caller passed, like the home-path and credential hits either side.
         # The URL IS the capability, so echoing the line into a log hands that log's reader the
         # artifact -- publishing the thing the hit is reporting, to a wider audience than the tree.
         if _ARTIFACT_URL.search(line):
