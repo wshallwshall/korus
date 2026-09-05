@@ -494,9 +494,13 @@ class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
     #: scanned by the gate it tests.
     SUPPRESSION_BAIT: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
-            "_HOME_PATH under re.IGNORECASE, which reaches every /users/ route. That is the "
-            "obvious repair for the lower-case drive path and the wrong one. NOT /users/me: "
-            "`me` is on the exemption list, so that route stays quiet under the widening too",
+            "_HOME_PATH under re.IGNORECASE, which reaches a /users/ route. That is the "
+            "obvious repair for the lower-case drive path, and the wrong one. `profile` is "
+            "chosen over `me` on purpose, and NOT because `me` is simply exempt: the "
+            "exemption needs a SEPARATOR after the name, so `/users/me` at end of line "
+            "FIRES while `/users/me ` and `/users/me HTTP/1.1` stay quiet. Same six "
+            "characters, opposite behaviour, decided by what follows them. Bait must not "
+            "depend on where the line happens to end; `profile` fires either way",
             ("GET ", "/users", "/profile"),
         ),
         (
