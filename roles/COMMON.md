@@ -90,7 +90,7 @@ no error.
 **Why the relayer owns the stamp and not the author.** An authoring rule asks the owner, who will
 not always attach a condition. A relay rule asks the seat that can see the age.
 
-### The PR route: every seat pushes its own, and the label is what blocks the merge
+### The PR route: every seat pushes its own, and the Lander merges
 
 **Owner-set 2026-08-29, three steps.** Create the pull request and notify the Reviewer. The Reviewer
 posts any findings on the pull request. On approval the Reviewer passes it to the Lander, which
@@ -100,17 +100,26 @@ merges. Creating the pull request means pushing your own branch, and that needs 
 | --- | --- |
 | Notification is a courtesy, not the trigger | The Reviewer finds waiting pull requests itself. Nothing pushes a notice to it. |
 | Findings go on the pull request | Never back to an author, which has usually exited. *Your pull request has to survive your own exit* covers what it must carry. |
-| The label is what blocks the merge | `a reviewer has read this` is a required status check on `main`. Any seat can apply it: `gh pr edit <N> --add-label reviewed`. |
-| What the label proves | That a step happened, not that an independent party looked. Labelling a pull request you resolved yourself satisfies the machine and defeats the point. Say so when you do it. |
+| RETIRED 2026-09-04, the label | No label blocks a merge. The owner removed the review gate. The required checks on `main` are `gates (ubuntu-latest)` and `gates (windows-latest)`. |
+| Do not spend a turn on it | `reviewed` now carries no machine meaning. Do not apply it, wait on it, or read a pull request as blocked for want of it. |
+| What that label proved, kept | That a step happened, not that a party looked. A seat could label a pull request it wrote itself and satisfy the machine. Any gate keyed on a self-appliable mark has this shape. |
 | Direct pushes to `main` | Still blocked by the harness. Branch and pull request is the path. |
-| RETIRED 2026-08-31 | The old fallback through an absent Reviewer is gone. See [REVIEWER.md](REVIEWER.md), *You sit in the pull request path*. |
+| RETIRED 2026-08-31, the fallback | The old route around an absent Reviewer. See [REVIEWER.md](REVIEWER.md), *You sit in the pull request path*. |
 
-**What that row used to say**, kept because seats still quote it. *"If no Reviewer is running, hand
-the PR to the Lander as before -- a route through an absent seat is a stall."*
+**What the retired rows used to say**, kept because seats still quote them.
 
-Since the review gate was armed the Lander cannot merge an unlabelled pull request either. Start a
-Reviewer, have any other running seat read the diff and label it, or let the Console carry the
-question to the owner on its next poll.
+The 2026-08-29 fallback, retired on 2026-08-31:
+
+*"If no Reviewer is running, hand the PR to the Lander as before -- a route through an absent seat
+is a stall."*
+
+The sentence that retired it, whose gate is now gone:
+
+*"Since the review gate was armed the Lander cannot merge an unlabelled pull request either. Start a
+Reviewer, have any other running seat read the diff and label it."*
+
+**Do not read that as the fallback returning.** Whether the Reviewer stays in the pull request path
+is the owner's call. Nothing here answers it, and no seat should act as though it has.
 
 ### Before you allocate, grep the ALLOC TITLES for your subject, not the ledger
 
@@ -1884,10 +1893,11 @@ anything left half-done stays half-done until a different session notices. Leave
 
 | Item | Rule |
 | --- | --- |
-| The label race | The review gate's `synchronize` run STRIPS `reviewed` when it executes, which is after your push returns. Labelling straight after a push loses. |
-| The order | Push. Wait for that branch's review-gate run to reach `completed`. Then label. Then read the label back. |
-| The cost, measured | 2026-09-04: 15 of 16 pull requests had NO `reviewed` label, despite the labelling command reporting success on every one. |
-| Read the newest run | A label cycle fires both an `unlabeled` run that fails and a `labeled` run that succeeds. The rollup shows the stale red; the newest run per name is the truth. |
+| The invalidation race | RETIRED SUBJECT, LIVE LESSON. Where a check invalidates on an event, the event is the gate's own RUN, not your command returning. Acting straight after a push loses. |
+| The order | Push. Wait for that branch's run to reach `completed`. Then act. Then read the state back. |
+| The cost, measured | 2026-09-04: 15 of 16 pull requests had NO `reviewed` label, though the labelling command reported success on every one. The review gate's `synchronize` run stripped it after each push returned. |
+| The gate that taught it is gone | The owner removed the review gate on 2026-09-04, so `reviewed` no longer gates anything. The race above is a property of gates, not of that one, so it recurs. |
+| Read the newest run | A label cycle fired both an `unlabeled` run that failed and a `labeled` run that succeeded. The rollup shows the stale red; the newest run per name is the truth. |
 | Do not trust exit 0 | `gh pr edit`, `gh run cancel` and `gh pr merge --disable-auto` can each report success and change nothing. Read the state back. |
 | Re-derive, never reuse | Run ids and check ids go stale the moment a head moves. Re-derive with `gh run list -c "$sha"` at the current head. |
 | Leave the question on it | If your brief left something open, write it in the pull request body. There is no session to ask later, and a comment is the only channel that outlives you. |
@@ -1906,7 +1916,7 @@ apply to.
 | A queue IS enabled | Branch protection does not expose merge-queue config, so a missing `merge_queue` key there proves nothing. Read it with the GraphQL `mergeQueue(branch:"main")` field before proposing to enable one. |
 | Do not enqueue or dequeue | The queue is the Lander's, and it is one seat's job precisely so these races stop. Dequeuing also deletes the entry's `gh-readonly-queue` branch and orphans every run already queued against it. |
 | Never `gh pr update-branch` | The queue rebases each entry against the `main` it will actually land on, so BEHIND is not a merge blocker. Measured 2026-09-03: a pull request read BEHIND, the label was added with no push, and it went CLEAN. |
-| What a rebase costs | Every `update-branch` fires a `synchronize`, which restarts all required contexts AND strips `reviewed`. It buys nothing here. |
+| What a rebase costs | Every `update-branch` fires a `synchronize`, which restarts every required context. It buys nothing here. It also stripped `reviewed`, until that gate went on 2026-09-04. |
 | Never arm auto-merge | Enqueuing is the Lander's call. Auto-merge fires on the head it SAW, so a later push is dropped: the pull request reads MERGED, the branch stays alive, and nothing reports a problem. |
 | Read the log, then rerun | Name the failing test and its mechanism before rerunning. One rerun. A second red on the same leg is a finding, not a flake. Record which leg and which head SHA on the pull request. |
 | `completed` is not `succeeded` | `status == completed` includes `skipped` and `cancelled`. Count `conclusion`. Measured: 79 of 100 runs were skipped. |

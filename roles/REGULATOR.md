@@ -207,10 +207,10 @@ A failure on a commit that cannot reach the code under test is not a property of
 | Arm | How | Cost |
 |---|---|---|
 | Passive | Search the leg's recent history for a commit that cannot reach the code and failed anyway. | Free, one `gh run list`. **Reach for this first.** |
-| Manufactured | Push a null-change commit. | A runner cycle, plus the cost in *A manufactured arm un-reviews the PR*. The only route when the history holds nothing suitable. |
+| Manufactured | Push a null-change commit. | A runner cycle, plus the cost in *A manufactured arm restarts the PR's checks*. The only route when the history holds nothing suitable. |
 
 **Prefer a throwaway branch off the same base** wherever the control does not need the PR's own head.
-It buys the same evidence for the same runner cycle and touches no label.
+It buys the same evidence for the same runner cycle and leaves the PR's own checks standing.
 
 **Say which arm you used.** A reader cannot tell them apart from the verdict alone.
 
@@ -220,25 +220,41 @@ hand the reading to your successor.
 **CI on the PR tree is the authority, not a local run.** A green local quartet and a red one have both
 turned out to be venv artifacts on the same commits.
 
-### 4b. A manufactured arm un-reviews the PR
+### 4b. A manufactured arm restarts the PR's checks
 
-A push to the PR branch fires `synchronize`. `review-gate.yml` removes the `reviewed` label on that
-event, and the required context `a reviewer has read this` goes red. So your diagnostic un-reviews the
-pull request.
+A push to the PR branch fires `synchronize`. Every check result on the old head stops counting, and
+the PR waits on a fresh run. That is the standing cost of the manufactured arm, and it is why 4a says
+prefer a throwaway branch wherever the control does not need the PR's own head.
 
-Somebody must read the diff again, and the label goes back on **after** the resulting run completes.
-Say so in your verdict comment, naming the PR you un-reviewed, so the Console can brief a Reviewer for
-it.
+**RETIRED 2026-09-04: this section used to charge a second cost, and it told you to act on it.** It
+said the push made `review-gate.yml` strip the `reviewed` label, and that the required context `a
+reviewer has read this` then went red. Your verdict comment had to name the PR you un-reviewed.
 
-The Lander owns label timing on ITS merge-forwards, not on your diagnostic push.
+**Measured 2026-09-04 on the engine's `main`: that context is not in the required set.** So the strip
+no longer blocks anything, and the hand-off it asked for is a turn spent on a check that will never
+answer.
+
+**Half of it is still live, so do not read this as "the label is gone".** `review-gate.yml` is still
+in the engine and still strips `reviewed` on a push. The label still disappears. What changed is that
+nothing required reads it.
+
+**This says nothing about the Reviewer seat**, which outlives its gate or does not on an owner
+ruling. Reading a diff was never the gate's to authorise.
 
 ### 4c. Never write a required-context count
 
 The engine's required set drifts. Readings inside one week: the failure log carries 13, 15 and 16, and
 REVIEWER measured 14 on the server 2026-08-31. **Read it fresh every time.**
 
-The vault is a separate repository with two required checks, no review gate, and `enforce_admins`
-false, so nothing here transfers to it.
+**It moved again on 2026-09-04.** `a reviewer has read this` was in the set on 2026-08-31 and was not
+when this was written. That is the rule firing, not an exception to it. Read the set, not this line:
+
+```
+gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts[]'
+```
+
+The vault is a separate repository with two required checks and `enforce_admins` false, so nothing
+here transfers to it.
 
 This prohibition expires only if the set is frozen and a workflow publishes it. Until then, a count in
 prose is stale the day after you write it.
@@ -284,15 +300,25 @@ That second command is the log's own prescribed remedy: **check it before callin
 | `mergeQueue: null` | A repository with no queue returns this. That is a different null and must not be read as "queue empty". |
 | An ejection itself | An ejection is a **state, not a cause**. Log the cause that ejected it, or `unestablished`. |
 
-### 5b. A PR's state is a join over three clocks, and one lies by omission
+### 5b. A PR's state is a join over two clocks, and one lies by omission
+
+**It was three until 2026-09-04.** The `reviewed` label was the middle clock. It still gets stripped
+on a push, but no required context reads it, so it no longer moves a PR's state. Two clocks now.
 
 | Clock | What it hides |
 |---|---|
-| `mergeStateStatus` | It reports `BEHIND` or `DIRTY` in preference to `BLOCKED`, so a review-gate block stays invisible on a stale branch. |
-| The `reviewed` label | A `synchronize` run strips it only when it **executes**. While the run is queued the label is present and already invalid -- *A manufactured arm un-reviews the PR* says why the push strips it. |
-| The runs | These settle it. Take the newest completed run per context name and compare its `createdAt` against the latest `reviewed` label event. Created before the label means stale, whatever the check says. |
+| `mergeStateStatus` | It reports `BEHIND` or `DIRTY` in preference to `BLOCKED`, so a block stays invisible on a stale branch. |
+| The runs | These settle it. Take the newest completed run per context name and check the sha it ran on against the PR's current head. An older sha means stale, whatever the check says. |
 
-**No run newer than the label event is unknown.** Keep polling, and never inherit the last verdict.
+**A required context with no completed run on the current head is unknown, not green.** Keep polling,
+and never inherit the last verdict.
+
+The demoted clock left a lesson worth more than the gate was. A label a workflow strips is trustworthy
+only once that workflow's RUN has executed -- not when your own command returns. While the run sat
+queued the label read present and was already wrong.
+
+Expect that shape from any check that invalidates on an event: **the event is the gate's run, not your
+command returning.** Wait for the run, then read the result back.
 
 ---
 
@@ -331,8 +357,7 @@ Less than this and the next Regulator redoes your triage from zero.
 
 ### 6c. Land the row through the vault, then hand the PR to the Lander
 
-Branch in the vault worktree your brief names, commit the row, push, and open the PR. The vault has no
-review gate, so no `reviewed` label is needed there.
+Branch in the vault worktree your brief names, commit the row, push, and open the PR.
 
 Then hand the PR to the Lander and say it is a tail-append to a table. The Lander decides what enters
 the queue and in what order. A second open log PR is its problem to sequence, not yours.
@@ -380,11 +405,14 @@ NEXT:     brief a Builder | wait on main | re-run <context> | hand to the Lander
 |---|---|
 | Fixing | A Builder fixes. You write the brief; the owner or the Console starts the session -- see the spawn-grant row in the standing rules. |
 | Enqueueing and merging | The Lander decides what enters the queue and in what order, and merges on a standing grant. |
-| The merge-forward | `main` has `strict: true`, so every open PR goes stale each time `main` moves. Nothing automates the update. The Lander does it, and owns when the `reviewed` label goes back on afterwards. |
-| The `reviewed` label | Any seat may apply it, but doing so claims someone read the diff. |
+| The merge-forward | `main` has `strict: true`, so every open PR goes stale each time `main` moves. Nothing automates the update. The Lander does it. |
 | A PR that needs a ruling rather than work | Hand it to the Lander, which takes it to the owner. |
 | The ledger | A `#N` you want filed routes through the Console. **Never allocate one yourself.** |
 | Raising `step_timeout` | It sits under `job_timeout` on purpose, so a deadlock below pytest surfaces as a step failure. Raising it trades a diagnostic for a green tick. |
+
+**RETIRED 2026-09-04: a `reviewed` label row sat in this table**, saying any seat may apply it but
+that doing so claims someone read the diff. The label still exists; no required context reads it, so
+applying it gates nothing -- see *A manufactured arm restarts the PR's checks*.
 
 Every row here expires the same way: on an owner ruling that widens this seat, stated in the owner's
 own words and dated. A peer relaying a grant is not that ruling.

@@ -46,8 +46,8 @@ scope silently, and the changed version is what later work encodes.
 ### III. A gate that cannot check identity must make refusal legible
 
 Every session pushes as one account, so the platform's own protection against an author
-approving their own change is unavailable. The review gate is therefore **a process gate,
-not an identity gate**, and it is that by necessity rather than by choice.
+approving their own change is unavailable. Any review gate built on top of that is therefore
+**a process gate, not an identity gate**, and it is that by necessity rather than by choice.
 
 **A process gate can be satisfied by the party it is meant to check.** So the only signal
 it carries that cannot be faked is a **refusal**. Refusal must therefore be recorded, and
@@ -61,9 +61,21 @@ nothing.** The careful reviewer's signal was its refusal, and the gate had no wa
 one: a reviewer that declines to pass looks exactly like one that never ran.
 
 This article does not require a human to judge. A reviewer may be a process that runs
-checks and applies a label when they pass, and that is what the Owner has specified. The
-requirement is narrower and it survives either design: **whatever refuses must leave a mark
-the gate can read.**
+checks and applies a label when they pass, which is what the Owner specified for the gate
+described above. The requirement is narrower and it survives either design: **whatever
+refuses must leave a mark the gate can read.**
+
+**The gate this article was written about was removed on 2026-09-04.** The Owner dropped it
+as a required check on `main`, leaving `gates (ubuntu-latest)` and `gates (windows-latest)`,
+and `.github/workflows/review-gate.yml` was deleted. **The evidence above is kept because the
+incident happened and the reasoning drawn from it did not depend on that gate's design.**
+
+**The article stands, and its subject is now any future gate.** Nothing that produced it
+changed: every session still pushes as one account, so no process gate KORUS can build is
+able to tell an author from a reviewer. **KORUS has no gate meeting this requirement today**,
+and anything proposed to replace one must record refusal as legibly as approval before it is
+worth building. Whether the Reviewer seat outlives the gate it fed is an Owner decision and is
+not settled here.
 
 ### IV. Every claim names the condition it did not vary
 
@@ -595,22 +607,32 @@ in the sentence around them. Say the word.
 **One coherent change per commit**, with a message saying what was measured and what it
 changes.
 
-**Nothing merges on its author's own approval.** See Article III.
+**Nothing merges on its author's own approval.** See Article III. **No gate has enforced this
+since 2026-09-04**, when the review gate was removed, so it is a standing norm and not a check.
 
 **The operational sequence lives in one place and this is not it.** It is
 `roles/COMMON.md`, section "Your pull request has to survive your own exit", at commit
 `3143b0ec`. Read it there rather than from a summary here, because a second copy drifts and
 the drift is invisible until someone follows the wrong one.
 
-The one thing worth stating twice, because omitting it is what the sequence exists to
-prevent: **wait for the branch's gate run to complete before applying the label, then read
-the label back.** The gate strips the label when its run executes, which is after the push
-command returns, so labelling immediately after a push is a race you lose silently. Measured
-by the seat that lost it: **fifteen of sixteen pull requests ended with no label while every
-command reported success.** The read-back step exists because the apply step reports success
-either way.
+One step from that sequence is repeated here, and **on 2026-09-04 it stopped being an
+instruction and became a finding.** The label it names belonged to the review gate, which was
+removed that day, so there is now nothing to label and no run to wait for. **Do not do this,
+and do not delete it**: the finding generalises to any gate with the same property.
 
-That section reached a commit only on 2026-09-04. Before that it, and two others beside it,
+The retired instruction read: wait for the branch's gate run to complete before applying the
+label, then read the label back. The gate stripped the label when its run executed, which is
+after the push command returns, so labelling immediately after a push was a race you lost
+silently. Measured by the seat that lost it: **fifteen of sixteen pull requests ended with no
+label while every command reported success.**
+
+**The general shape, which outlives that gate.** When a check invalidates on an event, the
+event is **the gate's own run**, not your command returning. So wait for the run, then read
+the result back. A step that reports success either way has not been measured until something
+reads it back, which is Article VI applied to a write.
+
+That `roles/COMMON.md` section reached a commit only on 2026-09-04. Before that it, and two
+others beside it,
 **existed in no commit anywhere** -- one uncommitted file in a checkout fifty-two commits
 behind. The fleet's merge procedure had no durable home while being the procedure whose
 missing step cost those fifteen labels.
@@ -641,10 +663,38 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.13.1 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
+**Version**: 1.14.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.14.0 2026-09-04  The review gate was removed by the Owner, and this document described it as
+       live in three places. Verified against the live GitHub API: the review check is no longer
+       required on main, which now requires gates (ubuntu-latest) and gates (windows-latest), and
+       .github/workflows/review-gate.yml is deleted.
+
+       ARTICLE III IS NOT RETIRED and its evidence is untouched. The 2026-09-02 incident happened:
+       a pull request drew two reviews eight minutes apart, the first found four defects and
+       withheld its approval, the second found nothing and labelled it, and the change merged on
+       the commit the first reviewer had refused. What changed is only that the article's worked
+       example describes a gate that no longer runs. The condition underneath it did not change --
+       every session still pushes as one account, so no process gate KORUS can build can tell an
+       author from a reviewer -- so the article now states a requirement for ANY such gate, and it
+       records that KORUS has none meeting it today. The opening sentence's "The review gate is
+       therefore" became "Any review gate built on top of that is therefore", which is the same
+       claim without asserting a live gate.
+
+       Whether the Reviewer SEAT survives the loss of its gate is an Owner decision. It is not
+       answered here, and the article says so rather than leaving the question implied.
+
+       HOW A CHANGE LANDS: the wait-then-label-then-read-back step is now marked as a retired
+       INSTRUCTION and kept as a FINDING. A seat following it today would wait on a run that will
+       never come. The measurement stays verbatim -- fifteen of sixteen pull requests ended with no
+       label while every command reported success -- with the general shape stated beside it: when
+       a check invalidates on an event, the event is the gate's own run and not your command
+       returning, so wait for the run and read the result back. That recurs on the next gate with
+       the same property, which is why deleting it would cost a real lesson. "Nothing merges on its
+       author's own approval" is kept and marked as a norm with no check behind it.
 
 1.13.1 2026-09-04  Article IX's HEADING now states the finding the body already states. It read
        "Built for Claude Code, and no design may require a particular surface", which is the

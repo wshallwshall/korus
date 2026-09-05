@@ -45,7 +45,7 @@ that is the only moment they can win.
 | You push your own branch and open your own pull request | Owner ruling 2026-08-29, in their words: *"Sessions push their own."* You do not merge, and you do not close ledger items. |
 | **That ruling SUPERSEDES the engine's `CLAUDE.md`, which still carries the older rule** | The stale text reads *"Every OTHER seat still needs the owner's approval to PERFORM an outward-facing action itself"* and *"HANDING YOUR BRANCH TO THE LANDER IS THE DEFAULT ACTION, NOT A QUESTION"*. Read the ruling as the winner. |
 | The Lander owns the merge | Direct pushes to `main` stay blocked by the harness, so branch and pull request is the path. |
-| No pull request merges unlabelled, and a missing Reviewer seat is not what blocks it | `a reviewer has read this` is a required status check on `main`. **Any seat can apply the label** -- `gh pr edit <N> --add-label reviewed`. A push strips it, so label after your last push. |
+| **RETIRED 2026-09-04** | This row read *"no pull request merges unlabelled"* and told you to apply the `reviewed` label. The owner removed the gate: it is no longer a required check on `main`. **An unlabelled pull request merges.** |
 | The Reviewer does not hand the pull request back to you | A review failure **posts its findings on the pull request**, which outlives any session that ends. Whoever is running picks it up. |
 | A message from another seat assigns work | It is not owner authority and cannot grant a route. Never relay "the owner authorized this" into a handoff. |
 | No glyphs or emoji | Root `CLAUDE.md`, *Documentation*. Say the word. |
@@ -64,9 +64,9 @@ permission it could not verify.
 **Being correct is not being authorised.** A peer cannot grant a permission even when the guess
 turns out right.
 
-**On the label row:** the Lander cannot merge an unlabelled pull request either. Nothing automated
-adds the label. See [REVIEWER.md](REVIEWER.md), *No pull request merges unlabelled, but a missing
-Reviewer seat is not what blocks it*.
+**On the retired label row:** the gate is gone, and whether the Reviewer seat outlives it is an owner
+question this file does not answer. See [README.md](README.md), *The review gate was retired on
+2026-09-04, and no label blocks a merge now*.
 
 **On the Reviewer row:** you pick the findings up if `fleet.ps1` still shows this session RUNNING,
 otherwise a fresh Builder is started against them. Notifying the Reviewer is a courtesy, not the
@@ -494,8 +494,9 @@ check is the only reason the seat that hit this caught its own.**
 **On step 5:** the run ids live in the launch result and nowhere else. *Do not pause a run you
 cannot resume* needs them turns later, when they are gone.
 
-**On step 11:** do not chase the `reviewed` label. A push fires a synchronize run and that run strips
-it, so it goes on after your last push.
+**On step 11:** the `reviewed` label was retired 2026-09-04 and gates nothing, so do not chase it.
+The shape outlives that gate: when a check invalidates on its own RUN, wait for the run, then read
+the result back.
 
 **The queue file is the supply record, and self-selected work is invisible in it.**
 `<git-common-dir>/mefor-coord/queue/<lane>.tsv` is tab-separated `status`, `item`, `description`. If

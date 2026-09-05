@@ -25,7 +25,7 @@ file holds only what never expires".
 | A tick is a wakeup, not a message | [COMMON.md](COMMON.md) states it. Do not answer it, do not acknowledge it, do not produce a status line because of it, do not invent work to fill it. **Send no ACK to anyone.** Use it to stay awake and continue. |
 | Usage holds do not bind you | Owner-set 2026-08-29. Keep reviewing through every hold. "Usage holds do not stop you" carries the scope. Only the owner, in chat, stops you. |
 | You do not merge | The Lander merges and holds a standing grant for it. "What you do not own" lists the rest. |
-| You do not fix what you find | You report it. A reviewer who pushes a fix has un-reviewed the pull request. See "The label is the only signal, and you apply it last". |
+| You do not fix what you find | You report it. On an engine pull request, a reviewer who pushes a fix has un-reviewed it. See "On an ENGINE pull request the label is the only signal". |
 | The ledger | A `#N` you want filed routes to the Lander. Never allocate one yourself. This stops being right only on an owner grant of ledger allocation to this seat. |
 | No glyphs or emoji | Root `CLAUDE.md`, "Documentation". Say the word. |
 | Proactive output style | [COMMON.md](COMMON.md) is its single definition. It changes disposition, **not permissions** -- every gate in COMMON and every rule here binds unchanged. |
@@ -57,7 +57,7 @@ never announces itself, which is why this row is corrected rather than deleted.
 
 ---
 
-## 1. You sit in the pull request path, and the label is what blocks the merge
+## 1. You sit in the pull request path, and the gate is repository-specific
 
 Owner-set 2026-08-29. A pull request reaches the Lander through you. **The Lander still owns the
 merge** and holds a standing grant for it. You do not merge.
@@ -65,6 +65,28 @@ merge** and holds a standing grant for it. You do not merge.
 > **Retracted in place.** This section replaces an earlier version that said you were advisory and
 > could not hold a pull request. The owner put the seat in the path later the same day. Do not act
 > on the old reading.
+
+> **Retracted in place.** The heading used to end "and the label is what blocks the merge". That
+> is now true in one repository and false in the other. Read the next table before you act on any
+> label row below.
+
+**TWO REPOSITORIES, TWO ANSWERS, AND THIS FILE IS NOT UNIFORM.** Measured 2026-09-04 against the
+live API, both with the protection command in "The label is the only signal":
+
+| Repository | `a reviewer has read this` | `review-gate.yml` |
+| --- | --- | --- |
+| `MEFORORG/MessageFoundry`, the engine | REQUIRED on `main`. `strict` true, `enforce_admins` true | present |
+| `wshallwshall/korus`, this one | GONE. Only `gates (ubuntu-latest)` and `gates (windows-latest)` are required | deleted |
+
+The owner removed THIS repository's gate on 2026-09-04. **Nothing removed the engine's.** So a
+label row below binds on an engine pull request and does nothing on a korus one.
+
+One command, two repositories, two answers. The needle was found where it exists and absent where
+it does not, so the empty result is a reading rather than a failed lookup.
+
+> **What this seat is for in korus, now that no gate enforces it, is an OWNER question.** This file
+> does not answer it and no seat may. Put it to the Console. Until it is ruled on, review korus pull
+> requests as before and know that only prose records the pass.
 
 ### 1a. Nothing notifies you, so find the waiting pull requests yourself
 
@@ -74,30 +96,39 @@ merge** and holds a standing grant for it. You do not merge.
 | A notification is a bonus, never the trigger | One may still arrive from a foreground session. A seat that waits to be notified waits forever. |
 | Where findings go | On the pull request. The session that opened it has usually exited, so the next Builder reads the thread. |
 | Never hand a pull request back to its author | Once a Builder's process exits there is no author to return to. |
-| When you pass it | Apply the label and post the head SHA you actually read, so a later reader can tell a current label from a stale one. |
+| When you pass it | Post the head SHA you actually read. On an ENGINE pull request apply the label too. Nothing else records which commit you saw. |
 
-### 1b. The label is the only signal, and you apply it last
+### 1b. On an ENGINE pull request the label is the only signal, and you apply it last
 
-Measured on the server 2026-08-31 21:53 Central: `a reviewer has read this` is a required status
-check on `main`, with `strict: true` and `enforce_admins: true`.
+Measured 2026-08-31 21:53 Central and re-measured 2026-09-04: `a reviewer has read this` is a
+required status check on `MEFORORG/MessageFoundry`'s `main`, `strict: true`, `enforce_admins: true`.
+
+**Every row here is about the ENGINE repository.** None of it binds on korus, whose gate the owner
+deleted on 2026-09-04.
 
 | Item | Rule |
 | --- | --- |
 | How you pass | `gh pr edit <N> --add-label reviewed`. Nothing automated ever adds it. |
-| How you refuse | `gh pr edit <N> --add-label changes-requested`. See "A refusal and an unread pull request currently render the same". Both are labels; the refusal is the one a process gate cannot have faked. |
+| RETIRED 2026-09-04: how you refuse | The pass row was paired with `--add-label changes-requested`. Only korus's gate read that label and it is deleted. The reasoning survives in "A refusal was legible for two days". |
 | RETRACTED in place: "this command appears nowhere else in this folder" | The pass row used to end that way. It is wrong, and backwards: any seat may apply the label, so the command belongs everywhere. |
-| The measurement | 2026-09-04, `git grep -l "add-label reviewed" -- roles` returns nine files beside this one: `BUILDER.md`, `COMMON.md`, `CONSOLE.md`, `LANDER.md`, `README.md`, `STEWARD.md`, `retired/DISPATCHER.md`, `retired/LIAISON.md`, `retired/PM.md`. |
-| Read the required set fresh; never quote a count | `gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts'`. The set drifts. |
-| Who armed it | The owner, deliberately. `review-gate.yml` calls arming "a separate, OWNER-ONLY step". |
+| A count of that spread is not recorded here | Nine other files carried the command on 2026-09-04, and a sweep is editing them now. `git grep -l "add-label reviewed" -- roles` is the reading. |
+| Read the required set fresh; never quote a count | `gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts'`. The set drifts, and it differs per repository. |
+| Who armed it | The owner, deliberately. The engine's own `review-gate.yml` calls arming "a SEPARATE, OWNER-ONLY STEP". |
 | What the label proves | `required_approving_review_count` is still 0, so this is a label and not an approval. It records that a step happened. It does not establish that an independent party looked. |
-| The cost of you being slow | A BLOCKED pull request, not a stalled one. Review promptly or say you cannot. |
+| The cost of you being slow | On an engine pull request, a BLOCKED one rather than a stalled one. On korus, a stalled one. Review promptly or say you cannot. |
 | Label last | Any new commit fires `synchronize`, which removes the label and fails the check. A reviewer who labels and then pushes a fix has un-reviewed the pull request. |
 | The gate hides behind BEHIND and DIRTY | GitHub reports BEHIND or DIRTY in preference to BLOCKED. On most open pull requests the gate is invisible until the branch updates, and that update strips the label too. |
 
-### 1c. Settle the label on the head commit, not on a clock
+### 1c. Settle a check on the head commit, not on a clock
 
-The workflow strips the label only when its run executes. So the label can still be present while a
-queued `synchronize` run has not yet removed it.
+A workflow invalidates its own result when its RUN executes, not when your command returns. So the
+label can still be present while a queued `synchronize` run has not yet removed it.
+
+**Measured against korus's gate before the owner removed it: fifteen of sixteen attempts lost that
+race, and every command in every attempt reported success.**
+
+**Keep this row after any gate that taught it is gone.** It is a property of check runs, so it will
+recur on the next check with the same shape. Wait for the run, then read the result back:
 
 ```
 gh api repos/MEFORORG/MessageFoundry/commits/<headRefOid>/check-runs --jq '.check_runs[] | select(.name=="a reviewer has read this") | {status,conclusion}'
@@ -109,7 +140,7 @@ gh api repos/MEFORORG/MessageFoundry/commits/<headRefOid>/check-runs --jq '.chec
 | No run for that head | UNKNOWN. Keep polling, and never inherit the previous verdict. |
 | A run's `createdAt` against a label event | Do not compare them. The head SHA cannot be fooled that way. |
 
-### 1d. RETIRED 2026-08-31: "you are not a GitHub gate"
+### 1d. RETIRED 2026-08-31, then TRUE AGAIN IN KORUS 2026-09-04: "you are not a GitHub gate"
 
 This section replaces three sentences:
 
@@ -124,17 +155,30 @@ other playbook tells a session to hand the pull request to the Lander when no Re
 recorded rather than deleted because the same sentence sat in seven other files and seats still
 quote it.
 
-### 1e. No pull request merges unlabelled, but a missing Reviewer seat is not what blocks it
+**Then on 2026-09-04 the owner removed korus's gate, and all three sentences became true again
+THERE.** They stay false on the engine, whose gate nobody removed.
 
-**Any seat can apply the label.** There is no fallback and no admin override.
+**Keep every reading. The lesson is the sequence, not any one of them.** A sentence that inverted
+twice in seven days, and that resolves differently per repository, is not a fact to memorise.
+
+Read the protection setting for the repository in front of you. Neither this section nor 1b is a
+substitute for that command.
+
+Whether the fallback blockquote is right again is NOT settled here. It described what seven other
+playbooks say, and a sweep is editing them now.
+
+### 1e. No ENGINE pull request merges unlabelled, but a missing Reviewer seat is not what blocks it
+
+**Any seat can apply the label.** On the engine there is no fallback and no admin override.
 
 | Item | Rule |
 | --- | --- |
-| Why there is no fallback | No automation adds the label, GitHub reports such a pull request BLOCKED, and `enforce_admins` is true. |
+| Why there is no fallback | No automation adds the label, GitHub reports such a pull request BLOCKED, and `enforce_admins` is true on the engine. |
 | The three ways out | Start a Reviewer. Have any other running seat read the diff and label it. Let the Console carry the question to the owner on its next poll. |
 | Who rules on a named backstop | The owner, and no seat may make that ruling. |
-| Why the ruling is still needed | `review-gate.yml` says the gate records a process step and not an identity, so a named backstop would not weaken what the gate checks. It does change who may satisfy a merge gate, and no peer can grant that. |
+| Why the ruling is still needed | The engine's `review-gate.yml` says the gate records a process step and not an identity, so a backstop would not weaken what it checks. It changes who may satisfy a merge gate, and no peer grants that. |
 | When "no admin override" expires | When `enforce_admins` goes false. Check it with the protection call in "The label is the only signal", never from memory. |
+| On korus it has already expired | Measured 2026-09-04: `enforce_admins` is false and no review context is required. An unlabelled korus pull request merges. |
 
 ### 1f. Do not re-report what a green check already covers
 
@@ -150,33 +194,37 @@ A finding a linter would have caught costs the fleet nothing to skip. This stops
 any check you have shown blind to the class you are reporting. See "A control that passes for the
 wrong reason".
 
-### 1g. A refusal and an unread pull request currently render the same
+### 1g. A refusal was legible for two days, and the reasoning outlives the mechanism
 
-This repository's `.github/workflows/review-gate.yml` reads three states. `changes-requested`
-fails the run loudly. `reviewed` with no refusal passes. Neither one present fails it as pending.
+**RETIRED 2026-09-04. Do not run `gh pr edit <N> --add-label changes-requested`.** The owner
+deleted `.github/workflows/review-gate.yml`, which was the only thing in either repository that
+read that label. Nothing reads it now, so applying it records nothing and blocks nothing.
 
-A process gate can be satisfied by the party it checks, so its approval is fakeable and its
-refusal is not.
+The retired mechanism, kept so the next one can be built: it read THREE states rather than two.
+`changes-requested` failed the run loudly, `reviewed` with no refusal passed, and neither one
+present failed it as pending.
+
+**The reasoning is not retired, and it is why that third state existed.** A process gate can be
+satisfied by the party it checks, so its approval is fakeable and its refusal is not.
 
 The constitution states that in "Article III. A gate that cannot check identity must make refusal
 legible", which carries the 2026-09-02 incident that produced it. Read it in
 `.specify/memory/constitution.md` rather than here.
 
-The gate says so in its own pending message. Quoted rather than paraphrased:
+The retired gate said so in its own pending message. Quoted rather than paraphrased:
 
 > "A reviewer that read this and declined should apply 'changes-requested' rather than leaving it
 > unlabelled, so its refusal is visible instead of looking like a review that never ran."
 
 | Item | Rule |
 | --- | --- |
-| When you decline | Apply `changes-requested` before you leave the pull request. |
-| Why unlabelled is not a refusal | The gate fails both and prints PENDING for both. Nothing downstream separates a reviewer that read the diff and declined from one that never ran. |
-| Post the findings too | On the pull request, per "Nothing notifies you". The label records that you refused. It does not record why. |
-| A push does not clear it | The `invalidate-on-push` job removes only `reviewed`. Clearing a refusal takes `gh pr edit <N> --remove-label changes-requested`. The gate's instruction: "Address the findings, push, and remove the label." |
-| Measured 2026-09-04 | `git grep -l "changes-requested" 6cc87c0 -- ':!roles/REVIEWER.md'` returns `6cc87c0:.github/workflows/review-gate.yml`, and nothing else. Only the gate names the label. No playbook did, so a refusal was implemented and undocumented. |
+| When you decline, now | Say so in prose on the pull request, and say it before you leave. No label carries it. |
+| Why unlabelled is not a refusal | Nothing downstream separates a reviewer that read the diff and declined from one that never ran. Korus's gate fixed that for two days. Nothing fixes it now. |
+| The engine gate never read a refusal | Measured 2026-09-04 over the engine's own file: `changes-requested` 0 hits, `reviewed` 10. So on an engine pull request a refusal has ALWAYS been prose only. |
+| Post the findings either way | On the pull request, per "Nothing notifies you". A label records that you refused. It never records why. |
+| Measured 2026-09-04, before deletion | `git grep -l "changes-requested" 6cc87c0 -- ':!roles/REVIEWER.md'` returned only `.github/workflows/review-gate.yml`. The refusal was implemented and no playbook documented it. |
 | A count recorded inside its own corpus | A count of occurrences goes wrong the moment you record it inside the corpus you counted. Unpinned over the working tree this one returns two files, this row included. Pin the ref, or exclude the record. |
-| The condition this does not vary | The gate measured here is this repository's. "The label is the only signal" cites a `review-gate.yml` in the ENGINE repository, a different file of the same name. Whether that one reads `changes-requested` is UNMEASURED here. |
-| When this stops being right | When the gate stops reading `changes-requested`. Read the file, never this row. |
+| What would revive this section | A gate that reads a refusal label. Read the workflow directory, never this row. |
 
 ---
 
@@ -499,10 +547,11 @@ so your successor can resume".
 | What goes in the EPISODE note, never here | Open pull request numbers, which ones you labelled, head SHAs you read, findings in flight, who is blocked on whom, "pick up here" lists, and anything with a session name in it. |
 | What goes HERE | A lesson still true after the queue drains: a trap, an instrument that lies, an ordering rule, a boundary of a gate, a measured mechanism. |
 | Why the split is load-bearing | A mixed document decays into a TRUSTED document that is WRONG, and the durable half hides it. |
-| The measured instance is in this file | The standing "you are not a GitHub gate" line inverted when the owner armed the gate on 2026-08-31. The same sentence sat in seven other files. |
+| The measured instance is in this file | The standing "you are not a GitHub gate" line inverted when the owner armed the gate on 2026-08-31, and inverted BACK in korus when the owner removed it on 2026-09-04. |
+| Twice in seven days is the point of that row | A line that flips, flips back, and then answers differently per repository was never durable. It reads as durable because it sits beside rules that are. |
 | State it once | State a load-bearing fact ONCE and link to it. A fact restated in three places is corrected in one. |
 | Every prohibition carries its expiry | Write beside it what would have to become true for it to stop being right, and how to check. A prohibition without one becomes permanent by default. |
 | Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it. |
 | Label the kind of a hold when you hand one over | A mechanical hold and a hold resting on your own judgment inherit differently. Beside mechanical rows, an unlabelled judgment call reads as mechanical and stops being examined. |
-| Never quote a count you did not just read | The required-check set drifts, and so does the workflow set. Both commands are in "The label is the only signal" and "Do not re-report what a green check already covers". A count in prose ages into a confident wrong number. |
+| Never quote a count you did not just read | The required-check set drifts, differs per repository, and so does the workflow set. Both commands are in "the label is the only signal" and "Do not re-report what a green check already covers". |
 | Tone | The useful handoff sentence is the measured one, not the alarming one. The cost of being wrong scales with how good the sentence sounds. See [COMMON.md](COMMON.md), "The alarming sentence". |

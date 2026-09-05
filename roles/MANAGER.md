@@ -61,9 +61,33 @@ those and expects to.
 In return: put your ledger row in its OWN commit, LAST. That turns a re-read of your
 intent into a scripted row-merge.
 
-**RETIRED 2026-09-04: there is no label sequence any more.** The owner removed the review
-gate. `gate` is no longer a required status check on `main`, and
-`.github/workflows/review-gate.yml` is deleted.
+**RETIRED 2026-09-04: nothing requires the label any more.** Owner instruction. But read the
+next paragraph before you conclude the label is gone, because it is not.
+
+| Repository | The required context | The workflow |
+| --- | --- | --- |
+| `MEFORORG/MessageFoundry`, the engine | REMOVED. 14 contexts to 13 | **STILL PRESENT AND STILL RUNNING.** It fires on every push and still strips `reviewed` |
+| `wshallwshall/korus` | REMOVED | deleted |
+
+**So an engine pull request still carries a check named `a reviewer has read this`, and whatever
+it says, it blocks nothing.** Do not chase it. Your label will also still vanish when you push.
+That is the workflow, not a peer and not a race.
+
+**Do not predict what that check will READ.** Queued, pending, red or green, depending only on
+whether its run has executed. None of those tells you anything about your merge any more.
+
+A draft of this section asserted it would show red. Measured the same hour: four sampled pull
+requests all read QUEUED, because the runner pool was backed up.
+
+**The state of a check that gates nothing is not worth reading at all.**
+
+Measure it yourself rather than trusting this table, because it moved once today already:
+
+```
+gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts[]'
+```
+
+Print the whole set. A grep for a zero cannot tell a removed context from a failed read.
 
 The retired rule read: *after any push to an existing pull request, re-run the label
 sequence*, because the gate stripped `reviewed` when its run EXECUTED rather than when

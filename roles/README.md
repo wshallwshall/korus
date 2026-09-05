@@ -32,9 +32,9 @@ Liaison both. Nothing replaced the other five.
 | Console | [CONSOLE.md](CONSOLE.md) | The plan and the brief. Reads the ledger, picks the row, writes a brief that holds for one turn, and polls for what comes back. **Replaces the Dispatcher.** Does not build, enqueue or merge. |
 | Manager | [MANAGER.md](MANAGER.md) | **An ALTERNATIVE to the Console, not a layer.** Added 2026-09-04. Owner-spawned, bound to ONE account, running its workers as in-process subagents rather than separate sessions. Several run at once, sharing only the repository. |
 | Builder | [BUILDER.md](BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR carrying the ledger row, then exits. It never guesses at what the brief left open and never waits: it writes the question to the Console and onto the PR, then stops. |
-| Reviewer | [REVIEWER.md](REVIEWER.md) | Reads the diff. A pass applies the `reviewed` label and posts the head SHA it read. A fail posts findings on the PR, for whichever Builder comes next. **Nothing automated ever adds the label.** |
+| Reviewer | [REVIEWER.md](REVIEWER.md) | Reads the diff. A pass posts the head SHA it read. A fail posts findings on the PR, for whichever Builder comes next. **Its label stopped gating merges on 2026-09-04**; see *The review gate was retired*. |
 | Regulator | [REGULATOR.md](REGULATOR.md) | Decides whose failure a red is: the PR's, `main`'s, a flake, or the queue's. Only the PR's own failure becomes work. **It starts with no memory, so its log is not optional.** |
-| Lander | [LANDER.md](LANDER.md) | **What enters the merge queue, and in what order.** Merge-forwards, made continuous by `strict: true` as `main` moves. Label timing. The one-at-a-time ledger slot, since the queue builds each entry on the one ahead. Handing back PRs needing a ruling. |
+| Lander | [LANDER.md](LANDER.md) | **What enters the merge queue, and in what order.** Merge-forwards, made continuous by `strict: true` as `main` moves. The one-at-a-time ledger slot, since the queue builds each entry on the one ahead. Handing back PRs needing a ruling. |
 | Steward | [STEWARD.md](STEWARD.md) | **A cron, not a seat.** Zero model calls, so it needs no account. Reads usage and names the account with headroom. It cannot warn a running session, because nothing can interrupt one. |
 | Every seat | [COMMON.md](COMMON.md) | The rules and instrument failures that belong to no single seat. **Read this first, whichever seat you hold.** |
 
@@ -73,22 +73,25 @@ COMMON has been renumbered, and a stale number resolves to the wrong rule silent
 | A playbook that contradicts COMMON is an owner question | [COMMON.md](COMMON.md), *Where a role playbook and this file disagree*, owns it. No seat resolves the contradiction by picking a winner. |
 | Why the seat files point rather than restate | Nine copies of a behaviour contract have no drift signal between them. This project has hit that defect repeatedly. Make a pointer, never a second summary. |
 
-## 3. The label blocks the merge, not the Reviewer seat
+## 3. The review gate was retired on 2026-09-04, and no label blocks a merge now
 
-**Owner-set 2026-08-29.** Create the PR and notify the Reviewer. The Reviewer posts findings on the
-PR, or passes it to the Lander, which merges.
+**Owner decision, 2026-09-04.** `a reviewer has read this` is no longer a required status check on
+`main`, and `.github/workflows/review-gate.yml` is deleted. Only `gates (ubuntu-latest)` and
+`gates (windows-latest)` remain required. **An unlabelled PR merges.**
+
+**Whether the Reviewer seat survives the loss of its gate is an owner question, and this file does
+not answer it.** The seat still holds its row above. Do not read a retired gate as a retired seat.
 
 | Item | Rule |
 | --- | --- |
+| What survives the gate | Create the PR and notify the Reviewer. It posts findings on the PR, or passes it to the Lander, which merges. Owner-set 2026-08-29. |
 | The notification is a courtesy, not the trigger | The Reviewer finds waiting PRs itself. |
 | Findings go on the PR | Not back to an author. A Builder's process has usually exited by then, so the findings are for whichever Builder comes next. |
-| The Lander still owns the merge | It holds its standing grant for it. A PR now reaches it THROUGH the Reviewer rather than directly. |
+| The Lander still owns the merge | It holds its standing grant for it. |
 | Handing work over needs no permission | It is the default action, and no seat asks. |
-| What the gate actually is | `a reviewer has read this` is a **required status check on `main`** since 2026-08-31. `required_approving_review_count` is still 0, so the gate is the label, not a GitHub review. |
-| Nothing automated adds the label | Only a person does. A push strips it, and so does a merge-forward, which puts the label back in play until the resulting run completes. |
-| A missing Reviewer seat is not what blocks a PR | **Any seat can apply the label:** `gh pr edit <N> --add-label reviewed`. Start a Reviewer, have another running seat read the diff and label it, or let the Console carry the question to the owner. |
-| Where the Reviewer states this | [REVIEWER.md](REVIEWER.md), *No pull request merges unlabelled, but a missing Reviewer seat is not what blocks it*. |
-| **RETIRED 2026-08-31** | This section previously read *"if no Reviewer seat is running, hand the PR to the Lander as before"*. Once the gate was armed, the Lander could not merge an unlabelled PR either, so the fallback stopped existing. |
+| **RETIRED 2026-09-04** | Three rows here told you to work the `reviewed` label: the gate was a required check, only a person adds it, and any seat may apply it. Following one now spends a turn on nothing. |
+| **RETIRED 2026-08-31, and now stale from the other side** | Before that, this section read *"if no Reviewer seat is running, hand the PR to the Lander as before"*. Arming the gate killed that fallback. Retiring the gate restored it. |
+| What the retired gate leaves behind | A lesson about a check that invalidates on its own run. [COMMON.md](COMMON.md), *Your pull request has to survive your own exit*, owns it. |
 
 ## 4. A rename is scoped to the seat name, and a blanket replace rewrites that name's history
 

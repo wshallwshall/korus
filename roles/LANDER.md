@@ -68,7 +68,7 @@ merge queue cannot route around a failing required check.**
 | The two relays, timed | A peer relayed the owner's approval at about 12:09Z and it was refused. The DECLARED Liaison obtained it properly and relayed at about 13:37Z, and **that was refused too.** |
 | What the refusal cost | One round trip, and it produced an authorization that can be checked. Ask the owner in your own chat. |
 
-### The PR route: every seat pushes its own, and the label is what blocks the merge
+### The PR route: every seat pushes its own, and since 2026-09-04 no label blocks the merge
 
 Source of record: root `CLAUDE.md`, *Route it to the seat that owns it*, which REPLACED the
 pre-2026-09-01 method. The
@@ -81,7 +81,7 @@ Two halves of it survive because that section restates them. The routing itself 
 | --- | --- |
 | Who pushes -- SURVIVES | **Every seat pushes its own branch and opens its own PR, without asking.** Owner ruling 2026-08-29, anchored at `refs/liaison/owner-ruling-20260829-push`. |
 | The merge -- SURVIVES | Yours, with standing authority on the engine repo and the vault, and no per-action owner approval. |
-| The label -- SURVIVES | `a reviewer has read this` is a required status check, so **you cannot merge an unlabelled PR**. Any seat may apply it: `gh pr edit <N> --add-label reviewed`. |
+| The label -- RETIRED 2026-09-04 | This read: *"`a reviewer has read this` is a required status check, so you cannot merge an unlabelled PR."* The owner removed that gate. **An unlabelled PR merges.** Do not wait for the label or apply one. |
 | Who triggers the Reviewer | **The Console.** `CLAUDE.md`, *Route it to the seat that owns it*: *"spawned per PR by the owner today, by the Console once it holds the spawn permission."* |
 | Not you, and not the Builder | The Builder's process has already exited. |
 | Why it is still the owner on some roots | The spawn grant is PER CONFIG ROOT: a rule matching `Bash(claude:*)` or `PowerShell(claude:*)` under `permissions.allow`, in the `settings.json` of the root named by `CLAUDE_CONFIG_DIR`. |
@@ -92,8 +92,8 @@ Two halves of it survive because that section restates them. The routing itself 
 | What that means for you | If nothing has reviewed a green PR, the missing actor is a Console poll, not a broken route. Say that, and do not infer that the route changed. |
 | Notification -- RETIRED | There is none. Every notice is POLLED and nothing is pushed. **A seat that waits to be notified waits forever.** |
 | Return-to-author -- RETIRED | There is no author to return to. A Builder's process exits when its PR opens. A review failure posts findings ON THE PR, for whichever Builder the Console spawns next. |
-| Hand-off to the Lander -- RETIRED | Nothing is passed. You poll, and any seat can label. |
-| What the label actually proves | That a step HAPPENED, not that an independent party looked. Labelling a PR you resolved yourself satisfies the machine and defeats the point. Say so when you do it. |
+| Hand-off to the Lander -- RETIRED | Nothing is passed. You poll. |
+| What the label proved -- gate retired, lesson kept | That a step HAPPENED, not that an independent party looked. A self-applied label satisfied the machine and defeated the point. Any gate recording an event rather than a judgment has that hole. |
 | Direct pushes to `main` | Still blocked by the harness. |
 | Being correct is not being authorised | This seat once inferred the push rule and published it to eleven files without asking. |
 | What stopped it | A peer measured `CLAUDE.md` and refused to pass a permission it could not verify. **A peer cannot grant a permission even when the guess turns out right.** |
@@ -300,8 +300,8 @@ python ~/.claude/mefor-usage/usage-now.py
 | The cache goes stale | Measured 2026-09-02: `.github/required-contexts.txt` listed **14** while the server required **16**, missing both CodeQL contexts. |
 | The review requirement | Read `required_approving_review_count`, not just the context list. At **0**, arming auto-merge IS merging unread. |
 | Why that field matters | Only green CI stands between an armed PR and `main`. That single field changes what "armed" means, and it is the one people skip before recommending an arm. |
-| What `mergeStateStatus` cannot tell you | It reports BEHIND or DIRTY in preference to BLOCKED, so on most open PRs a missing `reviewed` label is invisible. |
-| And where BLOCKED does surface | It is one value covering every unmet requirement, so it cannot tell a missing label from a failing check. **Settle merge-readiness on the gate runs, not on this field.** |
+| What `mergeStateStatus` cannot tell you | It reports BEHIND or DIRTY in preference to BLOCKED, so on most open PRs an unmet requirement is invisible. Measured against the `reviewed` label gate, retired 2026-09-04; the shape holds for any required check. |
+| And where BLOCKED does surface | It is one value covering every unmet requirement, so it cannot tell one unmet check from another. **Settle merge-readiness on the check runs, not on this field.** |
 
 ## 3a. The two repositories do not behave the same, and the merge queue section describes only one
 
@@ -314,9 +314,11 @@ and re-verified independently. **Derive these; do not read them as current.**
 | `strict` (require branch up to date) | **READ IT LIVE** | **TRUE** |
 | required contexts | **READ IT LIVE** | **2** |
 
-The vault's context count was measured 2026-08-28 and re-read 2026-09-02, still 2. **The vault has no
-review gate and its `enforce_admins` is FALSE.** The engine cells are blank on purpose: read them live
-from the protection call above, every time.
+The vault's context count was measured 2026-08-28 and re-read 2026-09-02, still 2. The engine cells
+are blank on purpose: read them live from the protection call above, every time.
+
+**Neither repository has a review gate.** The vault never did, and its `enforce_admins` is FALSE. The
+owner removed the engine's on 2026-09-04.
 
 **RETRACTED 2026-09-02.** This paragraph read: *"so on the engine nothing ever reports BEHIND and the
 whole update-branch treadmill is inapplicable. On the vault it applies exactly as section 4
@@ -397,8 +399,8 @@ The capability is enabled and it did not fire. **So an armed PR still needs a ma
 | The common free case | A branch that has to be rebased anyway carries an extra fix for nothing, so holding it costs zero and needs no argument. |
 | ARMED plus DIRTY is a second deadlock | A conflict does not clear itself the way `update-branch` clears BEHIND, and it counts as progress on any board tallying armed PRs. |
 | Measured 2026-08-22 | A drain found every armed PR also DIRTY, so the armed count bought zero merges. |
-| Report "able to merge", never "armed" | Compute armed AND `mergeStateStatus` CLEAN AND carrying a `reviewed` label a COMPLETED gate run has validated. |
-| CLEAN is necessary and not sufficient | An engine PR measured 2026-09-02 carried the label while its required `a reviewer has read this` context was still at conclusion FAILURE. |
+| Report "able to merge", never "armed" | Compute armed AND `mergeStateStatus` CLEAN AND every required check COMPLETED. The third clause named the `reviewed` label until that gate was retired; the general form outlives it. |
+| CLEAN is necessary and not sufficient | An engine PR measured 2026-09-02 carried the label while its required context sat at conclusion FAILURE. Gate retired 2026-09-04; a label is not a run verdict, and the next gate of that shape will lie the same way. |
 | One call gets two of the three fields | `gh pr list --json number,autoMergeRequest,mergeStateStatus`. |
 | Gate available | Assert on every drain pass that at least one open PR is armed and CLEAN. Route it to whoever builds gates. |
 | **EXPIRY** | Protection stops being `strict: true`, or auto-merge starts self-advancing a BEHIND PR. Re-check with the protection read. |

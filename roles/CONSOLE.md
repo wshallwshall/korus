@@ -217,15 +217,20 @@ Put this line in every brief:
 |---|---|---|
 | 1 | Scope | The one outcome, named in a sentence. **Name the outcome, not the mechanism** -- a named mechanism can defeat the intent by the time it executes. |
 | 2 | Items | The row number and its subject in one line, plus the defects in the filed text. If the row is stale or superseded, say so, and say whether your amendment has landed or is still local. |
-| 3 | Done | The pull request open at a named head sha, with the Builder's last push already made. **Do not ask for the `reviewed` label here.** |
+| 3 | Done | The pull request open at a named head sha, with the Builder's last push already made. **Never ask a Builder for a step that only completes after its process exits.** |
 | 4 | Out of scope | What an eager session would helpfully break. This field earns its place every time it is filled in. |
 | 5 | Answerable alone | Every fact the Builder needs: absolute paths, the base to branch from, whether you verified that base, the commands to run. Say which triage checks you skipped, so it can tell a verified claim from an inherited one. |
 | 6 | Seat and goal, which live only in text | Put the seat and the goal in the brief and in the pull request body. A headless Builder cannot declare itself, and **you must not ask it to**. |
 | 7 | The account and the launch line | The account with headroom, the exact `CLAUDE_CONFIG_DIR` value, the worktree absolute path, and the full command carrying `--permission-mode acceptEdits`. |
 
-**Why the Done field must not ask for the label.** A push fires `synchronize`, and that run strips
-the `reviewed` label. The Builder's process is gone before the run reports, so it can never establish
-the outcome. The label is the Reviewer's step, taken after that run completes.
+**RETIRED 2026-09-04: the review gate that made this concrete is gone.** Section 8 holds the
+measurement and the per-repository state. The rule is kept because its shape is not about the label.
+
+The retired text read: the Done field must not ask for the `reviewed` label, because a push fires
+`synchronize` and that run strips the label. A Builder's process is gone before the run reports.
+
+**What survives is the general shape.** When a check invalidates on an event, the event is the
+gate's own run, not your command returning. So wait for the run, then read the result back.
 
 **Why a Builder cannot declare its own seat.** `seat.ps1 -Declare` spawns a nested PowerShell process
 the harness refuses. Fleet views will show this Builder undeclared. The Stop hook still records the
@@ -372,27 +377,36 @@ box and re-brief when it expires** rather than waiting.
 
 ---
 
-## 8. The four-state pull request poll, and the gate run settles it
+## 8. The three-state pull request poll, and the run settles it
 
-**A pull request's state is a join over three clocks:** the branch against `main`, the checks against
-the head, and the `reviewed` label against both. Read all three or you will read one confidently and
-be wrong.
+**RETIRED 2026-09-04: the third clock is gone.** The owner removed the review gate from
+`wshallwshall/korus`. `gate` is no longer a required status check on `main`, and
+`.github/workflows/review-gate.yml` is deleted.
+
+**Measure both repositories before you rely on either.** Measured 2026-09-04, the engine repo still
+listed `a reviewer has read this` among its required contexts. The two do not move together.
+
+```powershell
+gh api repos/wshallwshall/korus/branches/main/protection --jq '.required_status_checks.contexts'
+gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts'
+```
+
+**A pull request's state is a join over two clocks:** the branch against `main`, and the checks
+against the head. Read both or you will read one confidently and be wrong.
 
 | State | What you see | What you do |
 |---|---|---|
-| **Behind or dirty** | `mergeStateStatus` is BEHIND or DIRTY | Hand it to the Lander, which owns the merge-forward. Hold the label; that update strips it |
-| **Waiting on review** | mergeable, and no valid `reviewed` label | Get the diff read, then labelled after the last push |
+| **Behind or dirty** | `mergeStateStatus` is BEHIND or DIRTY | Hand it to the Lander, which owns the merge-forward |
 | **Red** | a required context failed | Brief a Regulator, per "The Regulator" below |
-| **Ready** | required contexts green on a run newer than the label event, label present | Hand the pull request to the Lander |
+| **Ready** | every required context green at the current head | Hand the pull request to the Lander |
 
 | Item | Rule |
 | --- | --- |
-| BEHIND and DIRTY mask BLOCKED | GitHub reports them in preference to BLOCKED. So on most open pull requests **the review gate is invisible until the branch is current**. One that looks unblocked may simply not have been asked yet. |
-| A present label is not a valid label | A `synchronize` run strips the label only when that run executes. While the run is queued the label is still there and already meaningless. |
-| Settle it with the gate run | Take the newest completed run per context name. Compare its originating run's `createdAt` against the latest `reviewed` label event. Created before the label event means stale, whatever the check says. |
-| No run newer than the label event means no state | Keep polling. Never inherit the last verdict. |
+| BEHIND and DIRTY mask BLOCKED | GitHub reports them in preference to BLOCKED. So a required check can be invisible until the branch is current. One that looks unblocked may simply not have been asked yet. |
+| Settle it with the run, never the rollup | Take the newest completed run per context name and check its head sha against the pull request head. A run against an older head is not a reading of this one. |
+| No run at the current head means no state | Keep polling. Never inherit the last verdict. |
 | Never write a required-context count | The engine's count drifts, and it moved twice in one week. Read the live set every time: `gh api repos/MEFORORG/MessageFoundry/branches/main/protection --jq '.required_status_checks.contexts'` |
-| The vault repo is not the engine repo | It has far fewer required contexts, no review gate, and `enforce_admins` is false. An unqualified `gh` call may hit the wrong one, so pass `--repo` when the answer matters. |
+| The three repositories differ, so pass `--repo` | The vault has far fewer required contexts and `enforce_admins` is false. An unqualified `gh` call may hit the wrong one. |
 
 ---
 
@@ -400,17 +414,21 @@ be wrong.
 
 ### 9a. The Reviewer
 
+**RETIRED 2026-09-04: no label gates a merge here any more**, so the rows below are about the read
+and not about passage. Section 8 holds the measurement. **Whether the seat outlives its gate is the
+owner's call.** Brief it as written until the owner rules.
+
 | Item | Rule |
 | --- | --- |
-| When | The pull request is mergeable and unlabelled. |
-| A pass | Applies the label with `gh pr edit <N> --add-label reviewed` and posts the head sha it read. |
+| When | The pull request is mergeable and its diff has not been read. |
+| A pass | Posts the head sha it read, in a comment on the pull request. |
 | A fail | Posts findings on the pull request itself, for whichever Builder comes next. **Findings on the pull request outlive the session; findings in mail do not.** |
-| Label last | Any new commit fires `synchronize`, which removes the label. A reviewer who labels and then pushes a fix has un-reviewed the pull request. |
-| What the label proves | That a step happened, not that an independent party looked. Any seat can apply it. Labelling a diff nobody read satisfies the machine and defeats the point. |
+| Read after the last push | Any new commit changes the diff, so a read taken before it is a read of something else. |
+| What a recorded read proves | That a step happened, not that an independent party looked. The retired label had the same weakness: labelling a diff nobody read satisfied the machine. |
 | Nothing notifies a Reviewer | The notice is yours to send. The gap is filed in the engine repo as BACKLOG #1413. Read the row for its state rather than trusting this line. |
 
-**When no Reviewer runs, you may read the diff and apply the label yourself.** There is no automated
-fallback, `enforce_admins` is true, and no admin override exists.
+**When no Reviewer runs, you may read the diff yourself.** Nothing blocks the merge on that read now,
+so it buys quality rather than passage.
 
 Two conditions: read the whole diff, and say in a pull request comment that you both wrote the brief
 and read the diff.
@@ -458,7 +476,7 @@ These belong to the Lander and to no one else. Know them so you do not step into
 | The Lander's | Why it is theirs |
 |---|---|
 | The merge-forward | `main` has `strict: true`, so every open pull request goes stale each time `main` moves. **It moved ten times in six and a half hours on 2026-09-01.** Nothing automates this. |
-| Label timing | A merge-forward strips the `reviewed` label. It goes back on after the resulting run completes, never before. |
+| Label timing, RETIRED 2026-09-04 | A merge-forward used to strip the `reviewed` label, so it went back on only after the resulting run completed. No label gates a merge now. |
 | The ledger slot | Only one `docs/BACKLOG.md`-appending pull request fits the queue at a time, and nothing automated knows this. |
 | Why the ledger slot is one | The queue builds each entry on the one ahead of it rather than on `main`. A second such pull request goes unmergeable on a tail conflict while it is clean against `main`. |
 | Handing back a pull request that needs a ruling | Some need the owner's decision, not more work. The Lander returns those. |
@@ -477,7 +495,7 @@ These belong to the Lander and to no one else. Know them so you do not step into
 | Prohibition | Why | What would retire it |
 |---|---|---|
 | **Build** | Editing engine code spends the seat that keeps the queue supplied, and nobody else refills it | The owner re-scopes the role |
-| **Enqueue** | The Lander orders the queue, and it alone holds the merge-forward, the label timing and the ledger slot | An owner ruling, not a peer's message |
+| **Enqueue** | The Lander orders the queue, and it alone holds the merge-forward and the ledger slot | An owner ruling, not a peer's message |
 | **Merge** | The Lander owns the merge and holds the standing grant for it | An owner ruling, not a peer's message |
 | **Wait on an inbound message** | You have no inbound comms. A wait is indistinguishable from a stall, and it lasts until the owner notices | Never, while the seat polls |
 | Take a claim on a Builder's behalf | `claim.ps1` records the tree the SCRIPT lives in, and `claim_check.py` compares that against the COMMITTING worktree, so yours is refused at their commit | `claim_check.py` stops comparing the two, or `claim.ps1` gains a transfer verb |
