@@ -36,6 +36,13 @@ line. So no single source line here is a violation; only the joined value is.
 `ThePlantedFixturesNeverBecomeALeakThemselves` keeps that true under editing, instead of trusting
 that whoever adds the next fixture notices.
 
+AND IT HAS CAUGHT THREE AUTHORS ON THAT RULE, which is why it is a control and not a convention.
+The artifact fixture that exercised half a character class; a docstring quoting measured output
+with a live address in it; a comment explaining why a home path must never be written as one
+literal, which contained one. Every time the author was writing ABOUT the detector. That is the
+pattern worth naming: prose describing a detector wants to contain an example of what the detector
+catches, and the wanting does not announce itself.
+
 Run: python -m unittest discover -s tests
 """
 
@@ -93,6 +100,30 @@ FAKE_ACCOUNT = "ccxleak"
 #: The other end of the same class, kept as its own planted form. Narrowing the detector to `[a-f]`
 #: is the mirror of the defect above, and this is what fails when someone does it.
 DIGIT_UUID = "00000000-0000-4000-8000-000000000000"
+
+#: Four spellings of ONE Windows path, naming one file and one OS account. Windows compares paths
+#: case-insensitively, so a change of case is not a change of file, of account, or of disclosure.
+#:
+#: The detector read only the canonical spelling until this table existed. The other three exited
+#: `0` under a healthy receipt -- the failure this whole file is written against, in the class the
+#: gate's own docstring calls the one that actually fires.
+#:
+#: NONE OF THESE IS CONTRIVED. PowerShell's `Resolve-Path` normalises the drive letter and leaves
+#: the rest of the path as typed, so the lowercase form is what the shell itself hands back. A
+#: traceback echoes whatever the caller wrote. Both are arrival vectors the gate's own docstring
+#: names by hand: pasted terminal output, a traceback, a tool's error message.
+#:
+#: THE DRIVE LETTER VARIES TOO, and that is not decoration. The pattern matches `[A-Za-z]:`, so a
+#: table that only ever spelt `c:` would prove nothing about the class. Measured: with every row on
+#: `c:`, narrowing the detector to `[Cc]:` left the ENTIRE suite green. Two cases below pin both
+#: properties -- the casing of the segment, and the spread of the drive letter -- so a later
+#: tidy-up cannot collapse them and leave the suite green over a narrowed detector.
+HOME_PATH_FORMS: tuple[tuple[str, ...], ...] = (
+    ("C:", r"\Users", "\\" + FAKE_ACCOUNT, r"\run.py"),
+    ("c:", r"\users", "\\" + FAKE_ACCOUNT, r"\run.py"),
+    ("C:", r"\USERS", "\\" + FAKE_ACCOUNT, r"\run.py"),
+    ("d:", "/users", "/" + FAKE_ACCOUNT, "/run.py"),
+)
 
 #: One row per structural detector: (label, reason substring the hit must carry, line fragments).
 #: The fragments are joined to build the planted line. The module docstring says why they are
@@ -200,8 +231,31 @@ QUIET: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("C:", r"\Users", r"\<name>", r"\notes.md"),
     ),
     (
+        "the Windows shared account, in the LOWER-CASE spelling the drive branch newly reaches. "
+        "This is the near miss with teeth, and the placeholder row above is not: `<name>` is held "
+        "out twice over, by the lookahead AND by the `[A-Za-z]` start class, so it stays quiet "
+        "even with the lookahead scoped away. A stand-in starts with a letter, so ONLY the "
+        "lookahead exempts it -- measured. Widening the case must not widen past the exemptions, "
+        "and every other guard on that widening is a `/users/` route with no drive letter at all",
+        ("c:", r"\users", r"\Public", r"\Desktop"),
+    ),
+    (
         "the well-known CI account, which is not a person's login",
         ("/home", "/runner", "/work"),
+    ),
+    (
+        "a REST route, which is where `/users/` overwhelmingly appears. The bare `/Users` and "
+        "`/home` alternatives must stay CASE-SENSITIVE: flipping the whole pattern to "
+        "re.IGNORECASE catches the Windows spellings and this line with them, because the "
+        "exemption list needs a trailing separator and end-of-line does not supply one",
+        ("GET ", "/users", "/me"),
+    ),
+    (
+        "the macOS home path in lowercase -- a KNOWN MISS, recorded here rather than closed. It "
+        "cannot be told apart from the REST route above by shape, and the route is by far the "
+        "commoner string, so the gate takes this false negative over a false positive on every "
+        "API path in the tree. Stated as a limit in docs/LEAK-GATE.md, not left to be rediscovered",
+        ("/users", "/" + FAKE_ACCOUNT, "/Library"),
     ),
     ("an RFC1918 private address, which identifies no host on the internet", ("192.168.", "1.1")),
     ("a dotted OID, which the IPv4 look-arounds exist to keep out", ("1.3.6.", "1.4.1")),
@@ -276,6 +330,29 @@ class EveryDetectorFiresOnItsPlantedLine(unittest.TestCase):
                     f"no artifact-URL hit on {''.join(parts)!r}. Hits: {hits!r}",
                 )
 
+    def test_the_home_path_detector_reads_the_windows_drive_form_case_blind(self):
+        """Windows compares paths case-insensitively. These four name one file and one account.
+
+        Only the canonical spelling fired until this case existed, so a home path pasted out of
+        PowerShell or echoed by a traceback scanned clean -- exit `0`, healthy receipt, no
+        FORBIDDEN block. That is the silent-miss shape, in the detector the gate leans on most.
+
+        The fix is scoped to the drive-letter branch. `/home` and `/Users` stay case-sensitive,
+        which `QUIET` holds in place: `re.IGNORECASE` over the whole pattern would catch these
+        four and every `/users/` REST route with them.
+        """
+        for parts in HOME_PATH_FORMS:
+            planted = "".join(parts)
+            with self.subTest(form=planted):
+                hits = scan_line(self.gate, planted)
+                self.assertTrue(
+                    any("absolute user-home path" in h for h in hits),
+                    f"no home-path hit on {planted!r}. Hits: {hits!r}. Windows resolves this to "
+                    "the same file as the canonical spelling, so it discloses the same OS account "
+                    "-- and a gate that reads only one spelling of a case-insensitive path reports "
+                    "a clean tree over a leak.",
+                )
+
 
 class TheFixtureSpansTheClassItProves(unittest.TestCase):
     """A fixture that exercises half a character class proves half a detector, and reads as proof.
@@ -311,6 +388,50 @@ class TheFixtureSpansTheClassItProves(unittest.TestCase):
             "`test_the_artifact_detector_sees_every_form_of_the_same_capability` is then a "
             "duplicate of the row above it, and `re.IGNORECASE` on the detector is unproven -- "
             "deleting the flag would leave this suite green.",
+        )
+
+    def test_the_home_path_forms_span_the_case_of_the_users_segment(self):
+        segments = {parts[1].lstrip("\\/") for parts in HOME_PATH_FORMS}
+        self.assertLess(
+            len({segment.lower() for segment in segments}),
+            len(segments),
+            f"HOME_PATH_FORMS spells the segment {sorted(segments)!r}, and no two of those differ "
+            "only by case. The detector matches `[Uu][Ss][Ee][Rr][Ss]`, so a table of one casing "
+            "proves only the spelling it happens to use: reverting the pattern to a "
+            "case-sensitive `Users` would leave this suite green while the gate went blind to "
+            "every home path a shell or a traceback spells in lower case.",
+        )
+
+    def test_the_rest_route_near_miss_ends_at_the_exempt_name(self):
+        """Its teeth are one character wide, and nothing on the line says so.
+
+        `me` is on the exemption list, but the list requires a TRAILING separator after the name.
+        At end of line there is none, so the widened pattern matches and the row catches the
+        mutation. Measured: `GET /users/me` fires under `re.IGNORECASE`, `GET /users/me ` does
+        not. Append anything and the row keeps reading as a near miss while proving nothing.
+        """
+        route = next(
+            "".join(parts) for why, parts in QUIET if why.startswith("a REST route")
+        )
+        self.assertTrue(
+            route.endswith("/me"),
+            f"the REST-route near miss is {route!r}, which does not end at the exempt name. The "
+            "exemption needs a trailing separator, so a name at end of line is NOT exempt and the "
+            "row catches an `re.IGNORECASE` over-reach. Give it a trailing character and the "
+            "exemption applies, the row goes quiet under the mutation too, and it silently stops "
+            "being a control -- #52 shipped exactly that line as suppression bait and measured it "
+            "baiting nothing.",
+        )
+
+    def test_the_home_path_forms_span_more_than_one_drive_letter(self):
+        letters = {parts[0].rstrip(":").lower() for parts in HOME_PATH_FORMS}
+        self.assertGreater(
+            len(letters),
+            1,
+            f"every row of HOME_PATH_FORMS sits on drive {sorted(letters)!r}. The detector matches "
+            "`[A-Za-z]:`, so one letter leaves that class unexercised -- measured, narrowing it to "
+            "`[Cc]:` left this entire suite green. That is the `FAKE_UUID` defect in a second "
+            "place: a fixture that reads as proof of a class it never spans.",
         )
 
 

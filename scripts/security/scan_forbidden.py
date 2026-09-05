@@ -108,8 +108,26 @@ _ALLOWED_IP = re.compile(
 # explicit set of stand-ins and treats everything else as a disclosure. Deliberately NOT extended
 # with every plausible placeholder: each addition is a hole, and a false positive costs one
 # allowlist line while a false negative costs a publication.
+#
+# CASE, AND THE ASYMMETRY IS DELIBERATE. The Windows drive branch is case-blind; `/home` and
+# `/Users` are not. Windows compares paths case-insensitively, so a drive path spelled in lower
+# case names the same file, and discloses the same account, as the canonical one. That spelling
+# arrives for real rather than in theory: PowerShell's own `Resolve-Path` normalises the drive
+# letter and leaves the rest of the path as typed, and a traceback echoes whatever the caller
+# wrote. Both are arrival vectors this module's docstring names by hand. Measured before the
+# fix: the canonical spelling exited 1, the lower-case one exited 0 under a healthy receipt.
+#
+# NOT re.IGNORECASE OVER THE WHOLE PATTERN, which is the obvious repair and the wrong one. It also
+# catches `GET /users/me` and every other `/users/` route, because the placeholder exemptions above
+# require a TRAILING separator and end-of-line supplies none -- so the flag turns a REST path into a
+# disclosure. `/users/` is one of the commonest segments in a URL; the bare alternatives stay
+# case-sensitive for that reason alone.
+#
+# KNOWN MISS, recorded rather than closed: the macOS lower-case form `/users/<name>/Library`. By
+# shape it is indistinguishable from the REST route above, and the route is far the commoner
+# string, so the gate takes the false negative. `docs/LEAK-GATE.md` states it as a limit.
 _HOME_PATH = re.compile(
-    r"(?:[A-Za-z]:[\\/]Users|/home|/Users)[\\/]"
+    r"(?:[A-Za-z]:[\\/][Uu][Ss][Ee][Rr][Ss]|/home|/Users)[\\/]"
     r"(?!<|\$|%|\{"
     r"|(?:Public|Default|All|ContainerAdministrator|runner|vsts"
     r"|me|you|user|username|example)[\\/\s\"'`]"
