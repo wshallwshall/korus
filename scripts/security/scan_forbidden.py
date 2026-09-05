@@ -745,7 +745,8 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
         return []
     ip_scan = path.suffix not in _IP_SKIP_SUFFIXES and path.name not in _IP_SKIP_NAMES
     hits: list[str] = []
-    for lineno, line in enumerate(text.splitlines(), 1):
+    lines = text.splitlines()
+    for lineno, line in enumerate(lines, 1):
         if any(a.search(line) for a in ALLOWLIST):
             continue
         ctx = f": {line.strip()[:120]}" if show_context else ""
@@ -773,6 +774,38 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
         # artifact -- publishing the thing the hit is reporting, to a wider audience than the tree.
         if _ARTIFACT_URL.search(line):
             hits.append(f"{posix}:{lineno}: private artifact URL (capability)")
+        # A URL WRAPPED ACROSS TWO LINES MATCHED NOTHING, AND THE RUN SAID NOTHING. Every detector
+        # here is line-based, so a URL a text formatter reflowed at a column limit -- mid-UUID, or
+        # after the last slash -- was invisible to a gate that reported the file clean. Prose reflow
+        # is not an exotic case: it is what a wrapping editor does to a pasted link in a Markdown
+        # paragraph, which is exactly how `a3df144` put two of these in the tree.
+        #
+        # SCOPED TO THIS DETECTOR ON PURPOSE, and joined here rather than by widening
+        # `_ARTIFACT_URL` itself. Both choices are containment. The pattern is a member of
+        # _VALUE_IS_THE_DISCLOSURE, so it has a second job -- suppressing `--show-context` on the
+        # lines it matches -- where over-reach is SILENT. Leaving the pattern alone means the join
+        # cannot widen what the gate refuses to print. Leaving the other detectors alone means a
+        # home path or a credential still needs no cross-line reasoning: their line model is
+        # unchanged, so nothing about their false-positive behaviour moves.
+        #
+        # Reported at the FIRST line, because that is where a reader starts looking, and the reason
+        # says `wrapped` because grepping that line alone will not show a URL.
+        #
+        # RESIDUALS, measured, not assumed. A wrap spanning THREE lines is still missed: only
+        # adjacent pairs are joined. A continuation line carrying a prefix -- `# `, `> `, `* ` --
+        # is still missed, because the join strips whitespace and nothing else; stripping comment
+        # markers would fabricate adjacency between lines that a reader sees as separate, and this
+        # detector's over-reach is the silent kind. Both are narrower than the hole they leave.
+        elif lineno < len(lines):
+            nxt = lines[lineno]
+            if (
+                # A next line that carries a whole URL reports itself, on its own number. Joining
+                # would file the same capability twice, under two line numbers.
+                not _ARTIFACT_URL.search(nxt)
+                and not any(a.search(nxt) for a in ALLOWLIST)
+                and _ARTIFACT_URL.search(line.rstrip() + nxt.lstrip())
+            ):
+                hits.append(f"{posix}:{lineno}: private artifact URL (capability, wrapped onto the next line)")
         for cred_pat, cred_label in _CREDENTIALS:
             if cred_pat.search(line):
                 hits.append(f"{posix}:{lineno}: {cred_label}")
