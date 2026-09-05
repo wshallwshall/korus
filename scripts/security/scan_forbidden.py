@@ -130,10 +130,48 @@ _CREDENTIALS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bsk-(?:ant-|proj-)?[A-Za-z0-9_-]{32,}"), "model API key"),
 )
 
+# Private artifact URLs. The UUID here is not a name, it is a CAPABILITY: whoever holds the URL can
+# fetch the artifact, so the string discloses the thing itself the way a token does rather than the
+# way a hostname does. It arrives the way every class in this file arrives -- pasted out of a session
+# into a note, a handoff, a role playbook -- and no other detector here can see it. It carries no
+# home path, no host address and no credential prefix.
+#
+# THIS ONE IS NOT HYPOTHETICAL, WHICH IS WHY IT IS COMPILED IN. Commit a3df144 brought two of these
+# into the tracked tree (roles/LANDER.md, roles/retired/PM.md) and this gate passed them both. They
+# came out again in PR #48 because a person happened to read the diff -- the exact review this gate
+# exists to make cheaper, doing the whole job unaided.
+#
+# THE UUID SHAPE IS REQUIRED ON PURPOSE, so the placeholder form the documentation has to print --
+# claude.ai/code/artifact/<uuid> -- is not a hit for the detector that documents it. The alternative
+# is a detector whose own manual trips it, which earns an allowlist line, and an allowlist line is a
+# per-line veto over every other detector as well.
+#
+# A publicly shared artifact does not match either: that path segment is plural (/public/artifacts/),
+# and a deliberately published URL is not a disclosure.
+#
+# NO BARE-UUID DETECTOR, and this is a decision rather than an oversight. A bare UUID names no host,
+# no account and no project -- it is an opaque 128-bit number, and every other structural detector
+# here recognises a shape that IS the disclosure. It becomes one only when something says what it
+# addresses, which is precisely what the URL form supplies. Measured 2026-09-05 over the scan scope
+# CI actually uses, a bare-UUID detector would have fired zero times:
+#
+#     find . -type f -not -path './.git/*' -print0 | xargs -0 grep -ohE '[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}' | wc -l   ->   0
+#
+# That zero argues against the detector rather than for it. It is a property of this tree on this
+# day, not of the class: a UUID is the most common opaque identifier in software, and this project's
+# own session ids are UUIDs. The first pasted session id, PowerShell New-Guid or hard-coded test GUID
+# fires it, gets an allowlist line, and that line vetoes every detector on the lines it covers. A
+# gate people mute is worth nothing.
+_ARTIFACT_URL = re.compile(
+    r"claude\.ai/(?:code/)?artifact/"
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    re.IGNORECASE,
+)
+
 #: Every structural detector, for the count line. A caller cannot tell an armed run from a vacuous
 #: one unless the run says how many detectors it had, so this number is printed even though it is a
 #: constant: the day someone edits this file, the printed number is the receipt.
-_STRUCTURAL_COUNT = 2 + len(_CREDENTIALS)  # home path + routable IP + credential shapes
+_STRUCTURAL_COUNT = 3 + len(_CREDENTIALS)  # home path + routable IP + artifact URL + credentials
 
 #: A pattern that can never match -- the "detector off" sentinel. ``(?!)`` is an always-failing
 #: assertion, so ``.search`` never fires while ``.pattern`` stays a valid string.
@@ -635,6 +673,11 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
         # public log would publish exactly what the hit is reporting.
         if _HOME_PATH.search(line):
             hits.append(f"{posix}:{lineno}: absolute user-home path (OS account name){ctx}")
+        # Bare whatever the caller passed, like a credential hit and unlike every other branch here.
+        # The URL IS the capability, so echoing the line into a log hands that log's reader the
+        # artifact -- publishing the thing the hit is reporting, to a wider audience than the tree.
+        if _ARTIFACT_URL.search(line):
+            hits.append(f"{posix}:{lineno}: private artifact URL (capability)")
         for cred_pat, cred_label in _CREDENTIALS:
             if cred_pat.search(line):
                 hits.append(f"{posix}:{lineno}: {cred_label}")
