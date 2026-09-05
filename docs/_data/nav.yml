@@ -160,6 +160,12 @@
     - label: Tips and tricks
       title: Tips and tricks
       path: /TIPS-AND-TRICKS.html
+    # Under Reference because a reader arrives at it to look up how long a playbook may be, not to
+    # install anything. It ships no gate: its own opening says every length figure on it is a
+    # judgment, because the 2026-09-04 sweep found no study that varies document length at all.
+    - label: Playbook size
+      title: "Playbook size: Nobody has measured where an instruction document stops being followed"
+      path: /PLAYBOOK-SIZE.html
     # A STORED EXTERNAL STANDARD, which is why it sits under Reference rather than Guardrails. It
     # ships no gate and nothing checks a diagram against it. The page carries the owner's spec whole
     # and adds a measured contrast audit of the spec's own tokens, so a reader arrives here to look

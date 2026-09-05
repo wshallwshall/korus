@@ -5,9 +5,9 @@
 **What this is.** The questions an evaluator asks before installing anything, answered where they
 ask them. The first one is the one that decides whether you need this project at all.
 
-**Why you should care.** Several sessions at once is how a build gets dramatically faster, and the
-only thing in the way is them conflicting. Claude Code ships its own worktrees now, so the first
-question is which half of KORUS you still need.
+**Why you should care.** Several sessions at once raise how fast work arrives, and the shared write
+surface caps what lands. Claude Code ships its own worktrees now, so the first question is which half
+of KORUS you still need.
 
 Not for you if you have already installed it and want a specific command.
 
@@ -188,6 +188,56 @@ lander merges. [Run a KORUS build](KORUS-BUILD.md) has the procedure.
 
 More is not obviously better. The reported case that started this project was roughly fourteen
 sessions on one directory, and the limit there was not the tooling.
+
+**What more sessions buy is arrival rate.** Recorded 2026-09-03 to 09-04, on the largest run this
+method has had: five sessions, one per Claude account, each spawning its own workers. They opened 46
+pull requests in about three and a half hours.
+
+**Read those three figures as recorded, not as measured.** They were counted by hand during the
+run, with no command kept beside them, so nothing here reproduces them. Article XII says the same.
+
+They are still reported, because a hand count from the operator is evidence. They are labelled,
+because this project's rule is that a number without its instrument is not a measurement.
+
+**What caps it is the shared write surface.** Thirty-four of those landed over the following day, at
+a sustained two to five an hour. Thirty-three of the thirty-four merged commits touched one file, the
+item ledger.
+
+Every item's pull request updates that ledger by construction. So the contention is a property of the
+design rather than of any session, and a sixth session adds arrivals without adding service.
+
+**Queue depth is the wrong dial. Jobs per entry is the right one.** Measured by the seat doing the
+merging, on the same run: eighteen queued entries produced zero merges in an hour, against about
+twenty runners. A two-deep queue then merged both entries in twenty minutes.
+
+**What that run did not vary.** One repository, one serial merge queue, one shared ledger file, five
+accounts. It never ran the same work through a single session, so there is no baseline beside it.
+
+Those figures are a rate and a ceiling. They are not a speedup, and they cannot be turned into one.
+
+The counts above were taken on the run and are not re-derived here. They are written up in
+`.specify/memory/constitution.md`, Article XII, and in
+[roles/MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md).
+
+MANAGER.md is served on this site: `git ls-files` decides what ships, and only `docs/` is excluded
+from that copy. The constitution is not served, so read that one in the repository.
+
+### This answer and the landing page claimed a dramatic speedup, and it is withdrawn
+
+Both pages opened with: "Several sessions at once is how a build gets dramatically faster." That
+sentence is now gone from both, replaced by the rate and the ceiling above.
+
+[CI for leaders](CI-FOR-LEADERS.md#what-you-must-never-claim) already forbade it: "You cannot claim a
+speed or productivity gain. None is measured in either repository." The front page made the claim
+anyway, which is how a rule fails -- outward, on someone else's work, and never inward.
+
+The shape was the worse half. "Dramatically" is an adverb with no quantity behind it, so no reading
+could contradict it and no reading could retract it. A wrong number is the better sentence, because
+a later measurement can kill it.
+
+**What would make a speed claim sayable here.** Run one defined body of work twice, once through a
+single session and once through several, on the same repository and the same merge queue. Report both
+wall clocks with the conditions. Until someone does that, report the rate and the ceiling.
 
 ## Related
 

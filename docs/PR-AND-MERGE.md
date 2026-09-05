@@ -210,7 +210,97 @@ memory, because that list changes.
 This is the same failure shape as taking `--ours` on a conflict, below. The instrument was accurate
 about what it looked at, and silent about what it did not look at.
 
+### A green check attests to a base, so record the base beside it
+
+A worker runs the gates on its branch and gets green. Green against what? Against the trunk as it
+stood at that moment, and the check result does not say which commit that was.
+
+`gastown` records both, in `internal/refinery/engineer.go`: the CI result and the trunk SHA at the
+moment it ran. The merge path then asks one cheap question.
+
+```powershell
+$recorded = '<the trunk sha stored beside the green result>'
+if ((git rev-parse origin/main) -eq $recorded) { 'pre-verified' } else { 'stale -- re-run the gates' }
+```
+
+Still at that SHA: the pre-verification holds and the gates need not run again. Moved: the record
+says the pre-verification is stale, and they run.
+
+**The paired refusal is the half worth copying.** Any auto-rebase must refuse while the pre-verified
+flag is set. A rebase moves the branch onto a new base, which is the one thing the flag attests to.
+
+Without the refusal the flag survives the rebase and claims green against a base the branch no
+longer sits on. That is the calm wrong answer this whole page is about.
+
+**The limit, stated plainly.** It fires only while the trunk is quiet, and the trunk is not quiet
+when the queue is deep.
+
+Both halves of that are measured on this repository, and they are recorded in different places.
+The trunk moved seven times during the life of one pair of pull requests -- stated above under
+*What this is for*, not in the FAQ. Eighteen queued entries produced zero merges in an hour
+([FAQ](FAQ.md)).
+
+So this mechanism prevents a queue reaching eighteen. It cannot clear one that has.
+
+**Nothing in KORUS records this pair today.** Adopting it means storing the trunk SHA with the
+result, and teaching whatever rebases a branch to refuse while the flag stands.
+
 ## Resolving conflicts without losing work
+
+### A stamped bookkeeping field makes two disjoint writes collide
+
+Two sessions edit different rows of the same ledger. Nothing about the work overlaps, and the merge
+still conflicts.
+
+The cause is often a field neither writer chose. Every mutation stamps `updated_at`, so both sides
+changed that one line. The conflict is over the stamp, not over the content.
+
+This finding is imported, not ours. The `beads` issue store measured it in its own ledger: stamping
+`updated_at` on every mutation inflates the observed conflict rate.
+
+**Rule:** write the fields the change is about, and nothing else. A write that did not touch a
+timestamp or a counter must not stamp one.
+
+**Where the timestamp goes instead.** Git already records when each line changed, and who changed
+it. `git log -L` and `git blame` read that, and neither can conflict.
+
+**Unmeasured here.** KORUS measured that 33 of 34 merged commits touched one file, the item ledger,
+and treats that contention as a property of the design
+([roles/MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md)).
+
+What share of those conflicts is bookkeeping-only has never been measured on this repository. beads
+measured its own system. That is evidence for the mechanism and not for a number here.
+
+**What would measure it.** Merge two branches that both touch the ledger, read the conflicted
+ledger out of the merged tree, and count the hunks whose differing lines are only bookkeeping.
+
+**Sample OPEN pairs, not landed branches.** A branch that already landed merges cleanly against the
+trunk, because the trunk contains it. It produces no conflict and therefore nothing to count.
+
+```powershell
+$ledger = '<the ledger path in your repository>'
+$a = '<head SHA of one open pull request>'
+$b = '<head SHA of another that touches the same ledger>'
+
+# --write-tree prints the tree OID on its first line. A CONFLICT is what we want here, so a
+# non-zero exit is the expected case; only an empty OID means the command itself failed.
+$tree = (git merge-tree --write-tree $a $b) -split "`n" | Select-Object -First 1
+if (-not $tree) { throw "merge-tree produced no tree -- check both SHAs exist locally" }
+
+# READ THE EXIT CODE. Without this a wrong ledger path makes `git show` fail, prints nothing,
+# and the count comes back zero -- reported as "no bookkeeping-only conflicts". That is the
+# calm zero this page exists to attack, and an earlier draft of this recipe had it.
+$conflicted = git show "${tree}:$ledger" 2>$null
+if ($LASTEXITCODE -ne 0) { throw "cannot read $ledger from tree $tree -- wrong path or wrong tree" }
+if (-not $conflicted) { throw "$ledger read as empty -- that is not the same as no conflicts" }
+
+$hunks = $conflicted | Select-String -Pattern '^<<<<<<<' 
+"conflicted hunks: $($hunks.Count)"   # print the denominator beside any share you report
+```
+
+**Fix the predicate before you count, not after.** A hunk is bookkeeping-only when every differing
+line matches a field in a bookkeeping set you wrote down first. Two people who pick the set
+afterwards will report two different shares.
 
 ### Never take a side wholesale on an append-only file
 
@@ -444,6 +534,8 @@ Stated plainly, because at merge time an assumption that is wrong is expensive:
 | Armed auto-merge | Queued, green, and stalled forever | Auto-merge waits for checks, never updates a `BEHIND` branch |
 | Two-armed watcher | "Still running" until timeout | Poll merged / failing / **went stale** |
 | No pending checks | "Everything settled" right after a push | Assert on the expected leg **count**, not on absent pending legs |
+| A green check with no base | "It passed" -- against a trunk that has since moved | Record the trunk SHA beside the result; refuse to rebase while the flag stands |
+| A stamped bookkeeping field | Two sessions changed different rows and still conflicted | Write only the fields the change is about; never stamp `updated_at` on a write that did not touch it |
 | `--ours` on an append-only file | Well-formed file, clean status, green CI | Union both sides, then verify surviving entries by name |
 | Unanchored renumber | `cp1252` became `cp1316` | Anchor the pattern; re-verify **after** conflict resolution |
 | Rebasing a one-block stack | Clean tree, one heading, half the prose | One `git merge`; grep for a string only the latest revision has |

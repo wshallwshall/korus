@@ -262,6 +262,62 @@ function New-Control {
     }
 }
 
+# ------------------------------------------------------------------------------------------------
+# What a child must NOT inherit
+#
+# A spawn passes the parent's whole environment down. Measured 2026-09-04 on this machine: 96
+# variables in the parent, and this file's own spawn set $psi.UseShellExecute = $false and never
+# touched $psi.Environment, so a seat received all 96. A git grep for ANTHROPIC_API_KEY,
+# env_remove or Environment.Remove across scripts/ returned nothing anywhere.
+#
+# Each of these redirects something with NO ERROR ANYWHERE. That is what makes them worth a table
+# rather than a note: the failure is silent by construction, so nothing downstream reports it and
+# a reader has no reading that would contradict "the seat ran fine".
+#
+# THE INHERITED VALUE IS THE HAZARD, NOT THE VARIABLE. A caller that means to name an account may
+# still do so, deliberately and visibly, through -ChildEnv. What is removed is the accident.
+$script:ChildEnvStrip = [ordered]@{
+    # Names the account root the child bills. Inherited, every seat this watcher starts bills the
+    # watcher's account instead of its own, and any per-account routing is defeated silently.
+    # Measured 2026-08-31 and recorded in this file's own header: a CLAUDE_CONFIG_DIR that does not
+    # exist makes `claude agents --json` return an empty list and exit 0. The variable is already
+    # known here to fail without saying so.
+    'CLAUDE_CONFIG_DIR'    = 'redirects which account the child bills'
+    # Claude Code uses an API key if it finds one, and announces nothing. An inherited key turns a
+    # compliant spawn -- a terminal agent on the Owner's subscription -- into a pay-as-you-go API
+    # call against a balance nobody is reading. The constitution's execution-path article names
+    # this exact shape: not a design choosing the API, but a permitted design silently becoming a
+    # forbidden one through the environment it inherits.
+    'ANTHROPIC_API_KEY'    = 'silently switches the child off the subscription and onto API billing'
+    # The same mechanism under a second name. Vibe Kanban, the only tool in a ten-tool survey that
+    # guards any of this, guards ANTHROPIC_API_KEY alone -- so copying its coverage would leave
+    # this one live. Its idea is worth having; its list is not.
+    'ANTHROPIC_AUTH_TOKEN' = 'a second name for the same billing switch'
+}
+
+# WARNED, NOT STRIPPED, and the difference is deliberate. ANTHROPIC_BASE_URL is SET on this machine
+# (measured 2026-09-04, same reading that found ANTHROPIC_API_KEY unset), so it is plausibly a
+# proxy somebody chose on purpose. Removing a deliberate setting would break the spawn to fix a
+# hazard that may not exist here, which is the worse trade: a broken spawn is loud, and this whole
+# section exists because the quiet failures are the expensive ones. So the run says what it saw and
+# lets a reader decide.
+#
+# UNMEASURED: nobody has checked what this machine's ANTHROPIC_BASE_URL points at, or whether a
+# `claude -p` child honours it. Until someone does, "deliberate proxy" is the assumption, not a
+# finding.
+$script:ChildEnvWarn = @('ANTHROPIC_BASE_URL')
+
+# The reading is taken ONCE, from the parent, before any spawn. Two reasons: the receipt has to be
+# able to report it whether or not a red was found, and a per-spawn reading would let two spawns in
+# one tick disagree about what the parent held.
+$script:ChildEnvRemoved = @(
+    $script:ChildEnvStrip.Keys | Where-Object { $null -ne [Environment]::GetEnvironmentVariable($_) }
+)
+$script:ChildEnvWarnings = @(
+    $script:ChildEnvWarn | Where-Object { $null -ne [Environment]::GetEnvironmentVariable($_) } |
+        ForEach-Object { "$_ is set in this process and is passed through to every child unchanged. If it is not a proxy you chose, the seat is reaching a model you did not intend." }
+)
+
 # ProcessStartInfo.ArgumentList, not Start-Process -ArgumentList. The second joins an array with
 # spaces and quotes nothing, so a briefing path or a note containing a space arrives at the child as
 # two arguments. The .NET collection escapes each element for the platform it is on, which this has
@@ -275,13 +331,38 @@ function Start-Child {
         # Capture the child's output instead of letting it reach our stdout. Required for anything
         # chatty, or -Json emits a receipt with another script's console noise in the middle of it.
         [switch]$Quiet,
-        [switch]$Wait
+        [switch]$Wait,
+        # Values to SET in the child, applied after the strip above. A key mapped to $null removes
+        # it. This is how a caller names an account on purpose; there is no switch to skip the
+        # strip, because a skip is what the accident already looks like.
+        [hashtable]$ChildEnv
     )
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = $FileName
     foreach ($a in $ArgumentList) { $psi.ArgumentList.Add([string]$a) }
     if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
     $psi.UseShellExecute = $false
+
+    # THE STRIP HAS NO PARAMETER AND NO CALLER OPT-OUT. This function is the only place in this file
+    # that starts a process, so a name in $script:ChildEnvStrip cannot reach a child by any route
+    # the script has. A rule that depends on the next caller remembering decays; a rule inside the
+    # only door does not. Measured 2026-09-04 across this fleet: the same house rule held at 0
+    # violations where a gate refuses and 93 where it was prose alone.
+    #
+    # Reading $psi.Environment materialises a COPY of this process's variables into the collection,
+    # and Process.Start then uses that copy verbatim under UseShellExecute = $false. So the child
+    # gets exactly what the parent had, minus what is removed here -- not a blank environment.
+    # bin/ccx-doctor.ps1's Invoke-Probe already drives children this way; this is the same
+    # mechanism, applied where it was missing rather than a second one invented beside it.
+    foreach ($name in $script:ChildEnvStrip.Keys) { $null = $psi.Environment.Remove($name) }
+    if ($ChildEnv) {
+        foreach ($k in $ChildEnv.Keys) {
+            $v = $ChildEnv[$k]
+            if ($null -eq $v) { $null = $psi.Environment.Remove([string]$k) }
+            else { $psi.Environment[[string]$k] = [string]$v }
+        }
+    }
+
     if ($Quiet) {
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
@@ -297,11 +378,59 @@ function Start-Child {
     if ($Quiet) {
         # Drain both pipes before waiting. A child that fills a pipe buffer while the parent waits on
         # exit deadlocks, and claim.ps1 prints a block of text on every path.
-        $null = $proc.StandardOutput.ReadToEndAsync()
-        $null = $proc.StandardError.ReadToEndAsync()
+        #
+        # THE TASK HANDLES ARE KEPT NOW. They used to be assigned to $null, which drained the pipes
+        # and threw the content away -- so a spawned seat's entire answer, and every diagnostic a
+        # refusing child wrote to stderr, went nowhere. The caller could read the exit code and
+        # nothing else, which makes "claim.ps1 refused" and "claim.ps1 crashed" the same number with
+        # no text to tell them apart.
+        $outTask = $proc.StandardOutput.ReadToEndAsync()
+        $errTask = $proc.StandardError.ReadToEndAsync()
+        $proc | Add-Member -NotePropertyName CcxStdOutTask -NotePropertyValue $outTask -Force
+        $proc | Add-Member -NotePropertyName CcxStdErrTask -NotePropertyValue $errTask -Force
     }
     if ($Wait) { $proc.WaitForExit() }
+    if ($Quiet -and $Wait) {
+        # ONLY AFTER WaitForExit, and only when we waited. Both reads complete at end-of-file, which
+        # for a detached seat arrives when the seat does -- so resolving these without having waited
+        # would block this tick on a session that runs for an hour, which is the thing -WaitForSpawn
+        # exists to keep off the production path. A caller that did not wait still gets the handles
+        # above and may resolve them itself.
+        $proc | Add-Member -NotePropertyName CcxStdOut `
+            -NotePropertyValue ([string]$proc.CcxStdOutTask.GetAwaiter().GetResult()) -Force
+        $proc | Add-Member -NotePropertyName CcxStdErr `
+            -NotePropertyValue ([string]$proc.CcxStdErrTask.GetAwaiter().GetResult()) -Force
+    }
     return $proc
+}
+
+# What a quiet child said, flattened to one line a receipt can carry.
+#
+# THREE THINGS ARE DONE TO IT, AND NONE OF THEM MAY DROP THE MESSAGE. Escape sequences are removed:
+# pwsh writes a coloured error banner, and measured against a claims registry broken on purpose the
+# raw stderr arrived carrying ESC[31;1m runs. Those are not text -- they corrupt a -Json receipt for
+# anything parsing it and render as garbage in a log. Newlines become spaces so one row stays one
+# row. The result is capped, because a crashing child can produce a stack trace longer than the
+# whole receipt, and a receipt nobody can read is the same as no receipt.
+#
+# THE CAP SAYS WHEN IT BIT. Truncating silently would hand a reader a sentence that looks complete
+# and ends before the part that mattered.
+function Get-ChildSaid {
+    [CmdletBinding()]
+    param($Process, [int]$MaxLength = 500)
+    $parts = @($Process.CcxStdErr, $Process.CcxStdOut) |
+        Where-Object { $_ -and "$_".Trim() } | ForEach-Object { "$_".Trim() }
+    if (-not $parts) { return '' }
+    $text = ($parts -join ' ')
+    # ESC is written as the char code rather than a literal escape byte, so this file stays plain
+    # ASCII and greps cleanly.
+    $esc = [char]27
+    $text = [regex]::Replace($text, "$esc\[[0-9;]*[A-Za-z]", '')
+    $text = [regex]::Replace($text, '\s+', ' ').Trim()
+    if ($text.Length -gt $MaxLength) {
+        $text = $text.Substring(0, $MaxLength) + " [truncated at $MaxLength characters]"
+    }
+    return $text
 }
 
 # The interpreter running this file, so a child pwsh cannot be a different build from its parent.
@@ -394,6 +523,11 @@ $receipt = [ordered]@{
         labelled          = $null
         truncated         = $false
         dryRun            = [bool]$DryRun
+        # A strip nobody can see is a behaviour change that reads as no change at all. These two
+        # name what the parent actually held, so a reader can tell "nothing to remove" from "the
+        # removal did not run" -- which are the same empty list from outside.
+        childEnvRemoved   = $script:ChildEnvRemoved
+        childEnvWarnings  = $script:ChildEnvWarnings
     }
     controls = @()
     red      = @()
@@ -418,6 +552,11 @@ function Write-Receipt {
     Write-Host "           $open open pull requests examined, $carry carry the label"
     if ($s.truncated) { Write-Host "           WARNING: a list filled the -Limit of $Limit, so these counts may be short" }
     if ($s.query) { Write-Host "           $($s.query)" }
+    # Printed even when empty, because "no account variable was in this environment" and "the strip
+    # never ran" are the same silence otherwise, and only one of them is safe.
+    $stripped = if ($s.childEnvRemoved) { $s.childEnvRemoved -join ', ' } else { 'none were set here' }
+    Write-Host "           child env: removed $stripped"
+    foreach ($w in $s.childEnvWarnings) { Write-Host "           WARNING: $w" }
     foreach ($c in $receipt.controls) {
         $verdict = if ($c.proved) { 'proved' } else { 'NOT PROVED' }
         Write-Host "  control: $($c.name) -- $verdict (expected '$($c.expected)', read '$($c.reading)')"
@@ -886,10 +1025,27 @@ try {
             -ArgumentList @('-NoProfile', '-File', $claimScript, '-Take', $key,
                 '-Note', "ci-red on $repoName pull request $number")
         if ($claimProc.ExitCode -ne 0) {
-            # A peer took it in the instant between our existence check and our -Take. The exclusive
-            # create is what caught it, and skipping is the right answer.
+            # The usual cause is a peer taking the key in the instant between our existence check
+            # and our -Take; the exclusive create is what caught it, and skipping is right either
+            # way, because a key we do not hold is not ours to spawn on.
+            #
+            # THE CHILD'S OWN WORDS ARE QUOTED NOW, and this sentence stopped asserting the cause.
+            # The branch used to report an exit code alone -- Start-Child discarded both streams --
+            # and then name a peer, which was an INFERENCE from a non-zero exit. Driven against a
+            # claims registry broken on purpose (a file where the directory belongs), the old text
+            # read in full: "claim.ps1 refused the key (exit 1); a peer session holds it." A reader
+            # goes looking for a peer that does not exist while the registry stays broken on every
+            # future tick. The quote is what tells the two apart, so the run no longer guesses.
+            $said = Get-ChildSaid $claimProc
             $row.decision = 'ALREADY-CLAIMED'
-            $row.detail = "claim.ps1 refused the key (exit $($claimProc.ExitCode)); a peer session holds it."
+            $row.detail = "claim.ps1 refused the key (exit $($claimProc.ExitCode)), so this run does not hold it."
+            $row.detail = if ($said) { "$($row.detail) It said: $said" }
+            else {
+                # NOT "a peer holds it". The child said nothing, so the cause is unestablished, and
+                # the word for that is not the name of the likeliest case.
+                "$($row.detail) It said nothing, so why it refused is not established here -- " +
+                "usually a peer holds the key, but a broken registry exits the same way."
+            }
             $receipt.red += [pscustomobject]$row
             continue
         }
