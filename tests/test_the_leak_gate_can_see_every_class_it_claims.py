@@ -482,7 +482,24 @@ class AWrappedUrlIsStillTheCapability(unittest.TestCase):
             self.assertNotIn(FAKE_UUID[:8], hit, f"the wrapped hit echoed part of the UUID: {hit!r}")
 
     def test_joining_lines_does_not_fabricate_a_hit(self):
-        """The join is over-reach's cheapest opportunity, so the near misses are re-run across it."""
+        """The join is over-reach's cheapest opportunity, so the near misses are re-run across it.
+
+        WHAT THESE SIX ROWS DO AND DO NOT PROVE, measured rather than asserted, because "17 tests,
+        all green" averages them together with rows that are pinned. Five mutants, and the tests
+        each one reds:
+
+            A  delete the wrap branch          the 6 firing forms, and the line-number test
+            B  drop the double-report guard    the report-once test
+            C  join a three-line window        the three-line residual, and the line-number test
+            D  strip markers in the join       the marker residual, and ONLY that
+            E  widen _ARTIFACT_URL to any      THESE SIX -- and their line-level twins in
+               non-space run                   EveryDetectorStaysQuietOnItsNearMiss, together
+
+        So these rows are red under exactly one mutant, and that mutant reds the line-level table
+        in the same run. They add NO INDEPENDENT SIGNAL against pattern over-reach; what they add
+        is that the same near misses survive a line boundary. No join-level mutant reds them --
+        the join direction is guarded by the marker test below, not by these.
+        """
         for label, first, second in (
             # The self-documentation property has to survive wrapping too, or this file and
             # docs/LEAK-GATE.md stop being committable the moment a formatter touches them.
@@ -527,3 +544,31 @@ class AWrappedUrlIsStillTheCapability(unittest.TestCase):
             "a three-line wrap now fires. That is an improvement -- delete this test and say so in "
             "docs/LEAK-GATE.md, which currently records it as a known miss.",
         )
+
+    def test_a_marker_prefixed_continuation_is_a_documented_residual_not_a_claim(self):
+        """The join strips whitespace and nothing else, and that is a DECISION, not an oversight.
+
+        It is the one residual whose "fix" is a one-line change somebody will reach for on purpose,
+        because catching a URL wrapped inside a list item or a blockquote sounds like a straight
+        improvement. Measured: adding `.lstrip("|->*# ")` to the join turns all three markers below
+        from quiet to firing, and every other test in this file stays green. So without this row a
+        deliberate call is reversible by accident, which is the shape of defect this whole file
+        exists to catch -- and it is the argument for pinning a decision, not only a behaviour.
+
+        IT IS THE ONLY GUARD ON THE JOIN'S GREED. That mutant reds this test and nothing else --
+        not one of the six near-miss rows above, which are re-runs of the line-level table across
+        a boundary and cannot see a change to how the boundary is crossed.
+        """
+        for marker in ("> ", "# ", "* "):
+            with self.subTest(marker=marker):
+                hits = scan_lines(
+                    self.gate,
+                    "https://claude.ai/code/" + "artifact/" + FAKE_UUID[:12],
+                    marker + FAKE_UUID[12:],
+                )
+                self.assertEqual(
+                    [], [h for h in hits if "private artifact URL" in h],
+                    f"a {marker!r} continuation now fires. If that was deliberate, delete this test "
+                    "and update docs/LEAK-GATE.md, which records it as a known miss. Stripping "
+                    "markers fabricates adjacency between lines a reader sees as separate.",
+                )

@@ -76,6 +76,14 @@ Two residuals stand, both pinned by tests rather than assumed:
 - **A prefixed continuation line is still missed** -- `# `, `> `, `* `. The join strips whitespace
   and nothing else. Stripping comment markers would fabricate adjacency a reader does not see.
 
+**The join can fabricate adjacency, and that is its cost.** A line ending on the path, followed by
+one opening with an unrelated UUID, fires. Measured 2026-09-05: table rows, list items, quoted code
+and blockquotes stay quiet, because their punctuation survives the whitespace strip.
+
+So the false-positive surface is exactly the shape a real wrap has. That matters here: a false
+positive is answered with an allowlist line, and an allowlist line is a per-line veto over every
+detector, not just this one.
+
 **Every other detector is still line-based.** A wrapped home path or credential is missed, and
 nothing says so. The join was scoped to the artifact arm because that pattern measures zero
 population, so widening it silences nothing. The home-path detector fires in practice.
