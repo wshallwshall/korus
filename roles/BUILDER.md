@@ -57,10 +57,6 @@ that is the only moment they can win.
 specific and reads as more authoritative, so a seat comparing the two picks the wrong one. If the
 engine file is ever updated, this row is what stops the next seat re-deriving the conflict.
 
-**How that was settled outlives the seats in it.** An earlier Builder inferred the same rule and
-published it to **eleven files** without asking. A peer measured `CLAUDE.md` and refused to pass a
-permission it could not verify.
-
 **Being correct is not being authorised.** A peer cannot grant a permission even when the guess
 turns out right.
 
@@ -379,10 +375,6 @@ it.
 **Cost 4 is paid ONCE per seat, not per worktree.** After relocating, create every further worktree
 with `new.ps1` from inside the isolated session. Measured to work, no second move.
 
-**Cost 3, and what is honestly known is less than four seats have claimed.** That paragraph was
-rewritten **three times in one day**, each version confident and each narrowed by the next
-measurement. What follows is the state of the evidence, not a fourth verdict.
-
 `.git/mefor-coord/` **is exempt from rule 1 by design.** `worktree_gate.ps1` names it as "Rule 1's
 ONE EXEMPTION". Its own comment says the exemption exists because handoff documents were being
 refused: **rule 1 fired 18 times and nine were this false positive.**
@@ -401,10 +393,6 @@ silently, with a primary-tree write as the positive control proving silence mean
 **The refusal comes from the harness.** The two even speak differently: the gate says `BLOCKED:` and
 names a rule; the harness says "This session is isolated in the worktree X". And **the gate's deny
 log had NOTHING for five hours across a refusal that reproduces.**
-
-***SO NOBODY WAS WRONG. THE MISSING PIECE WAS A CONDITION RATHER THAN A FACT.*** The seats that
-measured `Write` working were not isolated and could not reproduce the refusal. The seat that was
-refused is.
 
 **An unconditioned "you do not need a redirect" strands exactly the seats that do.** If you are
 isolated, **the exemption cannot help you, because the layer refusing you has never heard of it.**
@@ -444,15 +432,10 @@ and doubled is exactly what a regex or a Python string literal needs.
 
 | Retracted claim | Why it was wrong |
 | --- | --- |
-| "Never use a heredoc" | The heredoc never gets a chance to be wrong; it preserves whatever reaches it. |
 | "Never use `printf`" | True but narrow. `printf` reads `{B}f` as a formfeed, so `...{B}file.py` becomes `...ile.py`. **It loses ONE CHARACTER and still looks almost right**, and the formfeed is invisible in most renderers. |
-| "Heredocs are safe" | That measurement covered **Windows paths and nothing else.** A seat hit a two-character newline escape inside a QUOTED heredoc that emerged as a REAL newline inside a string literal, which would not parse. |
 
 The `printf` loss was measured 2026-08-28 by three seats; both heredoc forms preserved the same path
 intact.
-
-**One escape class was tested and a rule about heredocs was written.** The gap between those two
-sentences is this section's whole lesson.
 
 A seat told only "never printf" writes a Python `replace()` with a doubled backslash, gets an
 unterminated string literal, and has no `printf` anywhere to blame.
@@ -502,9 +485,7 @@ the result back.
 `<git-common-dir>/mefor-coord/queue/<lane>.tsv` is tab-separated `status`, `item`, `description`. If
 your brief cites a row there, mark it `started` when you take it.
 
-A lane that reads short while it is building gets refilled on top of. **Retracted:** this file used
-to tell you to pull your own next item out of that file. Under the one-turn model there is no next
-item. The file and its format survive; the pull does not.
+A lane that reads short while it is building gets refilled on top of.
 
 ### 4a. Three things that hide in the commit
 
@@ -720,12 +701,11 @@ building in.
 `pytest` collects both**. Naming a path (`pytest tests/`) overrides `testpaths` and silently drops
 the console suite. **Run bare, or name both.**
 
-The builder-specific delta is the **install**, not the path -- **but not for the reason this trap
-used to give.**
+The builder-specific delta is the **install**, not the path.
 
 `new.ps1` has matched `ci.yml`'s test leg since 2026-08-23 (`995de69be`): the same seven extras plus
 the webconsole editable, held in step by `tests/test_worktree_venv_extras_parity.py` rather than by
-care. **An earlier version of this file said `new.ps1` installs two. It does not.**
+care.
 
 The hazard is still live by a different route: **a lane `new.ps1` never made.** A
 `.claude/worktrees/` lane has no guaranteed venv, and stale checkouts on this box still carry the old
@@ -740,18 +720,7 @@ count cannot see this class.
 
 ### 5j. Read `$LASTEXITCODE` before you read silence as a pass
 
-**The rule survives. The mechanism this trap used to name does not.** It said a hand-run
-`pre-commit run <hook> --files <path>` returns rc=127, "command not found", because the executable
-lives only in the primary's venv.
-
-**Measured 2026-08-28: false.** `pre-commit` resolves from a machine-wide Python Scripts directory on
-PATH -- neither the primary's venv nor a lane's. The command runs and returns 0 from a lane with no
-venv at all.
-
-The subordinate claim is true and harmless: no lane venv carries `pre-commit.exe`. It simply does not
-produce the failure.
-
-What is worth keeping is the habit, because the false mechanism was hiding it: **a probe that prints
+What is worth keeping is the habit: **a probe that prints
 nothing has not told you it passed.** A builder nearly recorded exactly that silence as "the wired
 hooks passed". Read the exit code every time, and say which one you read.
 
@@ -776,9 +745,6 @@ rev-parse --show-toplevel` unanchored, so where your shell stands is the answer 
 **Read the handoffs on arrival.** `handoff.ps1 -Report` is read-only and prints its denominators, so
 "nothing there" and "nothing looked" stay apart. It counts a subdirectory as a single entry, so it
 never opens what is inside `Archive/`.
-
-**The ref row used to break its own rule, and that is why it is worded this way.** It named
-`refs/rescue/*` and `refs/tags/rescue/*` and called the second one the larger namespace.
 
 Measured 2026-08-28 in the engine primary, rescue refs also sit under `refs/privtags/`,
 `refs/remotes/private/rescuetags/`, `refs/heads/rescue/` and `refs/archive/`. Some are loose names
@@ -811,8 +777,7 @@ stop.
 trees form a third group, and on this box it is the biggest of the three. The path names the
 directory family only; it does not prove `new.ps1` made it.
 
-**On the venv row:** it shifts the odds and settles nothing, so an earlier version of this row handed
-you an inference one line after telling you not to infer. Measure the venv on its own terms, and ask
+**On the venv row:** Measure the venv on its own terms, and ask
 the Console what you cannot read yourself: does this lane get removed, and what must land first.
 
 ---
@@ -842,9 +807,7 @@ burns the wall-clock window. A session that POLLS or sleeps in a loop spends tok
 window, and it is the more expensive of the two.
 
 Do not collapse them into a superlative such as "an idle builder is the most expensive thing in the
-fleet". An earlier version of this rule said exactly that. It is wrong about tokens, and it was
-retracted rather than deleted so the next reader meets the correction instead of re-deriving the
-error.
+fleet".
 
 ### 8a. Do not accept during a hold what you will not start
 
