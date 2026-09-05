@@ -594,6 +594,109 @@ class ContextSurvivesOnALineThatDisclosesNothing(unittest.TestCase):
         )
 
 
+class SuppressionReachesExactlyWhatTheJoinReaches(unittest.TestCase):
+    """A wrapped disclosure spans two lines. Both must go bare -- and ONLY when the join fires.
+
+    THE DEFECT. The join detects an artifact URL that prose reflow broke in half. Neither raw line
+    matches, so a suppression rule written against the raw line withholds nothing, and any other
+    detector on those two lines prints the halves one line apart. Measured on the merge: the gate
+    detected the capability, refused to print it, and printed it in two pieces.
+
+    WHY THIS ASSERTS AN EQUIVALENCE RATHER THAN A VALUE, which is the whole design. The obvious
+    control plants a marker-prefixed continuation and asserts its context survives. That works
+    today and goes misleading the moment anyone changes what the join reaches: mutating the join to
+    strip markers moves DETECTION and SUPPRESSION together, so a value-asserting control reddens
+    beside the join's own marker test, and a reader gets two red tests, one cause, and nothing
+    saying which moved.
+
+    So this pins the RELATION. Context is withheld on a line if and only if the gate reported a
+    wrapped hit spanning it. A mutation that moves both reaches in step leaves this GREEN and reds
+    only the join's own test, which is the single cause it is. A mutation that moves suppression
+    alone -- dropping the neighbour guard, dropping a join direction -- reds this and nothing else.
+
+    The residuals are here as rows rather than as prose because both reaches will move if anyone
+    touches them, and a row that moves with the code is worth more than a sentence that does not.
+    """
+
+    #: (label, the two planted lines). Every row carries a routable address on BOTH lines, because
+    #: an unsuppressed line only proves anything if some hit exists to carry its context.
+    PAIRS: tuple[tuple[str, str, str], ...] = (
+        (
+            "a genuine reflow: the join fires, so BOTH lines must go bare",
+            "host " + "".join(("198.18.", "0.1")) + " see https://claude.ai/code/artifact/" + FAKE_UUID[:24],
+            FAKE_UUID[24:] + " is the id, host " + "".join(("198.18.", "0.2")),
+        ),
+        (
+            "a marker-prefixed continuation: a documented residual, so the join does NOT fire and "
+            "these lines keep the context a person asked for",
+            "host " + "".join(("198.18.", "0.1")) + " see https://claude.ai/code/artifact/" + FAKE_UUID[:24],
+            "# " + FAKE_UUID[24:] + " is the id, host " + "".join(("198.18.", "0.2")),
+        ),
+        (
+            "the neighbour carries a whole URL, so it reports itself and this line discloses "
+            "nothing. Without the join's own guard this suppressed the innocent line",
+            "an ordinary sentence, host " + "".join(("198.18.", "0.1")),
+            "https://claude.ai/code/artifact/" + FAKE_UUID + " host " + "".join(("198.18.", "0.2")),
+        ),
+        (
+            "ordinary prose either side of a line break",
+            "the first host is " + "".join(("198.18.", "0.1")),
+            "the second host is " + "".join(("198.18.", "0.2")),
+        ),
+    )
+
+    def setUp(self):
+        self.gate = load_gate()
+
+    def scan_pair(self, first, second):
+        with tempfile.TemporaryDirectory(prefix="ccx-leakgate-reach-") as tmp:
+            planted = Path(tmp) / "planted.md"
+            planted.write_text(first + "\n" + second + "\n", encoding="utf-8")
+            return self.gate.scan_file(planted, rel_posix="<file>", show_context=True)
+
+    def test_context_is_withheld_on_exactly_the_lines_a_wrapped_hit_spans(self):
+        for label, first, second in self.PAIRS:
+            with self.subTest(case=label):
+                hits = self.scan_pair(first, second)
+                wrapped = [h for h in hits if "wrapped onto the next line" in h]
+                for lineno, text in ((1, first), (2, second)):
+                    carrying = [h for h in hits if h.startswith(f"<file>:{lineno}:")]
+                    self.assertTrue(
+                        carrying, f"no hit on line {lineno} to inspect, so this row proves nothing"
+                    )
+                    printed = any(text.strip()[:40] in h for h in carrying)
+                    spanned = bool(wrapped) or any(
+                        p.search(text) for p in self.gate._VALUE_IS_THE_DISCLOSURE
+                    )
+                    self.assertEqual(
+                        not spanned,
+                        printed,
+                        f"line {lineno} of this pair: the gate {'reported' if spanned else 'did not report'} "
+                        f"a disclosure spanning it, but context was {'printed' if printed else 'withheld'}. "
+                        "Suppression must reach exactly what the join reaches -- withholding more "
+                        "silences lines the gate never flagged, withholding less prints half a "
+                        "capability beside the other half.",
+                    )
+
+    def test_neither_half_of_a_wrapped_capability_appears_anywhere(self):
+        """The end the defect was actually about: no hit on the file may carry either half."""
+        label, first, second = self.PAIRS[0]
+        hits = self.scan_pair(first, second)
+        self.assertTrue(
+            any("wrapped onto the next line" in h for h in hits),
+            f"the join did not fire, so this case proves nothing: {hits!r}",
+        )
+        for half in (FAKE_UUID[:24], FAKE_UUID[24:]):
+            for hit in hits:
+                self.assertNotIn(
+                    half,
+                    hit,
+                    f"a hit printed {half!r}. Both halves in one report reassemble the capability "
+                    "for whoever reads it, which is the disclosure the wrapped hit exists to "
+                    "withhold.",
+                )
+
+
 class TheGateExitsNonZeroOverAPlantedFile(unittest.TestCase):
     """End to end. `scan_file` returning hits proves nothing if the exit code stays 0."""
 

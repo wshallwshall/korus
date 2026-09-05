@@ -712,6 +712,54 @@ def _read_text(path: Path) -> str | None:
     return data.decode("utf-8", errors="replace")
 
 
+def _carries_a_disclosure(lines: list[str], lineno: int) -> bool:
+    """Does line ``lineno`` (1-based) hold a value-is-the-disclosure class, WRAPPED OR NOT?
+
+    THE DEFECT THIS EXISTS FOR, measured on the merge of #52 and #53. A wrapped artifact URL
+    matches NEITHER of the two raw lines it spans -- that is precisely what the join at the call
+    site exists for. So a suppression rule written against the raw line leaves both halves
+    printable, and any other detector on those two lines reassembles the capability for whoever
+    reads the log:
+
+        p.md:1: routable IP address (<addr>): ... /artifact/<the first half>
+        p.md:1: private artifact URL (capability, wrapped onto the next line)
+        p.md:2: <the second half> is the id, host <addr>
+
+    The gate detects the capability, refuses to print it, and then prints it in two pieces one line
+    apart. Default output was never affected; this is ``--show-context`` only.
+
+    THE NEIGHBOUR GUARD IS THE JOIN'S OWN, and it is not decoration. Without it this suppressed the
+    innocent line NEXT TO a disclosure that sits whole on one line: measured over the tracked tree,
+    4 lines of 65,781 lost context they should have kept, every one of them the neighbour of a line
+    already carrying a home path in full. A value that does not SPAN the boundary is suppressed on
+    its own line already. The detection join states the same rule as "a next line that carries a
+    whole URL reports itself, on its own number".
+
+    REACH MUST EQUAL THE JOIN'S REACH, not exceed it. The join deliberately misses a
+    marker-prefixed continuation and a three-line wrap. Suppressing those lines anyway would
+    withhold context for a disclosure the gate never reported, which is over-reach in the silent
+    direction. Using the join's own shape here is what keeps the two in step, and
+    ``SuppressionReachesExactlyWhatTheJoinReaches`` pins that as a property rather than a
+    coincidence.
+    """
+    line = lines[lineno - 1]
+    if any(p.search(line) for p in _VALUE_IS_THE_DISCLOSURE):
+        return True
+    if lineno < len(lines):
+        nxt = lines[lineno]
+        if not any(p.search(nxt) for p in _VALUE_IS_THE_DISCLOSURE) and any(
+            p.search(line.rstrip() + nxt.lstrip()) for p in _VALUE_IS_THE_DISCLOSURE
+        ):
+            return True
+    if lineno >= 2:
+        prv = lines[lineno - 2]
+        if not any(p.search(prv) for p in _VALUE_IS_THE_DISCLOSURE) and any(
+            p.search(prv.rstrip() + line.lstrip()) for p in _VALUE_IS_THE_DISCLOSURE
+        ):
+            return True
+    return False
+
+
 def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = False) -> list[str]:
     """Forbidden-content hits in one file, as ``path:line: reason`` strings.
 
@@ -736,9 +784,10 @@ def scan_file(path: Path, rel_posix: str | None = None, *, show_context: bool = 
             continue
         # Bare is per LINE, not per hit -- see `_VALUE_IS_THE_DISCLOSURE`. A line carrying a
         # disclosure gets no context on ANY of its hits, including detectors that found
-        # something else entirely.
+        # something else entirely, and including a disclosure BROKEN ACROSS two lines, which
+        # matches neither of them on its own. `_carries_a_disclosure` is where that is decided.
         ctx = ""
-        if show_context and not any(p.search(line) for p in _VALUE_IS_THE_DISCLOSURE):
+        if show_context and not _carries_a_disclosure(lines, lineno):
             ctx = f": {line.strip()[:120]}"
         before = len(hits)
         # ``_`` is a word character, so a \b-anchored name pattern cannot see its token inside an
