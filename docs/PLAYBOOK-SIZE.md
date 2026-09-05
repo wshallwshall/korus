@@ -18,10 +18,12 @@ documented; the file loads in full and occupies the window on every request. The
 justification is asserted by the vendor with no experiment attached, and now has an affirmative
 null against it. Argue the rule on the ground that holds.
 
-**The study's largest effect is not about files.** Each function an agent generates carries about
-5.6 percent lower odds of compliance within that session (OR = 0.944). The abstract calls it
-exploratory, found during analysis. If it holds, adherence decays with session progress, which
-argues for shorter sessions, not shorter files.
+**The study's largest effect is not about files.** Compliance degrades as a session runs on. The
+abstract reports about 5.6 percent lower odds per generated function (OR = 0.944) but calls the
+relationship non-monotonic rather than a constant per-step effect, so the number does not
+extrapolate and forty functions does not mean halved. Exploratory, found during analysis, measured
+on one trivial annotation. Take the direction, not the dose: the lever it points at is session
+length and re-anchoring, not document shape.
 
 **"No study" and "no figure" are different sentences. Do not collapse them.** One length figure
 is product-enforced, and it is the only one here that is not a judgment: Claude Code warns when a
