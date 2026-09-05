@@ -209,7 +209,7 @@ class NoCardCarriesPrivateContent(unittest.TestCase):
     def test_each_leak_pattern_fires_on_a_planted_example(self):
         """The armed half. A pattern that matches nothing would pass the test above in silence."""
         planted = {
-            "artifact URL": "see https://claude.ai/code/artifact/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            "artifact URL": "see https://claude.ai/code/artifact/<uuid>",
             "bare UUID": "id aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee here",
             # `example` is one of the placeholder names scripts/security/scan_forbidden.py
             # allowlists. A name it does not allowlist makes THIS file trip the leak gate, which is
