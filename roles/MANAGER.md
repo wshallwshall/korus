@@ -128,6 +128,10 @@ carried here rather than re-derived by this seat.
 | Item | Rule |
 | --- | --- |
 | ONE PULL REQUEST PER WAVE for ledger-only output | A research wave producing seven backlog rows is one pull request, not seven. Same review, same text, one CI cycle, zero conflict resolutions. |
+| **ITS CEILING, measured 2026-09-05** | Of 48 branches touching `docs/BACKLOG.md` and conflicting with main, only 12 change that file ALONE. |
+| Why the other 36 are untouchable | They are Builder work whose banner update is REQUIRED to ride in the pull request implementing the item. No dispatch policy reaches them. |
+| So | Collapsing the 12 moves arrivals from about 9.7/hour to 7.7/hour. **The queue still diverges.** Worth doing, and not a queue fix. |
+| And batching CORRELATES FAILURE | One red check or one conflict blocks every item in the wave, where a bad row today blocks only itself. At heavy oversubscription that is a real trade. |
 | The measurement | Two dispatch waves added 17 pull requests in about 35 minutes. Open non-draft went 35 to 54 in one hour, and **zero** merged in it. **24 of the 54 were DIRTY**, overwhelmingly on the ledger tail. |
 | What those seven actually were | 13 to 69 lines each, of `docs/BACKLOG.md` only. They could have been one pull request. |
 | If an item must be its own pull request | The ledger edit is a FINAL COMMIT, ALONE. This section already states that rule. |
@@ -141,6 +145,15 @@ carried here rather than re-derived by this seat.
 | So | Pass `--repo MEFORORG/MessageFoundry` explicitly on anything you will act on. The vault was renamed to `wshallwshall/MessageFoundry-vault` the same day and the old slug STILL REDIRECTS, so a stale `--repo wshallwshall/MessageFoundry` still answers, and answers about the vault. |
 | **EXPIRY** | This holds only while the ledger is one file whose new rows land at one tail, and while conflict resolution is serial and manual. |
 | How to check the expiry | Re-examine it if `docs/BACKLOG.md` is split, if a merge driver is adopted for it, or if rows stop being appended in number order. |
+
+**Worked example, 2026-09-05, on when to brief NOTHING.** 62 open non-draft pull requests against a
+merge rate of 2.2 to 2.7 an hour. 29 opened in one three-hour window, or 9.7 an hour.
+
+That is a utilisation of 3.6 to 5.0. **Above 1.0 a queue does not settle at some depth. It grows
+without bound.**
+
+Median age at merge was already 15 hours and the oldest open item was two days. **At that point
+briefing anything new subtracts from the fleet's throughput.**
 
 **Why this is a Manager rule and not a Builder one.** A Builder cannot batch its own output: it is
 dispatched against one item and its process ends when its pull request opens.
@@ -173,6 +186,17 @@ Before you brief a batch:
 1. **Name the paths each item will touch**, and put them in the brief.
 2. **Check them against what is already open.** A path two open pull requests both touch is a
    conflict you have scheduled.
+**Path contention is the SHAPE. Waiting time is the CAUSE.** Measured on 15 pull requests changing
+only `docs/BACKLOG.md`: of those whose merge base trailed main by four or more ledger commits, 5 of
+5 were dirty. Of those trailing by one or none, 0 of 10 were. No misclassifications.
+
+The dirty five were 25 to 28 hours old and the clean ten were under two. The fleet lands a ledger
+commit about every 35 minutes, so a pull request that waits overnight wakes behind 30 of them.
+
+**So do not cut a ledger row you cannot land soon.** A row that lands within about two hours
+collides with nothing; the same row a day later collides with everything. If a batch cannot land
+today, the cheaper act is not to file the rows today.
+
 3. **Treat the ledger as contended by default.** Every item touches it. Either batch ledger updates
    separately from the work, or expect your entries to serialise behind each other.
 
