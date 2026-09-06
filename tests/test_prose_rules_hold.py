@@ -152,8 +152,26 @@ def skills_prose_files() -> list[str]:
 
     SO THE RULE IS THE CORPUS FOLLOWS THE PROSE. Moving a page out of `roles/` does not retire its
     prose obligations, and the next split has to add its destination here in the same change.
+
+    THE VENDORED `speckit-*` SKILLS ARE NOT IN IT, and the reason is arithmetic rather than taste.
+    They are Spec Kit 0.16.4 install output: `metadata.author` reads `github-spec-kit`, `metadata.
+    source` names the upstream template, `.specify/integrations/claude.manifest.json` lists these
+    exact paths, `.specify/init-options.json` pins that version, and `git log fa7ff92..HEAD` returns
+    no commit touching any of them.
+
+    THEY CARRY MOST OF THE DEBT AND NONE OF IT IS PAYABLE. Of 62 fat paragraphs, 44 are theirs; of
+    37 long sentences, 25 are. Paying either means diverging from a pinned upstream, and a bump to
+    0.17 would redden the run for reasons that have nothing to do with writing here.
+
+    AND THE RATCHET COULD NEVER HAVE FIRED WITH THEM IN. The tighten arm asks for re-derivation at
+    `baseline - slack`. Sweeping every payable fat paragraph moves 62 to 44 against an arm at 31;
+    every payable long sentence moves 37 to 25 against an arm at 19. Perfect effort left both arms
+    silent. At 18 and 12 the arms sit at 9 and 6, which pages korus owns can reach.
+
+    `.specify/` ITSELF WAS ALREADY EXEMPT FOR THIS REASON, so leaving the same vendor's other output
+    in would have given one release two answers inside one file.
     """
-    return _markdown_under((".claude/skills/",))
+    return [f for f in _markdown_under((".claude/skills/",)) if "/speckit-" not in f]
 
 
 def prose_files() -> list[str]:
@@ -164,8 +182,10 @@ def prose_files() -> list[str]:
     the corpus fires zero times on all three, and zero plus zero is still zero.
 
     `.claude/skills/` JOINED ON 2026-09-06 AT ZERO COST, measured rather than assumed: B-3, B-5 and
-    B-6 return 0 hits each across its 28 pages. That is the same reason they widened to the union in
-    the first place -- a rule the corpus already satisfies costs nothing to enforce.
+    B-6 return 0 hits each across all 28 skill pages, vendored ones included. That is the same
+    reason they widened to the union in the first place -- a rule the corpus already satisfies costs
+    nothing to enforce. The ten vendored pages are excluded from the RATCHETS, which carry numbers,
+    and would have been harmless in this scan, which does not.
     """
     return docs_prose_files() + role_prose_files() + skills_prose_files()
 
@@ -379,6 +399,7 @@ class BannedConstructionsAreAbsent(unittest.TestCase):
 UNREAD_PREFIXES = (
     ".specify/",   # vendored Spec Kit templates. Not written here and not read for guidance.
     "tests/",      # fixtures and this file's own README. Test data, not pages.
+    ".claude/skills/speckit-",  # Spec Kit 0.16.4 install output. Same vendor as `.specify/` above.
 )
 
 UNREAD_PAGES = frozenset({
@@ -733,10 +754,15 @@ ROLES_LONG_SENTENCE_SLACK = 70
 ROLES_FAT_CELL_SLACK = 13
 ROLES_FAT_PARAGRAPH_SLACK = 98
 
-# `.claude/skills/`, MEASURED 2026-09-06 THROUGH THIS FILE'S OWN `_measure` OVER ITS 28 TRACKED
-# PAGES, 37,777 words. A third corpus rather than a seat in either existing one, for the reason
-# `_markdown_under` gives at the scale it was written for: absorbing 62 paragraphs into the docs cap
-# would make a cap that reached zero over two sweeps unreachable again.
+# `.claude/skills/`, MEASURED 2026-09-06 THROUGH THIS FILE'S OWN `_measure` OVER THE 18 AUTHORED
+# PAGES, 22,159 words. The ten vendored `speckit-*` pages are excluded, and `skills_prose_files`
+# carries the evidence and the arithmetic. A third corpus rather than a seat in either existing one,
+# for the reason `_markdown_under` gives at the scale it was written for.
+#
+# THE FIRST VERSION OF THIS BLOCK READ 37 / 0 / 62 OVER ALL 28 PAGES, and it is recorded rather than
+# quietly replaced because the failure it carried is the interesting part. The numbers were real and
+# the corpus was wrong, so every arm went green over a subject two thirds of which nobody here could
+# edit. A measurement can be exactly right and still measure the wrong thing.
 #
 # THE FAT-CELL FIGURE IS ZERO, SO THAT ONE IS A CAP FROM THE START. It is the only baseline in this
 # file that never had debt to pay, and the next 40-word cell written into a skill fails the run
@@ -746,17 +772,21 @@ ROLES_FAT_PARAGRAPH_SLACK = 98
 # from `roles/` by a mechanical split that moved whole sections and reworded none, so the two
 # corpora hold the same authorship at different dates. What the gap measures is which pages the
 # split happened to carry, not that one set is better prose than the other.
-SKILLS_BASELINE_LONG_SENTENCES = 37
+SKILLS_BASELINE_LONG_SENTENCES = 12
 SKILLS_BASELINE_FAT_TABLE_CELLS = 0    # a CAP from the start, not a ratchet. Never raise it.
-SKILLS_BASELINE_FAT_PARAGRAPHS = 62
+SKILLS_BASELINE_FAT_PARAGRAPHS = 18
 
-# Near half, matching the docs slacks rather than the `roles/` tenth. The `roles/` comment above
-# gives the reason: at 708 and 986 a half would let a whole file be swept without the ratchet ever
-# asking to be tightened. At 37 and 62 the opposite risk binds, and a tenth would be 3 and 6, where
-# every ordinary edit reddens the run.
-SKILLS_LONG_SENTENCE_SLACK = 18
+# Near half, matching the docs slacks rather than the `roles/` tenth. THE TEST THAT MATTERS IS
+# WHETHER THE TIGHTEN ARM CAN EVER FIRE: at 18 and 12 it sits at 9 and 6, and sweeping pages korus
+# owns reaches both. The rejected 62 and 37 put it at 31 and 19, which perfect effort could not
+# reach. Check that arithmetic before changing either number.
+#
+# THE `roles/` COMMENT ABOVE CITES 708 AND 986. Its constants three lines on read 417 and 489, and
+# both arrived in `e5fefd5`. Those two figures have no instrument that reproduces them today, so
+# nothing here rests on them; the live constants are what this block was compared against.
+SKILLS_LONG_SENTENCE_SLACK = 6
 SKILLS_FAT_CELL_SLACK = 5
-SKILLS_FAT_PARAGRAPH_SLACK = 31
+SKILLS_FAT_PARAGRAPH_SLACK = 9
 
 # A STOP INSIDE EMPHASIS IS STILL A STOP. This document set writes `**A claim.** The evidence.`
 # constantly, and the bare `(?<=[.!?])\s+` form never fired on it, because the character after the

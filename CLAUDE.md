@@ -130,7 +130,8 @@ pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -Fix
 ## Writing rules
 
 [HOUSE-STYLE.md](docs/HOUSE-STYLE.md) states them, and `tests/test_prose_rules_hold.py` enforces the
-unambiguous ones over three corpora: `docs/`, `roles/` and `.claude/skills/`.
+unambiguous ones over three corpora: `docs/`, `roles/` and the authored half of
+`.claude/skills/`.
 
 **That sentence read "against every tracked page" until 2026-09-06, and it was false.** The playbook
 split moved 6,336 lines into `.claude/skills/`, which no corpus read. The scan stayed green because
