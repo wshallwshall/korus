@@ -65,6 +65,19 @@ class _RepoCase(unittest.TestCase):
         self.state = self.repo / ".git" / "ccx-coord"
         self.state.mkdir(parents=True, exist_ok=True)
 
+        # The worktree path a ledger row actually carries, as scripts/coord/alloc.ps1 and claim.ps1
+        # record it: `git rev-parse --path-format=absolute --show-toplevel`. The hook reads the same
+        # command, so in production the two sides cannot disagree.
+        #
+        # Do NOT default these rows to `str(self.repo)`. On a GitHub Windows runner %TEMP% is the 8.3
+        # SHORT form, so Python hands back C:\Users\RUNNER~1\... while git reports the long
+        # C:/Users/runneradmin/... . That mismatch is a property of the FIXTURE, not of the hook, and
+        # it reddened seven tests here while every one passed on a machine whose account name is short
+        # enough to need no 8.3 alias.
+        self.repo_path = self.git(
+            "rev-parse", "--path-format=absolute", "--show-toplevel"
+        ).stdout.strip()
+
     def git(self, *args):
         return subprocess.run(
             ["git", *args], cwd=self.repo, capture_output=True, text=True, timeout=TIMEOUT_SECONDS
@@ -77,7 +90,7 @@ class _RepoCase(unittest.TestCase):
         d = self.state / "alloc" / kind
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{number}.json").write_text(
-            json.dumps({"number": number, "kind": kind, "worktree": str(worktree or self.repo)}),
+            json.dumps({"number": number, "kind": kind, "worktree": str(worktree or self.repo_path)}),
             encoding="ascii",
         )
 
@@ -90,7 +103,7 @@ class _RepoCase(unittest.TestCase):
                     "key": key,
                     "note": note,
                     "branch": branch if branch is not None else self.branch(),
-                    "worktree": str(worktree or self.repo),
+                    "worktree": str(worktree or self.repo_path),
                 }
             ),
             encoding="ascii",
@@ -141,7 +154,7 @@ class ItReportsWhatThisWorktreeHolds(_RepoCase):
 
     def test_a_path_spelled_differently_still_matches(self):
         """A raw string compare reports two spellings of one worktree as two worktrees."""
-        self.write_alloc("adr", "0011", worktree=str(self.repo).replace("\\", "/").upper())
+        self.write_alloc("adr", "0011", worktree=str(self.repo_path).replace("\\", "/").upper())
         self.assertIn("0011", self.ctx())
 
 
@@ -272,7 +285,7 @@ class ItRestoresTheDeclarationHalfToo(_RepoCase):
             "goal": goal,
             "done_when": "the suite is green",
             "out_of_scope": "branch protection",
-            "worktree": str(worktree or self.repo),
+            "worktree": str(worktree or self.repo_path),
             "branch": branch if branch is not None else self.branch(),
             "declared_at": "2026-09-05T00:00:00.0000000+00:00",
         }
