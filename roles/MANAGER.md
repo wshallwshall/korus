@@ -112,6 +112,50 @@ with a pairwise conflict check; a self-enqueue takes a slot from a checked pull 
 
 DO NOT ASK BEFORE PUSHING OR OPENING A PULL REQUEST. Unpushed work is the only state git cannot recover, and an open pull request consumes nothing while it waits.
 
+### 2a. The ledger tail is a serialisation point, and one pull request per item lands on it hardest
+
+**A wave of N items filed as N pull requests does not cost N times one pull request. It costs N CI
+cycles PLUS N-1 conflict resolutions, and the resolutions are serial and land on the Lander.**
+
+Backlog numbers ascend, so every new item appends at the same tail of `docs/BACKLOG.md`. Separate
+pull requests for separate items therefore collide maximally by construction: each landing
+re-conflicts the next. That is a property of the file and the numbering, not a coordination failure
+anyone can fix downstream.
+
+Measured by the Lander on `MEFORORG/MessageFoundry`, 2026-09-05. The figures below are its readings,
+carried here rather than re-derived by this seat.
+
+| Item | Rule |
+| --- | --- |
+| ONE PULL REQUEST PER WAVE for ledger-only output | A research wave producing seven backlog rows is one pull request, not seven. Same review, same text, one CI cycle, zero conflict resolutions. |
+| The measurement | Two dispatch waves added 17 pull requests in about 35 minutes. Open non-draft went 35 to 54 in one hour, and **zero** merged in it. **24 of the 54 were DIRTY**, overwhelmingly on the ledger tail. |
+| What those seven actually were | 13 to 69 lines each, of `docs/BACKLOG.md` only. They could have been one pull request. |
+| If an item must be its own pull request | The ledger edit is a FINAL COMMIT, ALONE. This section already states that rule. |
+| What that rule does not say | **The author is GONE.** A Builder's process exits when its pull request opens. |
+| So | A branch interleaving ledger and code commits can be rebased cleanly by nobody. |
+| The worked example | PR 832 spread its `docs/BACKLOG.md` edits through code commits and needed a hand-resolved merge. |
+| Announce the files the pull requests will CHANGE, never the items' SUBJECTS | A dispatch announce naming `auth/service.py`, `api/app.py` and `config/settings.py` was read downstream as a collision forecast. The pull requests touched `docs/BACKLOG.md` and one test file; those paths were what the items were ABOUT. |
+| So, for a research wave | The changed file is almost always the ledger alone. Say that. |
+| Verify the remote before sizing a wave | `gh` answers plausibly against the wrong repository rather than failing. |
+| The measured case | A Manager ran `gh pr list` against the vault, read **1** open pull request, and sized a ten-subagent dispatch on it. The engine had **38**. |
+| So | Pass `--repo MEFORORG/MessageFoundry` explicitly on anything you will act on. The vault was renamed to `wshallwshall/MessageFoundry-vault` the same day and the old slug STILL REDIRECTS, so a stale `--repo wshallwshall/MessageFoundry` still answers, and answers about the vault. |
+| **EXPIRY** | This holds only while the ledger is one file whose new rows land at one tail, and while conflict resolution is serial and manual. |
+| How to check the expiry | Re-examine it if `docs/BACKLOG.md` is split, if a merge driver is adopted for it, or if rows stop being appended in number order. |
+
+**Why this is a Manager rule and not a Builder one.** A Builder cannot batch its own output: it is
+dispatched against one item and its process ends when its pull request opens.
+
+**Granularity is decided at dispatch and nowhere else.** A convention written into a Builder brief
+binds nobody after the fact, because there is nobody left to bind.
+
+**What this does not say.** It does not say small pull requests are bad.
+[LANDER.md](LANDER.md), *Throughput -- BATCH, do not serialise*, draws the line: telling Builders
+"small and independent is the right shape" is *"correct for avoiding CONFLICTS and exactly wrong for
+a queue rate-limited by PR COUNT"*, and the two pieces of advice *"look identical at the branch level
+and diverge only at the PR level"*.
+
+Batch items that share a file. Keep genuinely independent code changes separate.
+
 ---
 
 ## 3. A claim on an item is not a claim on a path
