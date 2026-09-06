@@ -145,29 +145,35 @@ Run `pytest tests/test_prose_rules_hold.py` before pushing prose.
 
 **Pushing, opening a PR and merging need the Owner's explicit approval.**
 
-**The review gate is advisory here, not enforced, and that is a known gap rather than a design.**
-Live branch protection on `main` requires only `gates (ubuntu-latest)` and `gates (windows-latest)`.
-The `gate` job from `review-gate.yml` is not among them, so a PR can merge with the review gate red.
+**RETIRED 2026-09-04: there is no review gate here, and no label blocks a merge.** The Owner removed
+it, and `review-gate.yml` was deleted from `.github/workflows/` in #47.
 
-Read that as a rule about people, not machines: **do not merge an unlabelled PR**, and know that
-nothing will stop you. `.github/workflows/required-workflow-state.yml` reports the gap daily.
-Closing it means adding `gate` to the required contexts, which is the Owner's call.
+Measured at `53ac1bd`: `git grep -n reviewed origin/main -- .github/` returns one hit, a comment in
+`site-build.yml` using the word in prose. No workflow reads or applies the label.
 
-The `reviewed` label is the gate and any seat may apply it, so a missing Reviewer is not what
-blocks a PR.
+Control, same command shape: `git grep -c gates.yml origin/main -- .` returns hits in ten files, so
+the pattern was live rather than empty.
 
-The gate has three states, and the refusal is the only signal it carries that cannot be faked:
+An earlier draft of this paragraph published one hit as none and ten files as five. The five came
+through a `head -5` pipe. Retained here because a corrected number teaches less than a named cause.
 
-| Label | Result |
-|---|---|
-| `changes-requested` | Fails, loudly. A recorded refusal blocks. |
-| `reviewed`, no refusal | Passes. |
-| Neither | Fails as pending. A PR nobody read does not merge. |
+Live branch protection on `main` requires `gates (ubuntu-latest)` and `gates (windows-latest)`, and
+nothing else. **An unlabelled PR merges.** Do not wait for the label, and do not apply one.
 
-A push strips `reviewed`, because a review of an older commit says nothing about a newer one.
+`.github/workflows/required-workflow-state.yml` still runs daily. It compares whatever `main`
+requires against the workflows on disk, so it reports the next gap of this shape.
 
-**The label records that a step happened, not that anyone read the diff.** Post the reading beside
-it. Article II.
+The retired text follows, so a seat that remembers the old rule meets the correction here rather than
+re-deriving it. It said a PR could merge with the review gate red, and read that as a rule about
+people: do not merge an unlabelled PR.
+
+It also gave the gate three states. `changes-requested` failed loudly, `reviewed` with no refusal
+passed, and neither one failed as pending. A push stripped `reviewed`, because a review of an older
+commit says nothing about a newer one.
+
+The label recorded that a step happened, not that anyone read the diff, and any seat could apply it
+to its own PR. Any gate keyed on a self-appliable mark has that hole. Post the reading beside the
+merge. Article II.
 
 Before trusting any "is it merged?" answer:
 
