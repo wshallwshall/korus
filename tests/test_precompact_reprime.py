@@ -70,8 +70,8 @@ class _RepoCase(unittest.TestCase):
         # command, so in production the two sides cannot disagree.
         #
         # Do NOT default these rows to `str(self.repo)`. On a GitHub Windows runner %TEMP% is the 8.3
-        # SHORT form, so Python hands back C:\Users\RUNNER~1\... while git reports the long
-        # C:/Users/runneradmin/... . That mismatch is a property of the FIXTURE, not of the hook, and
+        # SHORT form, so Python hands back the 8.3 alias of the account directory while git reports
+        # its long spelling. That mismatch is a property of the FIXTURE, not of the hook, and
         # it reddened seven tests here while every one passed on a machine whose account name is short
         # enough to need no 8.3 alias.
         self.repo_path = self.git(
