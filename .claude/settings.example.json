@@ -1,5 +1,74 @@
 {
+  "_comment": [
+    "EXAMPLE ONLY, AND INERT BY CONSTRUCTION. The harness loads settings.json and",
+    "settings.local.json; it never loads this file. That is the point: .gitignore records that",
+    "anything tracked under .claude/ must carry `.example.` in its name, so a tracked control can",
+    "never look installed when it is not.",
+    "",
+    "TO USE IT: copy the blocks you want into your own settings, and replace every",
+    "REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT with a real absolute path. The placeholder is loud",
+    "on purpose -- a hook with a wrong path fails silently, and a silent hook is indistinguishable",
+    "from a hook that decided to allow.",
+    "",
+    "These are the HAND-WIRED hooks. The gates that an installer writes -- the worktree gate, the",
+    "collision gate, the session banner, the announce hook -- are not here. docs/HOOKS.md has the",
+    "full event map and says which installer owns which."
+  ],
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/role-card-inject.ps1\"",
+            "timeout": 15,
+            "statusMessage": "Reading this worktree's role card"
+          },
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/mail-drain.ps1\" -Event SessionStart",
+            "timeout": 15,
+            "statusMessage": "Reading this worktree's session mail"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/mail-drain.ps1\" -Event Stop",
+            "timeout": 15,
+            "statusMessage": "Consuming the session mail this session displayed"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/context-budget.ps1\"",
+            "timeout": 15,
+            "statusMessage": "Reading this session's context budget"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/precompact-reprime.ps1\"",
+            "timeout": 15,
+            "statusMessage": "Carrying held ledger state across the compaction"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash|PowerShell",
@@ -9,6 +78,12 @@
             "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/block-blanket-git-stage.ps1\"",
             "timeout": 15,
             "statusMessage": "Checking for a blanket git stage"
+          },
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"REPLACE_WITH_ABSOLUTE_PATH_TO_YOUR_CHECKOUT/scripts/hooks/block-api-burn.ps1\"",
+            "timeout": 15,
+            "statusMessage": "Checking for a gh polling loop"
           }
         ]
       }

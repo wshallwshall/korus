@@ -33,7 +33,7 @@ Every installer refuses to run inside a Claude Code session, so use a plain `pws
 | Limit | Consequence |
 |---|---|
 | PowerShell 7, Windows-first | Most of these scripts are PowerShell. The POSIX paths exist (the process table falls back to `ps -A -o pid=,ppid=`) but Windows is where they are exercised. |
-| Announce needs the desktop client (the `ccd_session_mgmt` messaging MCP) | **Absent on a plain CLI install.** `scripts/hooks/announce-session.ps1` never sends; it asks the model to send. Without the MCP the hook fires and finds peers, then names tools the model cannot call. Leave it uninstalled, or create the `OFF` file. |
+| Announce names the desktop client's MCP tools | **The MCP is absent on a plain CLI install**, so the hook names tools the model cannot call. Teach it the built-in `ListAgents` and `SendMessage`, which a CLI session has from v2.1.234. Do not turn announce off. |
 | The session record schema is a vendor contract | Every fence here rests on `<config-root>/sessions/<pid>.json`, which the client writes. We do not own its shape, location or lifetime. It can break under you. |
 | `list_sessions` cannot see every session kind | It enumerates sessions the desktop app itself spawned. Editor-extension sessions are never entered into it. See below. |
 | Nothing has a heartbeat | Nothing here can *prove* a session is gone. Only the positive answer ("it is live") is trustworthy. |
@@ -564,7 +564,7 @@ avoids.
 
 ### The id rules: The most valuable part of the hook
 
-There are **two id namespaces in play and they share no characters.**
+There are **three id namespaces in play, and no two of them share characters.**
 
 **Trap.** Taking the 8-character session id printed in a coordination banner and passing it to the
 session-messaging tool.
@@ -572,6 +572,14 @@ session-messaging tool.
 **Why it is wrong.** The banner id is the **registry** id from `<config-root>/sessions/<pid>.json`.
 The messaging MCP uses a different identifier: measured, the two ids for **one** session shared no
 characters. Branch does not join them: the rosters reported different branches for one checkout.
+
+**The third is the built-in channel.** Claude Code's own `ListAgents` names a peer as a session
+**name** plus a short ref, and that is a third form again. Measured on a single session, all three
+at once: an 8-character registry id, a `local_`-prefixed MCP id, and a name with a 6-character ref.
+
+**It takes no cwd at all.** `SendMessage` addresses by name, with no other address syntax, so the
+join key below does not reach it. Its roster also stops at the config root, where the registry spans
+every root. See [Session mail](SESSION-MAIL.md#who-actually-needs-this).
 
 **Rule, in order:**
 
@@ -586,7 +594,8 @@ characters. Branch does not join them: the rosters reported different branches f
 3. Send to the `sessionId` from that row. A usable messaging id starts with `local_`.
 4. Message at most the peers you actually reached, one message each.
 
-**cwd is the only join key.**
+**cwd is the only join key for those two.** The built-in channel needs none: it is addressed
+by name.
 
 ### A matched row is enough: `isRunning` is not a reachability flag
 

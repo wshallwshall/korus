@@ -40,9 +40,11 @@ the portable part of the set.
 
 ## The event map
 
-Three harness events carry the controls here: `SessionStart` when a chat opens, `PreToolUse` before
-a tool call runs, and `UserPromptSubmit` when you send a prompt. Read the **Posture** column first:
-*fail open* lets work through when the control breaks, *fail closed* refuses it.
+Four harness events carry the controls here: `SessionStart` when a chat opens, `PreToolUse` before
+a tool call, `UserPromptSubmit` when you send a prompt, and `PreCompact` before a summary.
+
+Read the **Posture** column first. *Fail open* lets work through when the control breaks, and
+*fail closed* refuses it.
 
 | Event | Script | Matcher | What it decides | Posture |
 |---|---|---|---|---|
@@ -52,7 +54,13 @@ a tool call runs, and `UserPromptSubmit` when you send a prompt. Read the **Post
 | `PreToolUse` | `scripts/hooks/collision_gate.ps1` | `Edit\|Write\|MultiEdit\|NotebookEdit` | Denies an edit to a file a live peer **worktree** has uncommitted changes in -- your own worktree is skipped, so a second session in it is invisible. Reports, without denying, a file already committed on a live peer's branch. | fail open, **loud** |
 | `PreToolUse` | `scripts/hooks/block-blanket-git-stage.ps1` | `Bash\|PowerShell` (hand-wired) | Denies `git add -A/--all/-u/.` and `git commit -a/-am/--all`. | fail open, **loud** |
 | `PreToolUse` | `scripts/hooks/steer-inject.ps1` | `*` (opt-in, hand-wired) | Delivers a queued steering note as `additionalContext` at the next tool-call boundary. Decides nothing. | fail open, silent |
+| `SessionStart` | `scripts/hooks/role-card-inject.ps1` | -- (hand-wired) | Injects this worktree's role card, resolved from `.claude/seat.local.txt` then `$env:KORUS_SEAT`. **Never guesses from a branch or directory name** -- it stays silent instead, because a wrong card outranks the document the session should be reading. Decides nothing. | fail open, silent |
 | `UserPromptSubmit` | `scripts/hooks/announce-session.ps1` | -- | Resolves live peers and asks the model to announce itself to them. Decides nothing. | fail open, **loud** |
+| `UserPromptSubmit` | `scripts/hooks/context-budget.ps1` | -- (hand-wired) | Reports how full **this session's context window** is, at 0.75/0.85/0.92. Refuses to print a percentage when the count exceeds the assumed window, because the ceiling is a default and not a reading. Never blocks. Decides nothing. | fail open, silent below 0.75 |
+| `PreCompact` | `scripts/hooks/precompact-reprime.ps1` | -- (hand-wired) | Reads back what a compaction drops: the **declaration** `scripts/coord/seat.ps1` recorded, and the **ledger** of allocations, claims and unpushed work this worktree holds. Never invents a goal, and flags a record from another branch rather than restoring it. Decides nothing. | fail open, silent |
+| `PreToolUse` | `scripts/hooks/block-api-burn.ps1` | `Bash\|PowerShell` (hand-wired) | Denies `gh run watch`, any `gh --watch`, and hand-rolled `gh` poll loops. Every seat draws on one shared 5000/hr GitHub budget, and the seat that pays is not the seat that spent. | fail open, **loud** |
+| `SessionStart` | `scripts/hooks/mail-drain.ps1` | -- (hand-wired) | **Renders** this worktree's session mail and leaves it in the inbox. Consuming here would lose mail to a phantom: one measured launch fired six `SessionStart` events and only one session ever submitted a prompt. Decides nothing. | fail open, silent |
+| `Stop` | `scripts/hooks/mail-drain.ps1` | -- (hand-wired) | **Consumes** the messages this session displayed, and only those: an exclusive open, a receipt, a move out. A discarded session never reaches `Stop`. Speaks only when it filed something, but every fault path still speaks. Decides nothing. | fail open, silent unless it filed |
 
 | Git hook | Checker | What it decides | Posture |
 |---|---|---|---|
@@ -69,16 +77,16 @@ Installers:
 | `scripts/worktree/install-selfheal.ps1` | selfheal backstop | one config dir at a time, as an installed **copy** |
 | `scripts/coord/install-git-hooks.ps1` | claim gate, push guard | the clone's shared git hooks directory |
 
-Nothing installs `block-blanket-git-stage.ps1`, `steer-inject.ps1`, or `seq_check.py`. Wire those by
-hand.
+No installer wires the scripts marked **hand-wired** in the event map, and none wires
+`seq_check.py`. Wire those yourself.
 
 **The goal.** Switch on a control no installer covers.
 
-**What to do.** Each of the three goes somewhere different:
+**What to do.** They go to three different places:
 
 | Control | Where it goes |
 |---|---|
-| Blanket-stage guard | Copy its tracked row out of `.claude/settings.example.json` into a real `settings.json`, and replace the loud placeholder path |
+| Blanket-stage guard, API-burn guard, role-card injector, context budget, precompact reprime, mail drain | Copy their tracked rows out of `.claude/settings.example.json` into a real `settings.json`, and replace every loud placeholder path |
 | Steering injector | A `settings.local.json` row, per worktree. [Steering](STEERING.md) has it |
 | Sequence gate | **Not a settings row at all** -- a `pre-commit` hook you own. [Wiring the pre-commit hook](SEQUENCE-ALLOC.md#wiring-the-pre-commit-hook) has the snippet |
 

@@ -944,3 +944,61 @@ class TheAuthoredVerbatimExemptionStaysVisible(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+#: Phrases that assert the session-mail lane is not built. Matched ONLY on a line that also links to
+#: the page, so ordinary prose about some other unshipped thing never trips this.
+UNSHIPPED_MARKERS = ("not shipped", "not implemented", "ships nothing")
+MAIL_PAGE = "session-mail.md"
+
+
+def stale_mail_rows(text: str) -> list[tuple[int, str]]:
+    """Lines that link to the session-mail page AND call the lane unbuilt."""
+    out: list[tuple[int, str]] = []
+    for n, line in enumerate(text.split("\n"), 1):
+        low = line.lower()
+        if MAIL_PAGE in low and any(m in low for m in UNSHIPPED_MARKERS):
+            out.append((n, line.strip()))
+    return out
+
+
+class TheMailLaneShipsEverywhereOrNowhere(unittest.TestCase):
+    """A page that ships must not be called unshipped by the pages that link to it.
+
+    WHAT THIS EXISTS FOR. 004fc72 rewrote docs/SESSION-MAIL.md from "This page ships nothing" to
+    "This lane now ships", and left two rows in docs/RUNNING-MULTIPLE-SESSIONS.md saying the
+    opposite. Both rows survived the commit that shipped the lane, the commit that wired it, and a
+    later fix to the same page. A reader routed by either row would go and build what exists.
+
+    Nothing in this suite could tell a stale cross-reference from a current one. DocClaimsMatchTheCode
+    checks claims against code; this checks two documents against each other, which is where the
+    drift actually was.
+    """
+
+    def test_the_page_declares_that_the_lane_ships(self):
+        """The anchor. If this ever flips back, the rule below is void and must be revisited."""
+        text = t.read(t.REPO_ROOT / "docs" / "SESSION-MAIL.md")
+        self.assertIn("This lane now ships", text)
+
+    def test_no_cross_reference_calls_the_lane_unshipped(self):
+        offenders: list[str] = []
+        for rel in tracked_files():
+            if not rel.endswith(".md") or rel.endswith("SESSION-MAIL.md"):
+                continue
+            for n, line in stale_mail_rows(t.read(t.REPO_ROOT / rel)):
+                offenders.append(f"{rel}:{n}  {line[:120]}")
+        self.assertEqual(
+            [],
+            offenders,
+            "these lines link to SESSION-MAIL.md and call the lane unbuilt, but it ships:\n"
+            + "\n".join(offenders),
+        )
+
+    def test_the_scan_catches_a_planted_stale_row(self):
+        """The control. A drift check that cannot fail reports agreement rather than finding it."""
+        planted = "| [Session mail](SESSION-MAIL.md) | designed there, **not shipped** |"
+        self.assertEqual(1, len(stale_mail_rows(planted)))
+
+    def test_the_scan_does_not_fire_on_an_unrelated_unshipped_thing(self):
+        """The other half of the control: a line about something else staying unbuilt is fine."""
+        self.assertEqual([], stale_mail_rows("The urgent mid-turn tier is **not shipped**."))
