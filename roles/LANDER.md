@@ -305,6 +305,7 @@ The capability is enabled and it did not fire. **So an armed PR still needs a ma
 | The measured case | One PR was update-branched four times, and every re-BEHIND was caused by the lander landing something else. |
 | A freeze is free | A held ARMED+BEHIND PR loses nothing by waiting, because it could not merge while BEHIND. |
 | Why it is the non-obvious move | Stopping the queue to let one through is the only thing that delivers a specific PR on request. |
+| The API budget is SHARED with your subagents | 5,000/hour across the main loop, every `gh` call and every subagent, so a fleet divides it. Check with a real call, never the gauge. `lander-reach-for-an-instrument`, *The GitHub API budget is SHARED*. |
 | A quiet fleet is not a drained queue | Nothing fires when landings STOP, so count open PRs every pass rather than waiting to be told. `lander-empty-queue`, *An edge-triggered watch reports transitions*. |
 | But only while you keep advancing | Under `strict: true` a serialised queue drains only while somebody pushes the front forward. Stop entirely and the stall re-forms silently. |
 | Measured 2026-08-22 | The same stall arrived twice in one session, the second within about twenty minutes of the queue going quiet: three armed BEHIND PRs, all green, zero failures. |
@@ -469,6 +470,34 @@ has happened: 13 PRs merged in one drain while the open count still grew from 3 
 | A second criterion: ledger dispositionability | An arc of work dispositioned in the ledger as ONE item should not be split across PRs at all. |
 | Why | Splitting makes the disposition pass and the banner flip harder, and those are the two acts this seat is already slowest at. |
 | Measured 2026-08-22 | A lander took one larger merge over merging a smaller armed head and following up, on both grounds at once. |
+
+### 4j. Poll the QUEUE ENTRY, not the pull request. They disagree, and the entry is the true one
+
+**Measured 2026-09-05. Enqueuing four pull requests landed one.** 920, 915, 911 and 916 went in as
+one group; 911 and 915 flipped to `UNMERGEABLE` inside the queue and were evicted; 920 merged alone.
+
+| Item | Rule |
+| --- | --- |
+| The two states disagree, and `gh pr view` shows the wrong one | Every evicted entry read `mergeable=MERGEABLE`, `mergeStateStatus=CLEAN` at the pull-request level, with an unmoved head, while its queue entry read `UNMERGEABLE`. |
+| Not a transient | 911 held that split state across three polls over 90 seconds. |
+| So | Poll the QUEUE ENTRY state. A seat watching only the pull request sees healthy pull requests while some of them are being dropped. |
+| A queued entry is NOT a landed change | Say "queued". Say "landed" only on `merged=true`. |
+| Why that wording matters | The board reported a four-pull-request batch and the fleet got one. A status board reporting throughput nobody received hides the real bottleneck from whoever reads it. |
+| A clean `git merge-tree` matrix is not permission to enqueue | It answers "do these conflict with each other". "Will the queue take these" is a different sentence, and that night the first was green while the second was not. |
+| `dequeuePullRequest` failing is not always a failure | `Failed to remove PR #N` often means GitHub has ALREADY evicted it. Re-read the queue rather than retrying. |
+| Its GraphQL input field is `id` | Not `pullRequestId`. The wrong name returns a schema error that reads like a permissions problem. |
+| **THE CAUSE IS UNKNOWN, AND STAYS UNKNOWN** | Record it as an unexplained anomaly. Filling the gap with a tidy story is how a playbook acquires a rule nobody can defend. |
+| **EXPIRY** | Someone establishes why entries are dropped. Until then no rule here may rest on a cause. |
+
+**RETRACTED BEFORE IT WAS EVER WRITTEN DOWN, and kept so nobody re-derives it.** The proposal was
+*"`update-branch` every pull request onto current main BEFORE enqueuing"*, justified because all
+three evicted entries shared a stale base.
+
+**Its own control refuted it.** PR 905 was deliberately left in the queue on that same stale base.
+It survived TWO head merges without eviction.
+
+So a stale base does not cause eviction, and the queue does rebase entries across a head merge.
+That supports *Never `gh pr update-branch`* rather than undermining it.
 
 ### 4i. Before you arm, check what the merge leaves in the RECORD
 
