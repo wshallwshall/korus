@@ -130,7 +130,15 @@ pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -Fix
 ## Writing rules
 
 [HOUSE-STYLE.md](docs/HOUSE-STYLE.md) states them, and `tests/test_prose_rules_hold.py` enforces the
-unambiguous ones against every tracked page.
+unambiguous ones over three corpora: `docs/`, `roles/` and `.claude/skills/`.
+
+**That sentence read "against every tracked page" until 2026-09-06, and it was false.** The playbook
+split moved 6,336 lines into `.claude/skills/`, which no corpus read. The scan stayed green because
+its subject had been cut, not because the prose was clean.
+
+A test now fails on tracked Markdown that no corpus reads, so the next split cannot repeat it. It
+found five more pages on its first run, this one among them. They are listed in that test with what
+each would cost to admit.
 
 Three constructions are banned outright: an opener announcing that what follows matters, padding
 such as "in order to", and a sentence asserting its own significance. Paragraphs stop at 300
