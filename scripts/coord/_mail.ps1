@@ -118,6 +118,48 @@ function Get-CcxMailWorktreeRoot {
     finally { Pop-Location }
 }
 
+function Expand-CcxMailShortPath {
+    <#
+    .SYNOPSIS
+        The long spelling of a Windows 8.3 path. The input unchanged everywhere else.
+    .DESCRIPTION
+        WHY THIS EXISTS. The box key is a HASH of the address root, so one directory spelled two
+        ways lands in two boxes: the send reports success, the drain in that same directory reports
+        an empty box, and the two are byte-identical to a healthy empty channel. That silence is the
+        failure this module was written after.
+
+        `Resolve-Path` does not expand an 8.3 alias. Measured on a GitHub Windows runner, %TEMP% is
+        the SHORT form while the process working directory reports the long one, so a message
+        addressed through the short spelling was invisible to a drain sitting in that directory.
+
+        ONLY THE NON-WORKTREE FALLBACK NEEDS IT. A worktree root comes from git, which reports one
+        canonical spelling, so that branch is left alone.
+
+        FAILS SOFT ON PURPOSE. Every failure path returns the input, which is exactly the behaviour
+        before this function existed, so a host without the COM object is no worse off than it was.
+        The `~` test keeps the COM call off the overwhelmingly common path: a normal spelling costs
+        one regex match and nothing else.
+    #>
+    [CmdletBinding()]
+    param([string] $Path)
+
+    if (-not $Path) { return $Path }
+    if (-not $IsWindows) { return $Path }
+    if ($Path -notmatch '~\d') { return $Path }
+
+    try {
+        $fso = New-Object -ComObject Scripting.FileSystemObject
+        $long = if (Test-Path -LiteralPath $Path -PathType Container) {
+            $fso.GetFolder($Path).Path
+        } else {
+            $fso.GetFile($Path).Path
+        }
+        if ($long) { return $long }
+    }
+    catch { return $Path }
+    return $Path
+}
+
 function Get-CcxMailAddressRoot {
     <#
     .SYNOPSIS
@@ -143,7 +185,7 @@ function Get-CcxMailAddressRoot {
     try { $resolved = (Resolve-Path -LiteralPath $target -ErrorAction Stop).Path }
     catch { return $null }
     if (Test-Path -LiteralPath $resolved -PathType Leaf) { $resolved = Split-Path -Parent $resolved }
-    return $resolved
+    return (Expand-CcxMailShortPath -Path $resolved)
 }
 
 function ConvertTo-CcxMailComparablePath {
