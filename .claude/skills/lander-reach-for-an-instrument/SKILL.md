@@ -190,6 +190,28 @@ installed file, actual CR bytes        : 1305     <- and THIS is what 1305 would
 | Defence 2 | Count BYTES, not lines. `tr -cd '\r' \| wc -c` cannot be fooled this way. |
 | Say the discard out loud | The number was discarded because two sound instruments agreed with each other and disagreed with it. Ignoring a measurement is legitimate, but say so, or the discard looks like cherry-picking. |
 
+### 6k. The GitHub API budget is SHARED with your subagents, and its gauge reads full while refusing you
+
+**Measured 2026-09-05.** The Lander exhausted the 5,000/hour budget mid-drain, from ordinary polling
+and no misuse. `main` froze, pull request status went stale in the owner's own UI, and the seat lost
+the ability to measure the queue it exists to drain.
+
+| Item | Rule |
+| --- | --- |
+| ONE POOL, EVERY CONSUMER | The 5,000/hour limit is shared across the main loop, every Bash `gh` call, and **every workflow subagent**. |
+| So, before you spawn | A six-agent fleet DIVIDES that budget rather than each getting one, and spends it fast because every agent polls independently. |
+| THE GAUGE READS FULL WHILE REFUSING YOU | At 00:16Z `gh api rate_limit` reported core 5000/5000, and the very next REST call returned `403 API rate limit exceeded`. |
+| Two reasons, both live | That endpoint consumes no quota and reports only the PRIMARY counter. A burst of mutating calls trips a SECONDARY limiter that refuses while leaving the primary untouched. |
+| So | "5000/5000 remaining" is not evidence you may proceed. **The only test that answers the question is a real call.** |
+| GRAPHQL SURVIVES WHEN REST DOES NOT | In the same minute a REST read was refused, a `gh api graphql` merge-queue query answered normally. Switch transport before concluding GitHub is unreachable. |
+| The standing habit, not the emergency one | One GraphQL query in place of N REST reads. |
+| The per-PR sweep costs DOUBLE | A `mergeStateStatus` scan over 40-plus open pull requests is roughly 80 calls, and it must run TWICE. |
+| Why twice | GitHub computes mergeability lazily, so the first read returns `UNKNOWN`. A single pass is not merely stale, it is uninformative. |
+| So | Run it on an interval you choose, never once per turn. |
+| A REFUSAL IS NOT A RETRY CONDITION | The reset instant is up to an hour out. Read the reset from the error, schedule, and do something that needs no API. |
+| Why this sits in section 6 | Exhausting the budget does not degrade into slower work. It removes this seat's only instrument, at the moment the queue is busiest, because that is when polling is heaviest. |
+| **EXPIRY** | Holds while the budget is 5,000/hour and shared per account. Re-read it if the account moves to a different ceiling, if subagents are given their own budget, or if merge-queue state becomes readable without the GitHub API. |
+
 ## 14. Instruments that lie, in one list
 
 Source of record for the general discipline: COMMON.md, *Measure it before you conclude* and *A green
