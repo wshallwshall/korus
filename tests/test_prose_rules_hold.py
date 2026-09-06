@@ -138,14 +138,36 @@ def role_prose_files() -> list[str]:
     return _markdown_under(("roles/",))
 
 
+def skills_prose_files() -> list[str]:
+    """The trigger-loaded skills, split out of the playbooks on 2026-09-05.
+
+    THIS CORPUS EXISTS BECAUSE A SPLIT MOVED PROSE OUT OF A SCAN WITHOUT MOVING THE SCAN. 6,336
+    lines left `roles/` for `.claude/skills/` on 2026-09-05, and nothing followed them. `CLAUDE.md`
+    went on saying the rules were enforced "against every tracked page" while the newest third of
+    the playbook text was read by nothing.
+
+    THAT IS THE FAILURE MODE THIS FILE'S HEADER NAMES, arriving by a route the header did not: the
+    corpus did not shrink and no ratchet moved, so every number stayed green while its subject was
+    quietly cut. A ratchet measures what it is pointed at, and a split re-points it.
+
+    SO THE RULE IS THE CORPUS FOLLOWS THE PROSE. Moving a page out of `roles/` does not retire its
+    prose obligations, and the next split has to add its destination here in the same change.
+    """
+    return _markdown_under((".claude/skills/",))
+
+
 def prose_files() -> list[str]:
-    """Every prose page the hard-fail scan reads: the docs corpus and the role playbooks.
+    """Every prose page the hard-fail scan reads: docs, the role playbooks, and the skills.
 
     THE RATCHETS DO NOT USE THIS. They take one corpus each, because their numbers are not
     interchangeable. The hard-fail patterns take the union because they carry no number to launder:
     the corpus fires zero times on all three, and zero plus zero is still zero.
+
+    `.claude/skills/` JOINED ON 2026-09-06 AT ZERO COST, measured rather than assumed: B-3, B-5 and
+    B-6 return 0 hits each across its 28 pages. That is the same reason they widened to the union in
+    the first place -- a rule the corpus already satisfies costs nothing to enforce.
     """
-    return docs_prose_files() + role_prose_files()
+    return docs_prose_files() + role_prose_files() + skills_prose_files()
 
 
 RULE_ROW = re.compile(r"^\|\s*`?(?:B|HS|PD|OPEN|SD|CP)-\d+`?\s*\|")
@@ -329,6 +351,65 @@ class BannedConstructionsAreAbsent(unittest.TestCase):
         )
 
 
+# EXEMPTIONS FROM `test_every_tracked_prose_page_lands_in_some_corpus`, EACH WITH ITS PRICE.
+# Measured 2026-09-06 through this file's own `_measure` and `BANNED`. The guard found all five on
+# its first run, which is the argument for keeping it: none were known before it existed.
+#
+# NOT ONE OF THESE IS EXEMPT FROM THE HOUSE STYLE. They are unmeasured, and the difference is the
+# whole point of writing them down. Admitting a page means paying its debt or baselining it, and
+# baselining it into `docs/` would hand every swept page that much silent headroom -- the move
+# `_markdown_under` refuses at a scale of six.
+#
+#   page                                       long  fat paras  what blocks it
+#   CLAUDE.md                                     0          0  B-5, on the line quoting the phrase
+#   examples/sequence-adr/README.md               6          5  debt, and it is example prose
+#   examples/sequence-adr/index-row-format.md     4          3  debt, and it is example prose
+#   scripts/validation/README.md                  0          2  debt
+#   specs/001-worker-brief/spec.md               12          9  debt
+#
+# CLAUDE.md IS THE ONE TO FIX FIRST, and it is nearly free: zero long sentences, zero fat cells,
+# zero fat paragraphs. One hard-fail hit blocks it, on the line that names `in order to` as a banned
+# construction. That is the RULE_ROW problem in prose form -- a page stating the rules has to be able
+# to quote them -- and `scannable_lines` exempts only a table row whose first cell is a rule id.
+#
+# THE FIX IS NOT A QUOTED-TEXT EXEMPTION. "Ignore the pattern inside quotes" is a loophole any page
+# can reach for, and it would silence the rule everywhere to admit one page. Either widen RULE_ROW
+# to the shape CLAUDE.md actually uses, or reword that one line. Both are edits somebody should make
+# deliberately rather than as a side effect of adding a corpus.
+UNREAD_PREFIXES = (
+    ".specify/",   # vendored Spec Kit templates. Not written here and not read for guidance.
+    "tests/",      # fixtures and this file's own README. Test data, not pages.
+)
+
+UNREAD_PAGES = frozenset({
+    "CLAUDE.md",
+    "examples/sequence-adr/README.md",
+    "examples/sequence-adr/index-row-format.md",
+    "scripts/validation/README.md",
+    "specs/001-worker-brief/spec.md",
+})
+
+
+def unread_pages(paths: list[str]) -> list[str]:
+    """Tracked Markdown that no prose corpus reads, minus the named exemptions.
+
+    A FUNCTION RATHER THAN A TEST BODY SO THE CONTROL CAN REACH IT. The guard's honest result is an
+    empty list, and a filter that has broken returns an empty list too. Passing it a planted path is
+    the only way to tell those apart, and that is this repository's rule about zeros.
+    """
+    covered = set(prose_files())
+    return sorted(
+        f
+        for f in paths
+        if f.endswith(".md")
+        and not f.startswith(UNREAD_PREFIXES)
+        and f not in UNREAD_PAGES
+        and "/word/" not in f
+        and f not in t.AUTHORED_VERBATIM
+        and f not in covered
+    )
+
+
 class TheScannedCorpusIsBothHalves(unittest.TestCase):
     """Pinned separately from the word floor above, because the two fail differently.
 
@@ -338,14 +419,82 @@ class TheScannedCorpusIsBothHalves(unittest.TestCase):
     never opening it. Composition is the property; size is only its shadow.
     """
 
-    def test_neither_half_is_empty(self):
+    def test_no_corpus_is_empty(self):
         self.assertTrue(docs_prose_files(), "the docs corpus is empty; every ratchet reads nothing.")
         self.assertTrue(role_prose_files(), "roles/ is empty. It was never read until 2026-09-04.")
+        self.assertTrue(
+            skills_prose_files(),
+            ".claude/skills/ is empty. It was never read until 2026-09-06, and a split had put "
+            "6,336 lines there. An empty corpus reports zero on every metric and reads like a pass.",
+        )
 
-    def test_the_halves_do_not_overlap_and_the_union_is_their_sum(self):
-        docs, roles = docs_prose_files(), role_prose_files()
-        self.assertEqual(set(), set(docs) & set(roles), "a page is in both corpora and counted twice.")
-        self.assertEqual(sorted(docs + roles), sorted(prose_files()))
+    def test_the_thirds_do_not_overlap_and_the_union_is_their_sum(self):
+        docs, roles, skills = docs_prose_files(), role_prose_files(), skills_prose_files()
+        for a, b, why in (
+            (docs, roles, "docs and roles"),
+            (docs, skills, "docs and skills"),
+            (roles, skills, "roles and skills"),
+        ):
+            self.assertEqual(set(), set(a) & set(b), f"a page is in both {why} and counted twice.")
+        self.assertEqual(sorted(docs + roles + skills), sorted(prose_files()))
+
+    def test_every_tracked_prose_page_lands_in_some_corpus(self):
+        """The guard for the defect that created the skills corpus, not for its symptom.
+
+        A split moves prose to a new prefix and no other test here notices. The corpora stay
+        non-empty, they still do not overlap, their union still equals `prose_files()`, and every
+        ratchet stays green over a subject that no longer holds the moved pages. Composition tests
+        cannot see it, because nothing about the composition is wrong.
+
+        So this asks the one question none of them ask: is there tracked Markdown that no corpus
+        reads? Every exemption is named below with what it would cost to admit, because pruning one
+        silently is the defect this test exists to catch.
+        """
+        unread = unread_pages(tracked_files())
+        self.assertEqual(
+            [],
+            unread,
+            "tracked Markdown that no prose corpus reads:\n  "
+            + "\n  ".join(unread)
+            + "\n\nAdd its prefix to a corpus above, or name it in this test with the reason. A "
+            "page outside every corpus is not exempt from the house style. It is unmeasured, which "
+            "is the state the skills corpus was added to end.",
+        )
+
+    def test_the_guard_fires_on_a_page_no_corpus_reads(self):
+        """The positive control. Without it, a filter that matches nothing passes silently.
+
+        `notes/whatever.md` is the shape of the next split: a new top-level prefix holding prose,
+        added by somebody who did not think to widen a corpus. That is exactly how 6,336 lines
+        reached `.claude/skills/` unmeasured on 2026-09-05.
+        """
+        self.assertEqual(
+            ["notes/whatever.md"],
+            unread_pages(["notes/whatever.md"]),
+            "the guard did not fire on a page in no corpus, so it guards nothing.",
+        )
+
+    def test_the_guard_declines_a_page_a_corpus_already_reads(self):
+        """The negative arm. A guard that fires on everything is as useless as one that never does."""
+        already = prose_files()[0]
+        self.assertEqual(
+            [],
+            unread_pages([already]),
+            f"the guard flagged {already}, which a corpus already reads.",
+        )
+
+    def test_every_named_exemption_still_exists(self):
+        """An exemption for a deleted file is a stale claim that reads like a live one."""
+        tracked = set(tracked_files())
+        gone = sorted(p for p in UNREAD_PAGES if p not in tracked)
+        self.assertEqual(
+            [],
+            gone,
+            "UNREAD_PAGES names files that are no longer tracked:\n  "
+            + "\n  ".join(gone)
+            + "\n\nDelete the row. An exemption outliving its file hides the next page that "
+            "lands on the same path.",
+        )
 
     def test_a_retired_playbook_is_in_the_corpus(self):
         """`roles/retired/` holds 357 of the 986 fat paragraphs. Skipping it would hide a third."""
@@ -584,6 +733,31 @@ ROLES_LONG_SENTENCE_SLACK = 70
 ROLES_FAT_CELL_SLACK = 13
 ROLES_FAT_PARAGRAPH_SLACK = 98
 
+# `.claude/skills/`, MEASURED 2026-09-06 THROUGH THIS FILE'S OWN `_measure` OVER ITS 28 TRACKED
+# PAGES, 37,777 words. A third corpus rather than a seat in either existing one, for the reason
+# `_markdown_under` gives at the scale it was written for: absorbing 62 paragraphs into the docs cap
+# would make a cap that reached zero over two sweeps unreachable again.
+#
+# THE FAT-CELL FIGURE IS ZERO, SO THAT ONE IS A CAP FROM THE START. It is the only baseline in this
+# file that never had debt to pay, and the next 40-word cell written into a skill fails the run
+# rather than being absorbed. Do not raise it.
+#
+# WHY THESE ARE SMALLER THAN `roles/` AND IT PROVES NOTHING ABOUT THE WRITING. The skills were cut
+# from `roles/` by a mechanical split that moved whole sections and reworded none, so the two
+# corpora hold the same authorship at different dates. What the gap measures is which pages the
+# split happened to carry, not that one set is better prose than the other.
+SKILLS_BASELINE_LONG_SENTENCES = 37
+SKILLS_BASELINE_FAT_TABLE_CELLS = 0    # a CAP from the start, not a ratchet. Never raise it.
+SKILLS_BASELINE_FAT_PARAGRAPHS = 62
+
+# Near half, matching the docs slacks rather than the `roles/` tenth. The `roles/` comment above
+# gives the reason: at 708 and 986 a half would let a whole file be swept without the ratchet ever
+# asking to be tightened. At 37 and 62 the opposite risk binds, and a tenth would be 3 and 6, where
+# every ordinary edit reddens the run.
+SKILLS_LONG_SENTENCE_SLACK = 18
+SKILLS_FAT_CELL_SLACK = 5
+SKILLS_FAT_PARAGRAPH_SLACK = 31
+
 # A STOP INSIDE EMPHASIS IS STILL A STOP. This document set writes `**A claim.** The evidence.`
 # constantly, and the bare `(?<=[.!?])\s+` form never fired on it, because the character after the
 # stop is `*` rather than a space. Every such paragraph measured its bold lede fused to the sentence
@@ -734,31 +908,34 @@ class ABoldLedeEndsASentence(unittest.TestCase):
 
 
 # Each row: corpus name, the files it reads, the constant to edit, its value, its slack.
-# TWO ROWS PER METRIC, ONE PER CORPUS. The constant NAME travels in the row because the failure text
-# has to name the line to edit -- a message that says "lower the baseline" over two baselines sends
-# the reader to the wrong one, and the wrong one is the one that is already at zero.
+# THREE ROWS PER METRIC, ONE PER CORPUS. The constant NAME travels in the row because the failure
+# text has to name the line to edit -- a message that says "lower the baseline" over three baselines
+# sends the reader to the wrong one, and two of the three are already at zero.
 LONG_SENTENCE_RATCHET = (
     ("docs", docs_prose_files, "BASELINE_LONG_SENTENCES", BASELINE_LONG_SENTENCES, LONG_SENTENCE_SLACK),
     ("roles", role_prose_files, "ROLES_BASELINE_LONG_SENTENCES", ROLES_BASELINE_LONG_SENTENCES, ROLES_LONG_SENTENCE_SLACK),
+    ("skills", skills_prose_files, "SKILLS_BASELINE_LONG_SENTENCES", SKILLS_BASELINE_LONG_SENTENCES, SKILLS_LONG_SENTENCE_SLACK),
 )
 
 FAT_CELL_RATCHET = (
     ("docs", docs_prose_files, "BASELINE_FAT_TABLE_CELLS", BASELINE_FAT_TABLE_CELLS, FAT_CELL_SLACK),
     ("roles", role_prose_files, "ROLES_BASELINE_FAT_TABLE_CELLS", ROLES_BASELINE_FAT_TABLE_CELLS, ROLES_FAT_CELL_SLACK),
+    ("skills", skills_prose_files, "SKILLS_BASELINE_FAT_TABLE_CELLS", SKILLS_BASELINE_FAT_TABLE_CELLS, SKILLS_FAT_CELL_SLACK),
 )
 
 FAT_PARAGRAPH_RATCHET = (
     ("docs", docs_prose_files, "BASELINE_FAT_PARAGRAPHS", BASELINE_FAT_PARAGRAPHS, FAT_PARAGRAPH_SLACK),
     ("roles", role_prose_files, "ROLES_BASELINE_FAT_PARAGRAPHS", ROLES_BASELINE_FAT_PARAGRAPHS, ROLES_FAT_PARAGRAPH_SLACK),
+    ("skills", skills_prose_files, "SKILLS_BASELINE_FAT_PARAGRAPHS", SKILLS_BASELINE_FAT_PARAGRAPHS, SKILLS_FAT_PARAGRAPH_SLACK),
 )
 
 
 class TheReportedMetricsDoNotRegress(unittest.TestCase):
     """A ratchet, not a cap. The plan rejected all three as hard fails, with the measurement.
 
-    EACH METRIC RUNS TWICE, once over `docs/` and once over `roles/`, against that corpus's own
-    baseline. A subTest per corpus so one red corpus still reports the other's figure -- with a
-    single assertion the second number would be invisible behind the first failure.
+    EACH METRIC RUNS THREE TIMES, over `docs/`, `roles/` and `.claude/skills/`, against that
+    corpus's own baseline. A subTest per corpus so one red corpus still reports the others' figures.
+    With a single assertion the later numbers would be invisible behind the first failure.
     """
 
     def _ratchet(self, count: int, name: str, constant: str, baseline: int, slack: int, why: str) -> None:
@@ -776,7 +953,11 @@ class TheReportedMetricsDoNotRegress(unittest.TestCase):
         )
 
     def test_it_reports_what_it_examined(self):
-        for name, files, floor in (("docs", docs_prose_files, 30_000), ("roles", role_prose_files, 60_000)):
+        for name, files, floor in (
+            ("docs", docs_prose_files, 30_000),
+            ("roles", role_prose_files, 60_000),
+            ("skills", skills_prose_files, 20_000),
+        ):
             with self.subTest(corpus=name):
                 long_sentences, _, words, _ = _measure(files())
                 self.assertGreater(
