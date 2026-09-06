@@ -61,7 +61,17 @@ class _LaneCase(unittest.TestCase):
 
         self.tmp = tempfile.TemporaryDirectory(prefix="ccx-mail-")
         self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name)
+        # Resolve it. A path handed to these scripts must be spelled the way they will spell it
+        # back, because the mail box key is a HASH of the address root: one directory addressed
+        # two ways lands in two boxes, the send reports success, and a drain standing in that
+        # same directory reports an empty box. That silence is what scripts/coord/_mail.ps1 was
+        # written after, and it is indistinguishable from a healthy empty channel.
+        #
+        # Measured on a GitHub Windows runner, where %TEMP% is the 8.3 SHORT form: mkdtemp gave
+        # the short spelling and PowerShell's $PWD.Path the long one, and the two hashed to
+        # different keys. Resolve-Path does not expand an 8.3 alias, and neither, measured on
+        # that runner, does Scripting.FileSystemObject.
+        self.root = Path(os.path.realpath(self.tmp.name))
 
         # ONE clone with TWO worktrees. That is the shape the lane is for, and it is also the shape
         # that makes the primary-versus-worktree misdelivery possible.
