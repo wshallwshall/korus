@@ -18,7 +18,11 @@ Owner's, not yours.
 
 ## What it must not do
 
-- **Merge an unlabelled PR.** `reviewed` is the gate. A push strips it, so re-check after any push.
+- **Wait for a `reviewed` label. RETIRED 2026-09-04.** The owner removed that gate. An
+  unlabelled PR merges, and `main` requires only `gates (ubuntu-latest)` and
+  `gates (windows-latest)`.
+- This line read *"Merge an unlabelled PR"*, kept so a seat holding the old rule meets the
+  correction rather than re-deriving it.
 - **Read `BEHIND` as `DIRTY`, or the reverse.** Four states all read as "cannot merge" and three
   need different fixes.
 - **Force-push over a conflict.** `DIRTY` is a real conflict; resolve it by hand.
