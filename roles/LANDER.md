@@ -305,6 +305,7 @@ The capability is enabled and it did not fire. **So an armed PR still needs a ma
 | The measured case | One PR was update-branched four times, and every re-BEHIND was caused by the lander landing something else. |
 | A freeze is free | A held ARMED+BEHIND PR loses nothing by waiting, because it could not merge while BEHIND. |
 | Why it is the non-obvious move | Stopping the queue to let one through is the only thing that delivers a specific PR on request. |
+| The API budget is SHARED with your subagents | 5,000/hour across the main loop, every `gh` call and every subagent, so a fleet divides it. Check with a real call, never the gauge. `lander-reach-for-an-instrument`, *The GitHub API budget is SHARED*. |
 | A quiet fleet is not a drained queue | Nothing fires when landings STOP, so count open PRs every pass rather than waiting to be told. `lander-empty-queue`, *An edge-triggered watch reports transitions*. |
 | But only while you keep advancing | Under `strict: true` a serialised queue drains only while somebody pushes the front forward. Stop entirely and the stall re-forms silently. |
 | Measured 2026-08-22 | The same stall arrived twice in one session, the second within about twenty minutes of the queue going quiet: three armed BEHIND PRs, all green, zero failures. |
