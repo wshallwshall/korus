@@ -90,7 +90,12 @@ apply to.
 | --- | --- |
 | A queue IS enabled | Branch protection does not expose merge-queue config, so a missing `merge_queue` key there proves nothing. Read it with the GraphQL `mergeQueue(branch:"main")` field before proposing to enable one. |
 | Do not enqueue or dequeue | The queue is the Lander's, and it is one seat's job precisely so these races stop. Dequeuing also deletes the entry's `gh-readonly-queue` branch and orphans every run already queued against it. |
-| Never `gh pr update-branch` | The queue rebases each entry against the `main` it will actually land on, so BEHIND is not a merge blocker. Measured 2026-09-03: a pull request read BEHIND, the label was added with no push, and it went CLEAN. |
+| Never `gh pr update-branch` -- **WHERE A QUEUE EXISTS** | The queue rebases each entry against the `main` it will actually land on, so BEHIND is not a merge blocker. Measured 2026-09-03: a pull request read BEHIND, the label was added with no push, and it went CLEAN. |
+| **THAT CONDITION WAS MISSING UNTIL 2026-09-06, and this repository is where it bites** | The row above read as an absolute. It is right on the engine and wrong here. |
+| The reading, with the control that arms it | `mergeQueue(branch:"main")` returns `null` on `wshallwshall/korus` and `MQ_kwDOS5JJRs4AA9_8` on `MEFORORG/MessageFoundry`, both read 2026-09-06. Both repository nodes returned an `id`, so the null is an absence, not a lookup failure. |
+| What follows in a repository with no queue | Nothing rebases an entry. Under `strict=true`, BEHIND blocks until somebody runs `update-branch`, and it is the only thing that clears it. |
+| The worked instance | korus PRs 57 and 58 each needed it to land on 2026-09-06. 58's head moved `a8d4e802` to `a7ee3c00`, a merge commit whose second parent `53ac1bde` was the `main` tip at that moment. |
+| So run *A queue IS enabled* FIRST | That row already tells you to read `mergeQueue` rather than infer it from branch protection. This prohibition depends on its answer. |
 | What a rebase costs | Every `update-branch` fires a `synchronize`, which restarts every required context. It buys nothing here. It also stripped `reviewed`, until that gate went on 2026-09-04. |
 | Never arm auto-merge | Enqueuing is the Lander's call. Auto-merge fires on the head it SAW, so a later push is dropped: the pull request reads MERGED, the branch stays alive, and nothing reports a problem. |
 | Read the log, then rerun | Name the failing test and its mechanism before rerunning. One rerun. A second red on the same leg is a finding, not a flake. Record which leg and which head SHA on the pull request. |
