@@ -441,5 +441,69 @@ class TheHookResolvesInOrder(unittest.TestCase):
         self.assertIn("What this seat owns", copy.read_text(encoding="utf-8"))
 
 
+class RetiredRulesDoNotSurviveInACard(unittest.TestCase):
+    """A retired SEAT resolving to silence is already guarded above. A retired RULE is not.
+
+    The distinction cost something. Two cards reached `main` asserting the `reviewed` label as a
+    live merge gate, which the owner removed on 2026-09-04. `roles/COMMON.md`, `roles/LANDER.md`,
+    `roles/BUILDER.md` and `roles/MANAGER.md` all carry it as a RETIRED row; the cards carried it
+    as a rule, and one of them as a MUST NOT.
+
+    That direction is the expensive one: a Lander reading its own card holds a merge it is entitled
+    to make, and the card supplies an authoritative-sounding reason. `docs/ROLE-CARDS.md` names the
+    mechanism -- a card is injected at SessionStart, so it outranks the document that corrects it.
+
+    NARROW ON PURPOSE. This guards one retired rule by name rather than pretending to a general
+    test, because no registry of retired rules exists to check against. Widen it by adding a row
+    when the next rule retires, and the pair below keeps it honest meanwhile.
+    """
+
+    #: (pattern, why it is retired). Matched case-insensitively, line by line.
+    RETIRED = [
+        ("reviewed", "the `reviewed` merge gate was removed 2026-09-04; an unlabelled PR merges"),
+    ]
+
+    def _live_hits(self, text: str) -> list[str]:
+        """Lines naming a retired rule without marking it retired."""
+        out = []
+        for line in text.splitlines():
+            low = line.lower()
+            for pattern, _ in self.RETIRED:
+                if pattern in low and "retired" not in low and "read *\"" not in line:
+                    out.append(line.strip())
+        return out
+
+    def test_no_card_asserts_a_retired_rule_as_live(self):
+        offenders = {}
+        for path in card_paths():
+            hits = self._live_hits(path.read_text(encoding="utf-8"))
+            if hits:
+                offenders[path.name] = hits
+        self.assertEqual(
+            {},
+            offenders,
+            "a role card names a retired rule without marking it retired:\n"
+            + "\n".join(f"  {name}: {h}" for name, hs in offenders.items() for h in hs)
+            + "\n\nThe reasons: "
+            + "; ".join(why for _, why in self.RETIRED),
+        )
+
+    def test_the_scan_fires_on_the_shape_it_exists_to_catch(self):
+        """The positive control. Without it, a pattern that matches nothing passes silently."""
+        planted = "- **Merge an unlabelled PR.** `reviewed` is the gate, so re-check after any push."
+        self.assertTrue(
+            self._live_hits(planted),
+            "the scan did not fire on the exact line that shipped to main, so it guards nothing",
+        )
+
+    def test_the_scan_accepts_a_correctly_retracted_line(self):
+        """The negative arm. A retraction names the rule on purpose and must not be flagged."""
+        retracted = "- **Wait for a `reviewed` label. RETIRED 2026-09-04.** An unlabelled PR merges."
+        self.assertFalse(
+            self._live_hits(retracted),
+            "the scan flagged a correct retraction, which would make retracting in place impossible",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

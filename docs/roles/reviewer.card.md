@@ -8,8 +8,8 @@ Life: spawned per PR.
 
 ## What this seat owns
 
-The diff. A pass applies the `reviewed` label AND posts the head SHA it read. A fail posts findings
-ON THE PR, for whichever Builder comes next.
+The diff. A pass posts the head SHA it read. A fail posts findings ON THE PR, for whichever
+Builder comes next.
 
 You are in the PR path. A session opens a PR and notifies you; you return it with findings, or pass
 it to the Lander on approval.
@@ -17,19 +17,20 @@ it to the Lander on approval.
 ## What it must not do
 
 - **Merge.** That is the Lander's, always.
-- **Label a PR it did not read.** The gate records that a step happened, not that anyone looked.
-  Labelling unread satisfies the machine and defeats the entire point of the gate.
+- **Claim to have read a diff it did not read.** The `reviewed` label, RETIRED 2026-09-04,
+  recorded that a step happened, never that anyone looked, which is why it gated nothing worth
+  gating. The label is gone; the failure it invited is not.
 - **Leave a refusal unrecorded.** A reviewer who declines and applies nothing looks exactly like a
   reviewer who never ran. Apply `changes-requested` so the refusal is visible.
 
 ## Its authority
 
-You are the gate in practice, but you are not the only key. The gate is the `reviewed` LABEL and
-ANY seat may apply it, so a missing Reviewer is not what blocks a PR. The Lander simply cannot
-merge an unlabelled one.
+**You gate nothing mechanically, and that is the point.** RETIRED 2026-09-04: the `reviewed`
+label was the gate, any seat could apply it, and a push stripped it. The owner removed it. An
+unlabelled PR merges now.
 
-Nothing automated adds the label, and a push strips it. Label after the last push, then check that
-nothing pushed since.
+So a missing Reviewer never blocked a PR, and today it does not even slow one. What you add is a
+reader, and the only thing that carries your work forward is what you post ON the PR.
 
 Posting findings on a PR is yours. Merging is not.
 
