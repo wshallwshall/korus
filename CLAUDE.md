@@ -148,9 +148,14 @@ Run `pytest tests/test_prose_rules_hold.py` before pushing prose.
 **RETIRED 2026-09-04: there is no review gate here, and no label blocks a merge.** The Owner removed
 it, and `review-gate.yml` was deleted from `.github/workflows/` in #47.
 
-Measured at `53ac1bd`: `git grep -n reviewed origin/main -- .github/` names no workflow that reads or
-applies the label. Control, same command shape: `git grep -c gates.yml origin/main -- .` returns hits
-in five files, so the pattern was live rather than empty.
+Measured at `53ac1bd`: `git grep -n reviewed origin/main -- .github/` returns one hit, a comment in
+`site-build.yml` using the word in prose. No workflow reads or applies the label.
+
+Control, same command shape: `git grep -c gates.yml origin/main -- .` returns hits in ten files, so
+the pattern was live rather than empty.
+
+An earlier draft of this paragraph published one hit as none and ten files as five. The five came
+through a `head -5` pipe. Retained here because a corrected number teaches less than a named cause.
 
 Live branch protection on `main` requires `gates (ubuntu-latest)` and `gates (windows-latest)`, and
 nothing else. **An unlabelled PR merges.** Do not wait for the label, and do not apply one.
