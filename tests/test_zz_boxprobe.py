@@ -48,6 +48,18 @@ $keyDrain  = if ($rootDrain) { Get-CcxMailBoxKey -WorktreeRoot $rootDrain } else
 "boxKey(drain)        = $keyDrain"
 "ROOTS MATCH          = $($rootSend -eq $rootDrain)"
 "KEYS MATCH           = $($keySend -eq $keyDrain)"
+
+# Does the expansion 260f78c relied on actually work HERE? That commit was reverted, so the
+# tree has no copy; this is its body inline. It answers why the fix changed nothing: either
+# the COM object is unavailable on this runner, or it is and the fix was mis-placed.
+"guard '~\d' matches  = $($rootSend -match '~\d')"
+try {
+    $fso = New-Object -ComObject Scripting.FileSystemObject
+    "COM object           = created"
+    "GetFolder(send)      = $($fso.GetFolder($rootSend).Path)"
+    "EXPANSION WORKS      = $($fso.GetFolder($rootSend).Path -eq $rootDrain)"
+}
+catch { "COM object           = UNAVAILABLE: $($_.Exception.Message)" }
 """
 
 
