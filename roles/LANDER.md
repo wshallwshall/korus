@@ -215,16 +215,32 @@ python ~/.claude/mefor-usage/usage-now.py
 | What `mergeStateStatus` cannot tell you | It reports BEHIND or DIRTY in preference to BLOCKED, so on most open PRs an unmet requirement is invisible. Measured against the `reviewed` label gate, retired 2026-09-04; the shape holds for any required check. |
 | And where BLOCKED does surface | It is one value covering every unmet requirement, so it cannot tell one unmet check from another. **Settle merge-readiness on the check runs, not on this field.** |
 
-## 3a. The two repositories do not behave the same, and the merge queue section describes only one
+## 3a. The three repositories do not behave the same, and the merge queue section describes only one
 
-Source of record: `gh api repos/<owner>/MessageFoundry/branches/main/protection`. Measured 2026-08-28
-and re-verified independently. **Derive these; do not read them as current.**
+Source of record: `gh api repos/<owner>/<repo>/branches/main/protection`, and the GraphQL
+`mergeQueue(branch:"main")` field for the queue, which branch protection does not expose. Measured
+2026-08-28 and re-verified independently. **Derive these; do not read them as current.**
 
-| | ENGINE `MEFORORG` | VAULT `wshallwshall` |
-| --- | --- | --- |
-| merge queue | **YES** | **NO** |
-| `strict` (require branch up to date) | **READ IT LIVE** | **TRUE** |
-| required contexts | **READ IT LIVE** | **2** |
+| | ENGINE `MEFORORG` | VAULT `wshallwshall` | THIS REPO `korus` |
+| --- | --- | --- | --- |
+| merge queue | **YES** | **NO** | **NO** |
+| `strict` (require branch up to date) | **READ IT LIVE** | **TRUE** | **TRUE** |
+| required contexts | **READ IT LIVE** | **2** | **2** |
+
+**The korus column was added 2026-09-06, and its absence had a cost.** A seat reading the fleet
+rules met *Never `gh pr update-branch`* with no condition on it, in the one repository where the
+command is required.
+
+The reading, with its control: `mergeQueue(branch:"main")` returns `null` on `wshallwshall/korus`
+and `MQ_kwDOS5JJRs4AA9_8` on `MEFORORG/MessageFoundry`, both 2026-09-06. Both repository nodes
+returned an `id`, so the null is an absence rather than a lookup failure.
+
+korus required contexts are `gates (ubuntu-latest)` and `gates (windows-latest)`, `strict` true,
+`required_linear_history` false.
+
+**So on korus the update-branch treadmill is the normal case, not the exception.** PRs 57 and 58
+each needed it to land on 2026-09-06. 58's head moved `a8d4e802` to `a7ee3c00`, a merge commit whose
+second parent `53ac1bde` was the `main` tip at that moment.
 
 The vault's context count was measured 2026-08-28 and re-read 2026-09-02, still 2. The engine cells
 are blank on purpose: read them live from the protection call above, every time.
@@ -497,7 +513,8 @@ three evicted entries shared a stale base.
 It survived TWO head merges without eviction.
 
 So a stale base does not cause eviction, and the queue does rebase entries across a head merge.
-That supports *Never `gh pr update-branch`* rather than undermining it.
+That supports *Never `gh pr update-branch`* rather than undermining it, **on a repository that has a
+queue.** Section 3a carries the two that do not, korus among them.
 
 ### 4i. Before you arm, check what the merge leaves in the RECORD
 
