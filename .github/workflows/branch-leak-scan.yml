@@ -1,0 +1,71 @@
+name: branch leak scan
+
+# DETECTION, NOT A GATE. Read that first, because the difference is the whole design.
+#
+# This repository IS the published artifact. A push to a public remote makes its content public the
+# instant it completes, so nothing running afterwards can PREVENT a leak. It can only tell you one
+# happened, in time to delete the branch, assess the exposure and rotate whatever was exposed.
+#
+# Do NOT make this a required status check, and do not describe it anywhere as a control that stops
+# a leak. A required check gates MERGING, which is not the event this watches.
+#
+# WHY THE EXISTING LEAK GATE IS NOT ENOUGH, measured on this repository 2026-09-05.
+# `gates.yml` triggers on `push: branches: [main]` and on `pull_request`. A branch pushed with NO
+# pull request is scanned by neither of those, and that is exactly the shape of the realistic leak
+# here: the role playbooks came across from a private vault, and two private artifact URLs reached
+# `origin/main` inside that transfer (PR #48 removed them from the tree). At the moment this was
+# written there were four branches on the remote whose content no run had ever scanned.
+#
+# WHAT IT CANNOT DO. It reads the branch as pushed. It cannot see history that was force-pushed away
+# before it ran, and it cannot un-publish anything. A hit here means "respond", never "you are safe".
+#
+# WHY IT SCANS THE TREE AND NOT THE DIFF. A branch cut from a private-lineage ref carries files
+# inside a commit TREE, where `.gitignore` is never consulted because those files never went through
+# this clone's index. A diff against `main` would show them as additions only if they differ from
+# main, and the dangerous case is the one that does not.
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-leak-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pushed tree is what is public. One commit is the subject; history is not in scope
+          # here, and pretending otherwise would overstate what this job checked.
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Leak gate over the pushed tree
+        id: scan
+        run: python scripts/security/scan_forbidden.py --path .
+
+      - name: Say what was scanned, whatever the result
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "### Branch leak scan"
+            echo
+            echo "- ref: \`${{ github.ref }}\`"
+            echo "- head: \`${{ github.sha }}\`"
+            echo "- outcome: \`${{ steps.scan.outcome }}\`"
+            echo
+            echo "This is DETECTION, not prevention. The branch is already on the remote."
+            echo "A failure here means respond -- delete the branch, assess exposure, rotate what"
+            echo "was exposed. It does not mean the push was blocked, because it was not."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -52,7 +52,7 @@ column, and only there.
 | Two sessions build the **same thing** in **different files** | Zero conflicts, two green pull requests, one thrown away. This is the residual no gate can compute: announce and claims are both best-effort. | [Coordination](COORDINATION.md) |
 | Two sessions reach for the same next number in a shared sequence | Two records numbered `0004`. Git merges both cleanly and nothing in the graph can see it. | [Sequence allocation](SEQUENCE-ALLOC.md) -- atomic allocation plus a commit-time gate; neither half suffices alone, and no installer wires the commit-time half |
 | A session is a long way into the wrong approach | Typing at its prompt only queues your message for after the turn. | [Steering](STEERING.md) -- a note delivered at the target session's next tool call |
-| A peer cannot be reached at all | An editor-extension session, or one under a different login, is invisible to the realtime channel. | [Session mail](SESSION-MAIL.md) -- designed and documented there, **not shipped** |
+| A peer cannot be reached at all | An editor-extension session, or one under a different login, is invisible to the realtime channel. | [Session mail](SESSION-MAIL.md) -- **ships**: a sender, a drain, and one shared key function |
 | Two sessions write the same last-write-wins state outside git | Project memory, a shared note, a ledger. One write vanishes with no error anywhere. | **No shipped mechanism.** Named in [Worktrees](WORKTREES.md) and [Concepts](CONCEPTS.md) as something a worktree does not isolate; the remedy is single-writer convention. An accepted residual -- see [lander](#using-a-lander-session). |
 | Several branches all have to land in one trunk | "Can't merge" is four different states with three different fixes. | [PRs and merges](PR-AND-MERGE.md) -- read the state before touching the branch; it also owns what squash-merge does to reachability |
 | Cleanup deletes a worktree a session is still working in | Or it half-fails, stranding commits in no ref and no reflog. | [Pruning](PRUNING.md) -- merged AND clean AND NOT occupied, two occupancy signals either of which may veto, and an orphan ledger |
@@ -172,7 +172,8 @@ At least these channels exist. Each links to the page that owns it.
 
 | Channel | Reaches whom, and when | Push or pull | Shipped here |
 |---|---|---|---|
-| [Steering note](STEERING.md) | **A** -- a **busy** session, at its next tool call. The only channel that interrupts a turn in progress. | addressed to one worktree | yes, opt-in per worktree; nothing wires it |
+| [Cross-session messaging](https://code.claude.com/docs/en/cross-session-messaging) | **A** -- a **busy** peer between tool calls; an idle one at a new turn. Not another login: nothing can name it. | addressed by name, never by path | yes, built into the harness; nothing to install |
+| [Steering note](STEERING.md) | **A** -- a **busy** session, at its next tool call. The only one here a non-Claude process can send. | addressed to one worktree | yes, opt-in per worktree; nothing wires it |
 | [Collision gate](COORDINATION.md) | **A** -- a **busy** session, at the tool call: while the outcome can still change. | addressed to whoever attempts the edit; delivered by the harness, not a peer | yes |
 | [Kill-switch files](COORDINATION.md) | **A** -- sessions already running, because the hook re-reads the file on every run. | broadcast, one bit | yes |
 | [Announce](COORDINATION.md) | **B** -- a peer already running **and** in the desktop session list. Not an extension session, not another login. | addressed; one note per peer, same content to each | yes; delivery needs a desktop-only server |
@@ -184,11 +185,14 @@ At least these channels exist. Each links to the page that owns it.
 | [Commit-time claim gate](COORDINATION.md) | **D** -- the committing session, at commit; it reaches one that never asked for anything. | addressed to the committing session | yes, installed per clone into the shared git hooks directory, so one copy governs every worktree; `--no-verify` bypasses it |
 | [SessionStart context](HOOKS.md) | **E** -- only a session that starts later. | broadcast | yes |
 | The working agreement ([`CLAUDE.md`](https://claude-multisession.pages.dev/CLAUDE.md.template)) | **E** -- only sessions that start later; an edit misses a running one. | broadcast | template only; nothing installs it |
-| [Session mail](SESSION-MAIL.md) | **E** -- a session that starts later; a mid-turn wake-up is possible and is one-shot. | addressed to a worktree box, keyed by normalized path | **no** -- designed and documented here, not implemented here |
+| [Session mail](SESSION-MAIL.md) | **E** -- a session that starts later; a mid-turn wake-up is possible and is one-shot. | addressed to a worktree box, keyed by normalized path | **yes** -- `scripts/coord/mail.ps1` sends, `scripts/hooks/mail-drain.ps1` delivers |
 
-One property explains the whole first band: **a file is re-read on every hook run**. An environment
+One property explains the first band: **a file is re-read on every hook run**. An environment
 variable is read once at process start, and a settings edit reaches only the next session. So every
-channel in **band A** is a file.
+band A channel *this repo ships* is a file.
+
+**The harness's own channel is the exception.** Cross-session messaging is not a file and needs no
+hook. Claude Code reads an arriving message between tool calls itself.
 
 **Announce is band B and is not a file.** It delivers through a desktop-only MCP server, which is
 why it reaches only peers in the desktop session list.
@@ -343,10 +347,10 @@ hop.
   authorized.
 - **State that lives only in one context.** Whatever it decides must end up in a claim, a number, a
   branch or a gate; a cleared context takes the rest with it.
-- **It inherits the timing table, and the one channel that interrupts a turn is closed to it.** The
-  steering note is the only channel reaching a *busy* session, and
-  [Steering](STEERING.md#the-trust-boundary) forbids this use of it in terms: "Do not route
-  machine-to-machine traffic through it."
+- **It inherits the timing table, but a busy session is now reachable.** Cross-session messaging
+  reaches a busy peer between tool calls, and not through the note.
+  [Steering](STEERING.md#the-trust-boundary) forbids that use: "Do not route machine-to-machine
+  traffic through it."
 
   Its premise is "this came from the user". A lander writing one puts words in the operator's mouth,
   which is the bullet above.

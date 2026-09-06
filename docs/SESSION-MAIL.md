@@ -2,13 +2,24 @@
 
 ## TLDR/BLUF
 
-**What this is.** Build instructions for a mailbox that reaches a [KORUS](KORUS.md) peer the
-realtime channel can *list* but cannot *send* to. Two peers need one: an editor-extension session,
-and a session under a [second Claude account](DESKTOP-ACCOUNTS.md).
+**What this is.** Build instructions for a mailbox that reaches a [KORUS](KORUS.md) peer no
+channel here can name. A session under a [second Claude account](DESKTOP-ACCOUNTS.md) needs one, and
+that half is measured. An editor-extension session is expected to, and that half is untested.
 
-**This page ships nothing. No script here implements it.** It is the design, staged as buildable
-steps, plus every failure a first attempt hits. Each failure below was measured, not reasoned about.
-Two survived a full review before anyone caught them.
+**This lane now ships, and these are the scripts.** The page stays the design and the record of
+every failure a first attempt hits. Each failure below was measured, not reasoned about. Two
+survived a full review before anyone caught them.
+
+| Piece | File |
+|---|---|
+| Shared key and root resolution | `scripts/coord/_mail.ps1` |
+| Send, list and status | `scripts/coord/mail.ps1` |
+| The drain | `scripts/hooks/mail-drain.ps1` |
+| The tests, one class per failure below | `tests/test_session_mail.py` |
+
+**The urgent mid-turn tier is NOT built**, deliberately. It is the one section here with no script
+behind it, and [why it is left alone](#a-mid-turn-wake-up-is-one-shot-and-cannot-fix-itself) is at
+the end of the page.
 
 **Why you should care.** [Announce](COORDINATION.md#announcing-yourself), the realtime channel, only
 knows about sessions the desktop app itself started. Neither peer above is one of those, by
@@ -26,10 +37,10 @@ found by someone who thought their first build was done.
 ## Who actually needs this
 
 KORUS recommends a VS Code instance alongside the desktop app for review, and several Claude
-accounts to cover a week of build work. Both of those peers sit outside announce's reach, and the
-gap is structural, not a setting to flip.
+accounts to cover a week of build work. Both peers sit outside the channels here, for two different
+reasons, and the difference is what the lane is built on.
 
-**The gap is delivery, not discovery.**
+**For announce, the gap is delivery, not discovery.**
 [Announce](COORDINATION.md#announcing-yourself) finds peers through `presence.ps1`, which reads the
 on-disk registry across every config root and sees every surface. So it can *list* both peers below.
 
@@ -37,19 +48,35 @@ What it cannot do is send to them. Delivery runs through `list_sessions` and `se
 desktop-only MCP server, and that map holds only sessions the desktop app itself spawned, under the
 account it authenticated against.
 
-| Peer | Why announce cannot reach it |
-|---|---|
-| A VS Code companion session | Visible in the roster, but never entered into the desktop app's session map -- not filtered out, never registered. There is no id to send to |
-| A session under a second Claude account | Its config root is independent. The roster spans it; the messaging map does not |
+**For the built-in channel, the gap is the reverse.** Claude Code ships `ListAgents` and
+`SendMessage` from v2.1.224, and v2.1.234 on native Windows. Transport is not the limit there.
+Discovery is.
 
-A file drop is blind to both axes. It does not care which app spawned the reader or which account it
-logged into. That is the whole reason the lane is a file, not a second realtime channel.
+Counted on this machine inside one minute: **12** `cc-msg` pipes bound, against a roster that could
+name **6** of them. Two sessions counted separately and got the same three numbers.
+
+The mechanism is published as well as measured. Each session registers itself in files on disk, and
+Claude Code reads those files to find peers. Two sessions reach each other only when they can see
+the same files, and a second Claude account is a different config root.
+
+So `SendMessage` addresses by name and nothing else. A peer that nothing can name is a peer it
+cannot reach, however open the transport underneath.
+
+| Peer | Why the channels here cannot reach it | Status |
+|---|---|---|
+| A session under a second Claude account | Its config root is independent. The roster spans it; neither messaging map does | **measured** |
+| A VS Code companion session | Expected to be in the roster and in neither messaging map, on the same mechanism | **untested** |
+
+A file drop is blind to both axes. It needs no id and no name, because it is addressed by normalized
+worktree path, which both peers already have. That is the whole reason the lane is a file, not a
+second realtime channel.
 
 **A failed send is evidence about your instrument before it is evidence about the channel.** The
-`SendMessage` tool addresses subagents of your own session, not sibling top-level sessions.
+`SendMessage` tool does reach sibling top-level sessions. What it cannot do is name one that lives
+under another config root.
 
-A `SendMessage` failure to a sibling proves nothing about whether that peer is reachable at all.
-Confirm which tool you called before deciding a peer is unreachable.
+So a failure there proves nothing about whether the peer is reachable. Confirm which tool you
+called, and whether its roster could name the target, before calling a peer unreachable.
 
 ---
 
@@ -328,12 +355,29 @@ than reading a successful send as proof.
 **What to do.** Build three habits into the drain, which make delivery observable instead of merely
 wired:
 
-- **The drain announces that it ran.** "The box is empty" beats silence: a missing line means the hook
-  did not fire, where silence alone reads the same as a hook that fired and found nothing.
+- **The drain announces that it ran, where a reader is deciding.** At **session start**, "the box is
+  empty" beats silence: a missing line means the hook did not fire, where silence alone reads the
+  same as a hook that fired and found nothing.
 - **A receipt records what was observed, not what was attempted**, written by the drain at the moment
   it renders. A receipt written by hand can assert a delivery that never happened.
 - **Every observation carries its as-of time.** An undated observation reads as current and is not
   usable for anything.
+
+**This rule stops at `SessionStart`. Do not carry it to `Stop`.** `Stop` fires at the end of every
+turn, so a line on the consumed-nothing path injects context into every turn, forever, to report the
+normal state. It was observed five turns in a row, with nothing else happening.
+
+Nobody is deciding anything at `Stop`. Its one reader wants to know the matcher is wired, and that
+is asked once, at install. Answer it once: a settings file carrying the matcher, and a test that
+fails when a hook script is referenced by nobody.
+
+**That line also claimed more than the drain knows.** Two sessions display one message. The first to
+reach `Stop` files it, so the second consumes nothing **having displayed it**.
+[Step 5](#step-5-split-show-from-consume-across-two-hook-events) calls that the accepted trade.
+
+**Every fault still speaks at `Stop`.** No queue, no box, delivery switched off, a helper that
+would not load, the catch-all: all of them report. `Stop` loses exactly one line, the one that
+reported success with nothing to do.
 
 ---
 

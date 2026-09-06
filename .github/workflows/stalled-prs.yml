@@ -1,0 +1,81 @@
+name: stalled PRs
+
+# A pull request can be finished, green, and unable to merge, forever, silently.
+#
+# THE MECHANISM, and it is live on this repository. Branch protection sets
+# `required_status_checks.strict = true` and there is no merge queue, so a PR that goes green has to
+# finish while `main` holds still. The moment anything else lands, every other open PR flips to
+# BEHIND and stops. Armed auto-merge does NOT update a BEHIND branch: it waits on checks that have
+# already passed.
+#
+# WHY NO EXISTING SIGNAL CATCHES IT. Every other signal here is a check OUTCOME, and no check has
+# failed -- that is the whole problem. `scripts/cron/watch-ci-red.ps1` watches for red, and there is
+# no red to watch. The author's last signal was a full pass, so they have no reason to look. A green
+# dashboard and a wedged repository are indistinguishable unless something asks the different
+# question: can this still merge AT ALL?
+#
+# MEASURED HERE 2026-09-05: four open pull requests, and merging one of them (#48) put the other
+# three BEHIND at once. Nothing reported it.
+#
+# THIS REPORTS, IT DOES NOT REPAIR. Updating a branch is a push to somebody else's PR, which is the
+# Owner's call and not a scheduled job's. The job's whole output is a list and a reason.
+
+on:
+  schedule:
+    # Once a day is enough. The condition persists until somebody acts, so a tighter cadence buys
+    # nothing and a looser one lets a wedge sit over a weekend.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask whether each open PR can still merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          prs=$(gh pr list --repo "$REPO" --state open --limit 100 \
+                  --json number,title,mergeStateStatus,mergeable,isDraft,updatedAt)
+
+          total=$(echo "$prs" | jq 'length')
+          echo "open pull requests: $total"
+
+          # BEHIND and DIRTY are the two that never clear themselves. BLOCKED is usually just
+          # waiting on checks, and reporting it would train people to ignore this job.
+          stuck=$(echo "$prs" | jq '[.[] | select(.isDraft | not)
+                                        | select(.mergeStateStatus == "BEHIND"
+                                              or .mergeStateStatus == "DIRTY")]')
+          count=$(echo "$stuck" | jq 'length')
+
+          {
+            echo "### Stalled pull requests"
+            echo
+            echo "Checked $total open PR(s) at $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+            echo
+            if [ "$count" -eq 0 ]; then
+              echo "**None stalled.** Every open PR is draft, mergeable, or waiting on a check."
+              echo
+              echo "This line is the proof the job ran. Its absence means the job did not fire,"
+              echo "which reads the same as a clean result if nothing says so."
+            else
+              echo "**$count stalled.** Neither state below clears on its own:"
+              echo
+              echo "| PR | State | What it means | Fix |"
+              echo "|---|---|---|---|"
+              echo "$stuck" | jq -r '.[] |
+                "| #\(.number) \(.title) | \(.mergeStateStatus) | " +
+                (if .mergeStateStatus == "BEHIND"
+                 then "trunk moved after this went green; strict mode stops it, and armed auto-merge will not update it | merge trunk into the branch (do NOT rebase over a squash-merged base) "
+                 else "a real conflict | resolve by hand; never force-push over it as if it were BEHIND " end) + "|"'
+            fi
+            echo
+            echo "This job REPORTS. Updating somebody else's branch is the Owner's call."
+          } >> "$GITHUB_STEP_SUMMARY"
