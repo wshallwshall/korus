@@ -123,9 +123,17 @@ A non-ASCII character raises `UnicodeEncodeError` the moment a script prints it 
 and it is invisible in review because it looks like its ASCII neighbour.
 
 ```powershell
-pwsh -NoProfile -File scripts/quality/check-ascii.ps1
-pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -Fix
+pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -Path scripts docs roles tests .github
+pwsh -NoProfile -File scripts/quality/check-ascii.ps1 -Path <one path> -Fix
 ```
+
+**Run it over what you changed, not over the tree.** A bare run exits 1 on a clean checkout: the
+vendored Spec Kit templates carry 275 non-ASCII characters and are not ours to rewrite. CI scans the
+tree in two steps for that reason, and `.github/workflows/gates.yml` is the source of record.
+
+**`-Fix` is not a route for the vendored trees.** Against a copy it leaves 134 of the 275, because
+one template's 81 hits are box-drawing characters in a directory diagram, and where it does act on
+template syntax it corrupts it.
 
 ## Writing rules
 
