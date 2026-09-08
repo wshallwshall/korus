@@ -29,7 +29,8 @@ do not guess and do not wait. Write the question to the console,
 comment it on the pull request, and stop.
 ```
 
-The console is the session that wrote the brief. In a KORUS build that is the dispatcher.
+The console is the session that wrote the brief. In a KORUS build that is the Console seat, which
+replaced the Dispatcher when it was retired on 2026-09-01.
 
 The template below ends with this block. That copy is the one you paste, and it goes in unchanged.
 

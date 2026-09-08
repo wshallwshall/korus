@@ -218,12 +218,18 @@ Four controls, and each one covers a failure the others do not:
 ## A seat's standing rules live in `roles/`, and nothing delivers them
 
 Each seat named on [Run a KORUS build](KORUS-BUILD.md) has a **playbook**: a durable file it reads
-on arrival. Those files sit at the repository root, not under `docs/`, and this site serves them.
+on arrival. Those files sit at the repository root, not under `docs/`, so **this site does not serve
+them.** Open them in your checkout.
 
-**Start at [roles/README.md](https://claude-multisession.pages.dev/roles/README.md).** It defines
-what a playbook is, and its section 1a is the seat-to-file table.
+**Start at [The playbooks](PLAYBOOKS.md).** It has the seat-to-file table, and a card for each seat
+that this site does serve.
 
-**This page carries no copy of that table on purpose.** A moving set gets one snapshot, and that
+**RETIRED 2026-09-08: this section sent readers to `roles/README.md`, at a URL that served
+nothing.** That file came from a private vault and still lists six seats retired on 2026-09-01 as
+live. The link pointed under `/roles/`, which resolves against `docs/roles/`, where no `README.md`
+exists.
+
+**This page carries no copy of the seat table on purpose.** A moving set gets one snapshot, and that
 is the one.
 
 Nothing routes a playbook to the session that needs it, for the reason
@@ -287,8 +293,8 @@ nothing.
 `origin/main`. So a worktree sitting on a legitimately newer branch is counted as stale here. Line
 endings were varied and changed nothing: the 13 shared files still differ with `\r` stripped.
 
-**These rows are what the rule in `roles/README.md` costs when nobody holds it.** The measurement
-expires the day a check reports two copies disagreeing.
+**These rows are what one folder of record costs when nobody holds it.** The measurement expires the
+day a check reports two copies disagreeing.
 
 ## Next
 
