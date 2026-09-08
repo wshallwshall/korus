@@ -44,23 +44,40 @@
 
 name: site
 
-# DISABLED ON PUSH AND PULL REQUEST, DELIBERATELY, 2026-09-03.
-# This workflow builds and deploys a site that korus does not have. It came across with the
-# tooling copy and its `build` job fails on every commit, because the Cloudflare project and
-# the served host both belong to another repository.
+# RE-ENABLED ON PUSH TO MAIN, 2026-09-08, by owner decision that korus publishes this host.
+# All three conditions the retired block below named are now met: both Cloudflare secrets are set
+# on this repository, the project exists, and docs/_config.yml names the host korus deploys to.
 #
-# A permanently red check on main is worse than no check: it trains every reader to ignore
-# red, and the next genuine failure arrives in a colour nobody looks at. So the automatic
-# triggers are removed rather than the workflow, because the capability is wanted later.
+# WHAT WAS ACTUALLY BROKEN WAS NOT THE TRIGGER ALONE, and this is the part worth keeping. The
+# deploy step carries `if: github.event_name == 'push'`. With `push` commented out the only live
+# trigger was `workflow_dispatch`, for which that condition is always false. So EVERY possible run
+# built the site, SKIPPED the deploy, and reported success.
 #
-# RE-ENABLE WHEN: docs/_config.yml names this repository's own served host, a Cloudflare
-# project exists for it, and the CLOUDFLARE_API_TOKEN secret is set. Restore the two lines
-# below and delete this block. The skipped test in tests/test_internal_links_resolve.py
-# names the same condition and should be un-skipped in the same change.
+# Measured on run 34266692519, a workflow_dispatch at fdd5bd32 with both secrets present:
+#   Publish to Cloudflare Pages          conclusion=skipped
+#   Publish the repository's own files   conclusion=success   <- control, same job
+#   Upload the built site                conclusion=success   <- control, same job
+# A green run and a run that deployed nothing were the same colour. `completed` is not
+# `succeeded`, because it includes `skipped`.
+#
+# So the condition is widened as well as the trigger restored: a manual dispatch on main now
+# deploys too, or the only way to re-publish would be to invent a commit.
+#
+# THE ONE THING THIS DOES NOT SETTLE. wshallwshall/claude-multisession is public, not archived,
+# and deployed to this same Pages project three times on 2026-09-03. Two repositories writing one
+# project means the last deploy wins and nothing reports it. Disabling that repository's deploy is
+# a change in that repository.
+#
+# THE RETIRED TEXT FOLLOWS, so a reader who remembers the old rule meets the correction here rather
+# than re-deriving it. It said: disabled on push and pull request, deliberately, 2026-09-03,
+# because the workflow built a site korus did not have and its build job failed on every commit,
+# the Cloudflare project and the served host both belonging to another repository. A permanently
+# red check on main is worse than no check, because it trains every reader to ignore red and the
+# next genuine failure arrives in a colour nobody looks at. That reasoning was sound and its
+# condition expired.
 on:
-  # push:
-  #   branches: [main]
-  # pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 # Least privilege. Nothing here writes to the repository; the deploy authenticates to Cloudflare
@@ -349,8 +366,14 @@ jobs:
           fi
           echo "the deploy target and the site's own address agree"
 
+      # THE REF TEST IS THE GUARD; THE EVENT TEST IS NOT. Restricting to `push` alone made this
+      # step unreachable for the whole time `push` was commented out, and a skipped step and a
+      # successful one report the same colour. A dispatch on main is a deliberate re-publish and
+      # must be able to deploy, or the only way to re-publish is to invent a commit.
       - name: Publish to Cloudflare Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: >-
+          github.ref == 'refs/heads/main'
+          && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
