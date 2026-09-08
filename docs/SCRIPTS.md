@@ -18,7 +18,7 @@ once installed.
 
 ---
 
-The source is also on [GitHub](https://github.com/wshallwshall/claude-multisession), the better view
+The source is also on [GitHub](https://github.com/wshallwshall/korus), the better view
 where reachable.
 
 **Fetching these by hand instead of cloning?** Take `ccx.config.json` and the four shared modules
