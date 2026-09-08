@@ -394,7 +394,26 @@ jobs:
   # the document set they answer for.
   forward:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # THE REPOSITORY TEST IS THE MISSING CONDITION, added 2026-09-08. This job publishes forwarding
+    # stubs to a GitHub Pages host, so a reader holding an old wshallwshall.github.io URL is told
+    # where the page went. That host belongs to wshallwshall/claude-multisession. korus never
+    # served it, and its stubs are already published and static.
+    #
+    # Run here, the job targets wshallwshall.github.io/korus -- a host nobody holds a link to --
+    # and fails because Pages is not enabled on this repository, which is the correct setting.
+    #
+    # Measured on run 34268360638, the first push-triggered run after the deploy was re-enabled:
+    #   build    success    and the Cloudflare deploy step inside it: success
+    #   forward  failure    "Failed to create deployment (status: 404) ... Ensure GitHub Pages has
+    #                        been enabled: https://github.com/wshallwshall/korus/settings/pages"
+    #
+    # So the site published correctly and the run went red on a job whose premise is absent here.
+    # The condition is written rather than the job deleted, for the reason the update-branch rule
+    # was conditioned rather than dropped in #61: the rule is true where it came from.
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && github.repository == 'wshallwshall/claude-multisession'
     runs-on: ubuntu-latest
     # Job-level permissions REPLACE the workflow-level block rather than adding to it, so `contents`
     # is restated here; without it the checkout below cannot read the repository.
