@@ -79,7 +79,7 @@ You are working with two directories and they are not the same:
 
 | Name | What it is |
 |---|---|
-| **tooling** | A clone of `claude-multisession`. Only the source of scripts. Nothing governs it. |
+| **tooling** | A clone of `korus`. Only the source of scripts. Nothing governs it. |
 | **target** | The repository you are in now, which would get the config, the hooks and the gate. |
 
 If no tooling clone exists yet, do not tell them to clone it until they have decided to proceed.
