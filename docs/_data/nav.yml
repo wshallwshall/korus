@@ -94,12 +94,24 @@
     - label: Running multiple sessions
       title: "Running multiple sessions"
       path: /RUNNING-MULTIPLE-SESSIONS.html
+    # BEFORE the worker brief, because the brief names a playbook and this is the page that says
+    # which ones exist. It replaces the route through roles/README.md that QUICKSTART.md carried
+    # until 2026-09-08: that file is the pre-2026-09-01 roster, and the URL it was linked at
+    # (/roles/README.md) served nothing, because roles/ sits outside the Jekyll source.
+    - label: The playbooks
+      title: The playbooks
+      path: /PLAYBOOKS.html
     - label: Worker brief
       title: "Brief a worker session"
       path: /WORKER-BRIEF.html
     - label: Worktrees
       title: Worktrees
       path: /WORKTREES.html
+    # AFTER Worktrees, because it is the join rather than either half, and it assumes the isolation
+    # boundary that page establishes.
+    - label: Seats and worktrees
+      title: Seats and worktrees
+      path: /SEATS-AND-WORKTREES.html
     - label: Coordination
       title: Coordination
       path: /COORDINATION.html
@@ -133,6 +145,13 @@
     - label: Leak gate
       title: The leak gate
       path: /LEAK-GATE.html
+    # THE PAGE EXISTED AND NOTHING LINKED TO IT. It has been built and served since it landed, and
+    # it was absent from every group here, so the only route to it was CLAUDE.md. Under Guardrails
+    # rather than Run a build because the mechanism is a SessionStart hook that runs unattended in
+    # every worktree, like the hooks above it.
+    - label: Role cards
+      title: "Role cards: giving a worktree a seat that outlives its session"
+      path: /ROLE-CARDS.html
     - label: Usage awareness (design)
       title: "Usage awareness: Knowing when to stop, without lying about it"
       path: /USAGE-AWARENESS.html
