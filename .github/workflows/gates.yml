@@ -167,9 +167,25 @@ jobs:
         # and excludes nothing, while `-ExcludeDir skills .specify` binds `.specify` to the
         # positional -Path and scans only the vendored tree. Both spellings look right and
         # both are wrong; measured 2026-09-02 at 192, 20 and 202 files scanned.
-        # `skills` and `.specify` hold VENDORED Spec Kit files. They are not ours to rewrite,
-        # and `specify init` would overwrite any fix on the next upgrade, so a rule enforced
-        # there would fail on someone else's schedule. The house rule applies to what we write.
+        # `skills` and `.specify` hold Spec Kit files we do not rewrite: `specify init` would
+        # overwrite any fix on the next upgrade, so a rule enforced there fails on someone
+        # else's schedule. The house rule applies to what we write.
+        #
+        # THAT LAST SENTENCE WAS ONCE FALSE OF THIS STEP, and the correction is the step below.
+        # `-ExcludeDir` matches a LEAF directory name at ANY depth, so `skills` pruned all of
+        # `.claude/skills` -- 18 authored playbook skills -- and `.specify` pruned the
+        # constitution. Measured 2026-09-06: 20 files hidden, 19 of them written here.
+
+      # The half the step above cannot see. It enumerates the VENDORED set and scans everything
+      # else, so a NEW authored skill is covered the day it lands. Naming the authored set instead
+      # would fail the other way: silence for anything nobody remembered to add.
+      #
+      # A new VENDORED skill is scanned until somebody names it here, and may well fail. That is
+      # the correct direction -- a red says "classify this", where a silent skip says nothing.
+      # `tests/test_ascii_gate_reads_what_we_write.py` pins the list against the tree.
+      - name: ASCII gate (authored files inside the Spec Kit trees)
+        shell: pwsh
+        run: pwsh -NoProfile -Command "& ./scripts/quality/check-ascii.ps1 -MaxReport 0 -Path .claude/skills,.specify/memory -ExcludeDir speckit-analyze,speckit-checklist,speckit-clarify,speckit-constitution,speckit-converge,speckit-implement,speckit-plan,speckit-specify,speckit-tasks,speckit-taskstoissues"
 
       - name: Leak gate (structural-only unless a token source is supplied)
         shell: bash
