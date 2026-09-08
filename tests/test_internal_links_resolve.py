@@ -298,14 +298,22 @@ class InternalLinksResolve(unittest.TestCase):
         )
 
     @unittest.skip(
-        "korus publishes no site, so SERVED_HOST names another repository's host and the "
-        "corpus is legitimately empty. SKIPPED RATHER THAN DELETED, and rather than left "
-        "failing, because the guard is correct and will be needed the day this repository "
-        "publishes: it exists to stop the served-URL branch of broken_links passing over "
-        "nothing. UN-SKIP WHEN: docs/_config.yml names this repository's own served host "
-        "and SERVED_HOST above is repointed at it. Until then a green here would assert "
-        "that a check ran when its corpus was empty, which is the failure this whole file "
-        "is written against."
+        "The corpus is empty, and as of 2026-09-08 the REASON changed. SKIPPED RATHER THAN "
+        "DELETED, and rather than left failing, because the guard is correct: it exists to stop "
+        "the served-URL branch of broken_links passing over nothing. "
+        "THE OLD REASON HAS EXPIRED. It read: korus publishes no site, so SERVED_HOST names "
+        "another repository's host. The owner settled that on 2026-09-08 -- korus is the "
+        "publisher of this host, both Cloudflare secrets are set, and site-build.yml deploys on "
+        "push to main. SERVED_HOST already matches docs/_config.yml, so that half is met. "
+        "WHAT IS STILL TRUE is narrower and it is not about ownership: no tracked page carries an "
+        "ANCHORED link to a served URL. Measured at fdd5bd3, 0 such links across 106 tracked "
+        "markdown files -- the file count is the control, without which a zero would also be what "
+        "a blind scan returns. korus writes intra-docs links relative and lets "
+        "jekyll-relative-links rewrite them, which is the recommended form, so the branch this "
+        "guards may simply have no users here. "
+        "UN-SKIP WHEN a tracked page carries an anchored served-URL link. DELETE BOTH THIS AND "
+        "the served-URL branch of broken_links if a deliberate decision is taken that no page "
+        "ever should, rather than leaving a branch that passes over nothing."
     )
     def test_the_served_url_scan_has_something_to_look_at(self):
         """The served-URL branch above is only worth anything while such links exist.
