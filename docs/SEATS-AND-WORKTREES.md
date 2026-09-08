@@ -147,7 +147,7 @@ Check the filename before inventing your own. `*.local.*` needs a segment after 
 
 ## Related
 
-[Worktrees](WORKTREES.md) has the commands and the isolation boundary.
-[Role cards](ROLE-CARDS.md) has the card format, the alias map and the design record.
-[The playbooks](PLAYBOOKS.md) has the seven live seats and the file each one reads.
-[Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) covers the surfaces and the channels.
+- [Worktrees](WORKTREES.md) -- the commands and the isolation boundary.
+- [Role cards](ROLE-CARDS.md) -- the card format and the design record.
+- [The playbooks](PLAYBOOKS.md) -- the seven live seats.
+- [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) -- surfaces and channels.
