@@ -11,7 +11,7 @@ layout: default
 makes Claude Code productive on a real project. It covers the model and effort to run, what the
 accounts cost, what to write down, and running several sessions without collisions.
 
-`claude-multisession` is the tooling that enforces that last part.
+`korus` is the tooling that enforces that last part.
 
 **Why you should care.** Several sessions at once raise how fast work arrives, and the shared write
 surface caps what lands ([measured](FAQ.md#how-many-sessions-should-i-run)). The conflicts that cost

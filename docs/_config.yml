@@ -11,10 +11,15 @@
 #
 # `title` is read in four places and is the only definition: _layouts/default.html prints it in the
 # header and builds every `<title>` from it, and the layout's own `page.title == site.title` test is
-# what keeps the landing page from carrying its title twice. The REPOSITORY, the Cloudflare Pages
-# project and the hostname are all still `claude-multisession`, and `.github/workflows/site-build.yml`
-# compares `url` below against the project name before it deploys -- so renaming this line is safe and
-# renaming `url` is not.
+# what keeps the landing page from carrying its title twice.
+#
+# CORRECTED 2026-09-08. This said "the REPOSITORY, the Cloudflare Pages project and the hostname are
+# all still `claude-multisession`". Two of those three are; the repository is not. korus publishes
+# this site from 2026-09-08, and site-build.yml in claude-multisession is disabled.
+#
+# The Cloudflare Pages PROJECT and the HOSTNAME are still `claude-multisession`, and
+# `.github/workflows/site-build.yml` compares `url` below against the project name before it
+# deploys -- so renaming this line is safe and renaming `url` is not.
 title: KORUS
 description: >-
   KORUS -- Keep One Repo, Unblock Sessions. A practitioner's framework for better AI coding with
