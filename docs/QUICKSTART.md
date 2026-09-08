@@ -26,7 +26,7 @@ can remove them.
 ## 1. Get the tooling
 
 ```powershell
-git clone https://github.com/wshallwshall/claude-multisession.git
+git clone https://github.com/wshallwshall/korus.git
 ```
 
 **Pin it rather than tracking `main`.** This repository runs concurrent sessions against itself, so

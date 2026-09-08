@@ -68,10 +68,21 @@ label resolves to silence rather than to a retirement notice.
 
 ---
 
-## `roles/README.md` is not the roster
+## `roles/README.md` agrees with the roster, and this page said it did not
 
-It came across from a private vault, and it still lists every seat in the table above as live.
-CLAUDE.md's seat table governs, and it says so in the table's own note.
+**RETIRED 2026-09-08, on the first day this page existed.** It read: "It came across from a private
+vault, and it still lists every seat in the table above as live." That is false, and this page
+carried it because CLAUDE.md says it and nobody re-read the file.
+
+Measured at `9658940`: `roles/README.md:22` retires all seven seats in bold, naming each one, and
+line 26 says not to route work to a retired seat or read a retired row as live. Its section 1a
+lists the same seven live seats as the table above, and 1b lists the retired files.
+
+Control, same file: `wc -l roles/README.md` returns 237, so the grep read a real document rather
+than an empty one.
+
+CLAUDE.md's seat table still governs, for the ordinary reason that one file has to. The claim that
+`roles/README.md` contradicts it is retired.
 
 Two files in `roles/` are holding pens rather than playbooks. `COMMON-STAGED.md` and
 `LANDER-ROUTED-OUT.md` were split out on 2026-09-05 and are unedited. Each block in them needs a

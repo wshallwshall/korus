@@ -106,8 +106,9 @@ specs/                            one directory per feature: spec.md, plan.md, t
 ## Related
 
 - [claude-multisession](https://github.com/wshallwshall/claude-multisession) -- the
-  earlier public home for KORUS documentation and scripts, and where the open findings
-  currently live.
+  earlier public home for KORUS docs and scripts. **Its site deploy was disabled on 2026-09-08,
+  and korus publishes the site now.** The findings moved here too, so the clause saying they
+  live there is retired.
 
 ## Licence
 
