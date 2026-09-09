@@ -123,6 +123,23 @@ rule:
 
 > A false SKIP is a minor annoyance. A false PRUNE destroys a session.
 
+<a id="g05"></a>
+
+<figure class="explain-figure">
+<picture>
+<source media="(max-width: 1100px)" srcset="/assets/diagrams/g05-pruner-decisions-mobile.svg">
+<img src="/assets/diagrams/g05-pruner-decisions.svg" alt="Every pruner check must pass, including a fresh check before removal; failures skip the worktree." loading="lazy" width="777" height="1117">
+</picture>
+<figcaption>This maps the automated pruner, with its default activity veto. Every failure or unknown state takes the SKIP path. The manual remover follows a different policy. <a href="/assets/diagrams/g05-pruner-decisions.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
+The merge check accepts trunk containment, an exact-tip merged pull request, or the branch's own gone upstream.
+The gone-upstream signal keeps the branch; it does not prove the commits merged.
+
+`-Name` can override recent activity, but never a session veto, nested worktree, or Git lock.
+The fresh checks narrow a race window; they do not make removal atomic. Check recovery references
+and invisible occupants before acting. Ignored files can still be lost.
+
 Any uncertain check produces SKIP. Cleanup must never take priority over preserving work.
 
 `Test-WorktreeClean` blocks removal whenever it cannot establish cleanliness.

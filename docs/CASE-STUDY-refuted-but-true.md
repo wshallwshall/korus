@@ -35,6 +35,15 @@ The extension's catalog entry in the Spec Kit repository reads:
 `>=0.1.0` includes every 0.16 release. The repository's machine-readable catalog explicitly
 supported the claim.
 
+<a id="g14"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="assets/diagrams/g14-evidence-sequence-mobile.svg">
+    <img src="assets/diagrams/g14-evidence-sequence.svg" width="799" height="575" alt="A compatibility claim received three rejection votes. The Spec Kit catalog then confirmed support through its version range. Untested claims need a separate verdict." loading="lazy">
+  </picture>
+  <figcaption>The recorded rejection and the source evidence supported different conclusions. The catalog confirmed compatibility; a failed search alone would leave the claim untested. Only contradictory evidence refutes it. <a href="assets/diagrams/g14-evidence-sequence.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 ---
 
 ## Why this kind of error survives review

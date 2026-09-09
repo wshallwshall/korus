@@ -185,3 +185,5 @@ The prose gate scans only `docs/`, `README*`, and `INSTALL*`. It excludes `CLAUD
 
 A planted banned phrase in `CLAUDE.md` left the gate green, confirming that scope. This page is
 inside the checked set.
+
+The [handoff diagram](KORUS-BUILD.md#g04) shows each role alongside the work it receives and passes on.

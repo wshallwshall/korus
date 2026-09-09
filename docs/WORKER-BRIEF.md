@@ -168,3 +168,5 @@ the measurements above do not support.
 | Which channel reaches which peer, and when | [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) |
 | The working agreement every session reads | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Judging a prohibition against the paths it closes | [Drift audit](CASE-STUDY-drift-audit.md) |
+
+The [handoff diagram](KORUS-BUILD.md#g04) places the brief between the Console and Builder.

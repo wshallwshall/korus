@@ -244,3 +244,5 @@ labelling setup.
 - [Usage awareness](USAGE-AWARENESS.md) -- why an unproven reading has to refuse rather than report
 - [CI for leaders](CI-FOR-LEADERS.md) -- what done means when the author cannot vouch for the change
 - [Every script](SCRIPTS.md) -- the full inventory, including this one
+
+The [handoff diagram](KORUS-BUILD.md#g04) shows where the Regulator receives a failed check.

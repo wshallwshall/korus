@@ -248,3 +248,5 @@ channel: peer data must not acquire the user's authority.
 | Receipt | The command confirms the write, never the delivery. The absence of the file is your only delivery evidence. |
 | Failure mode | Fails open and silently by design; a broken hook is indistinguishable from an idle one at the session. |
 | Install | No installer wires it. `bin/ccx-doctor.ps1` reports whether it is wired, by receipt, and does not attack it. |
+
+The [mail timeline](SESSION-MAIL.md#g09) shows a different delivery path and its limits.

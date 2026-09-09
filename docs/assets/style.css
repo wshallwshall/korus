@@ -907,3 +907,69 @@ body.has-nav-toggle .site-nav.is-collapsed {
     color: inherit;
   }
 }
+
+/* Explanatory graphics retain a light paper surface in both site themes.
+   The mobile picture source changes the layout, rather than shrinking its labels. */
+.page-content .explain-figure {
+  margin: 2rem 0;
+  max-width: 100%;
+}
+.page-content .explain-figure picture {
+  display: block;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+.page-content .explain-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.page-content .explain-figure figcaption {
+  max-width: var(--measure);
+  margin: .75rem 0 0;
+  color: var(--fg-muted);
+  line-height: 1.6;
+}
+.page-content .explain-figure figcaption a {
+  white-space: normal;
+}
+@media (max-width: 1100px) {
+  .page-content .explain-figure {
+    max-width: 460px;
+  }
+}
+/* Existing wide figures keep their original artwork at a readable scale.
+   Phone and tablet readers get separately laid-out SVGs. */
+.page-content figure:has(.legacy-diagram-mobile) {
+  margin: 2rem 0;
+  max-width: 100%;
+}
+.legacy-diagram-desktop {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.legacy-diagram-desktop svg {
+  display: block;
+  width: 1200px;
+  max-width: none;
+  height: auto;
+}
+.legacy-diagram-mobile {
+  display: none;
+  max-width: 460px;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.legacy-diagram-mobile img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 1100px) {
+  .legacy-diagram-desktop { display: none; }
+  .legacy-diagram-mobile { display: block; }
+}

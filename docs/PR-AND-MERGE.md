@@ -106,6 +106,15 @@ merely confirms it.
 
 ## Reading "can't merge": Four states, three different fixes
 
+<a id="g08"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g08-merge-states-mobile.svg">
+    <img src="/assets/diagrams/g08-merge-states.svg" alt="Four merge states connect to their distinct fixes." loading="lazy" width="799" height="668">
+  </picture>
+  <figcaption>Read the exact state before acting. Auto-merge waits for checks but does not update a BEHIND branch. <a href="/assets/diagrams/g08-merge-states.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 A pull request can stop being mergeable within ten minutes. Rebasing and force-pushing without
 reading its state can cancel checks or damage conflict resolution.
 

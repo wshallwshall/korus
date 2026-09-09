@@ -732,3 +732,5 @@ A first run commonly finds missing or unproven controls. Follow the matching res
 | The sequence gate's `OFF (opt-in)` | [Sequence allocation](SEQUENCE-ALLOC.md) has the `pre-commit` hook to wire |
 | The ASCII gate's `OFF (opt-in)` | Wire `scripts/quality/check-ascii.ps1` into your own `pre-commit` and into CI |
 | A leak-gate question | [Leak gate](LEAK-GATE.md). No installer wires that one either |
+
+The [setup roadmap](QUICKSTART.md#g03) connects installation to the checks that prove it worked.

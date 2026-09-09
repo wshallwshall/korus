@@ -223,3 +223,5 @@ Keep the repository and merge queue the same, and report elapsed time and condit
 | Check requirements and blind spots | [Limits and requirements](LIMITS.md) |
 | Diagnose unexpected behavior | [Troubleshooting](TROUBLESHOOTING.md) |
 | Read the author's account of the method | [The KORUS framework](KORUS.md) |
+
+The [visibility map](LIMITS.md#g11) shows which work the collision gate can observe.

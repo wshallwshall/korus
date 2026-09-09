@@ -69,6 +69,7 @@ B can coordinate with A or work on `parser.py` instead. That gives both sessions
 without finding the overlap at merge time.
 
 <figure role="group">
+<div class="legacy-diagram-desktop" tabindex="0" role="region" aria-label="Wide diagram; scroll horizontally to read">
 <svg viewBox="0 0 820 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two session lanes on a shared timeline. Session A edits service.py and leaves the change uncommitted. Session B then reaches for the same file and the collision gate refuses the edit before it runs, naming who holds the file. Session B edits parser.py instead, and both branches land.">
   <defs>
     <marker id="ix-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -93,8 +94,12 @@ without finding the overlap at merge time.
   <text x="665" y="165" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">both branches land</text>
   <text x="12" y="196" font-size="10" font-style="italic" fill="currentColor">Without the gate, B's write lands and one of the two loses work at merge -- with nothing on either screen saying so.</text>
 </svg>
+</div>
+<div class="legacy-diagram-mobile">
+  <img src="/assets/diagrams/home-collision-mobile.svg" alt="The collision gate refuses B's edit before it runs; B edits another file." loading="lazy" width="339" height="828">
+</div>
 <figcaption>The refusal happens at edit time, before the write, and names who holds the file. Without
-it both writes succeed and the loss surfaces at merge, or later.</figcaption>
+it both writes succeed and the loss surfaces at merge, or later. <a href="/assets/diagrams/home-collision-mobile.drawio">Editable mobile diagram</a>.</figcaption>
 </figure>
 
 <a id="what-the-tooling-enforces"></a>

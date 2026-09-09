@@ -161,3 +161,5 @@ Do not treat silence as proof that no peer exists.
 | Who is live, what they are touching, and the collision gate's full rule | [Coordination](COORDINATION.md) |
 | Installing the controls, and watching one refuse | [Quickstart](QUICKSTART.md) |
 | Every installer flag, and how to prove each control is live | [Install](INSTALL.md) |
+
+Use the [merge-state guide](PR-AND-MERGE.md#g08) to match a blocked merge to its fix.

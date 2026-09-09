@@ -111,3 +111,5 @@ playbook it points to.
 
 [Seats and worktrees](SEATS-AND-WORKTREES.md) has how a seat reaches a session. [Role cards](ROLE-CARDS.md) has the card format and the design record.
 [Run a KORUS build](KORUS-BUILD.md) has the shape a build runs in. [Worker brief](WORKER-BRIEF.md) has what to put in the opening prompt.
+
+The [handoff diagram](KORUS-BUILD.md#g04) shows how work moves between the build roles.
