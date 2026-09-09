@@ -77,7 +77,7 @@ jobs:
               echo "**COULD NOT READ \`$BRANCH\`.** Nothing was audited, and this is a FAILURE"
               echo "rather than a clean result. This endpoint needs no elevated scope, so a"
               echo "refusal here is an outage or a renamed branch, not a permission gap."
-            } >> "$GITHUB_STEP_SUMMARY"
+            } | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
@@ -165,4 +165,4 @@ jobs:
             echo
             echo "This job READS. It never edits protection: a workflow that could widen what gates"
             echo "it is the same fault as a gate that can change what it decides on."
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
