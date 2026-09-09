@@ -124,7 +124,7 @@
     # and Worktrees, so a reader budgeted time for a feature, read the page, and found homework. Six
     # independent reviews of the live site raised it. The suffix is the only place the distinction
     # can reach a reader who has not opened the page yet.
-    - label: Session mail (design)
+    - label: Session mail
       title: "Session mail for a KORUS build"
       path: /SESSION-MAIL.html
     - label: Sequence allocation

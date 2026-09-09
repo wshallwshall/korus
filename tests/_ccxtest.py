@@ -15,6 +15,7 @@ against another empty set.
 from __future__ import annotations
 
 import re
+import json
 import shutil
 from pathlib import Path
 
@@ -53,7 +54,16 @@ WATCH_CI_RED = REPO_ROOT / "scripts" / "cron" / "watch-ci-red.ps1"
 # WHAT IT DOES NOT EXEMPT, because an exemption wider than its reason is the failure this repository
 # is about: the ASCII gate, the link-wrapping rule, every link resolving, and the site building. An
 # exempt page is still a page a reader has to be able to load.
-AUTHORED_VERBATIM = ("docs/KORUS.md",)
+AUTHORED_VERBATIM = ("docs/KORUS.old.md",)
+
+# Archives preserve the prose the owner asked to replace. Hash checks in
+# test_page_revisions cover these exact paths; an unlisted .old file is not exempt.
+ARCHIVED_PAGES = tuple(
+    "docs/" + page["archive"]
+    for page in json.loads(
+        (REPO_ROOT / "docs/_data/page-revisions.json").read_text(encoding="utf-8")
+    )["pages"]
+)
 
 # HS-21: retired 2026-08-16. See docs/HOUSE-STYLE.md for the tombstone. The constant and the test
 # that read it (test_a_series_answers_one_set_of_questions.py) are both gone; this comment is the

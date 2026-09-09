@@ -119,6 +119,7 @@ def _markdown_under(prefixes: tuple[str, ...]) -> list[str]:
         and f.startswith(prefixes)
         and "/word/" not in f
         and f not in t.AUTHORED_VERBATIM
+        and f not in t.ARCHIVED_PAGES
     ]
 
 
@@ -427,6 +428,7 @@ def unread_pages(paths: list[str]) -> list[str]:
         and f not in UNREAD_PAGES
         and "/word/" not in f
         and f not in t.AUTHORED_VERBATIM
+        and f not in t.ARCHIVED_PAGES
         and f not in covered
     )
 
@@ -630,7 +632,7 @@ class TheBannedPatternsCatchWhatTheyExistToCatch(unittest.TestCase):
 # back with a token missing; two were deliberate (a range rewritten as `HS-20 to HS-23`, a date
 # restated twice and now stated once) and the third was a real loss -- the ASVS large-assessment link
 # dropped when the landing page was split -- which was restored to the page that now owns that case.
-BASELINE_LONG_SENTENCES = 58        # sentences over 30 words
+BASELINE_LONG_SENTENCES = 7        # sentences over 30 words
 BASELINE_FAT_TABLE_CELLS = 11       # table cells over 40 words
 
 # HS-20: a paragraph over 300 characters. THE BASELINE IS NOW ZERO, SO THIS IS A CAP RATHER THAN A

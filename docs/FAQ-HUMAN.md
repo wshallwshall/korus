@@ -1,7 +1,5 @@
 # KORUS questions, answered plainly
 
-Alternate copy for review. [Original FAQ](FAQ.md) | [Rewritten home page](HOME-HUMAN.md) | [Rewritten Quickstart](QUICKSTART-HUMAN.md)
-
 KORUS adds checks for sessions that share a repository. You may only need Claude Code's own
 worktrees if your sessions do separate work and a person reviews the results.
 
@@ -199,7 +197,7 @@ Keep the repository and merge queue the same, and report elapsed time and condit
 
 | Next step | Guide |
 |---|---|
-| Install it and test a blocked edit | [Quickstart](QUICKSTART-HUMAN.md) |
+| Install it and test a blocked edit | [Quickstart](QUICKSTART.md) |
 | Check requirements and blind spots | [Limits and requirements](LIMITS.md) |
 | Diagnose unexpected behavior | [Troubleshooting](TROUBLESHOOTING.md) |
 | Read the author's account of the method | [The KORUS framework](KORUS.md) |

@@ -5,46 +5,41 @@ layout: default
 
 # BMAD 6.11.0 with Ultracode: A how-to
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) 6.11.0 is a
-persona-based skill framework for Claude Code. This page compares it to Ultracode and answers
-whether combining them is worth doing.
+[BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) 6.11.0 adds named roles and planning skills to Claude Code. It can supply written plans
+and review steps for Ultracode.
 
-**Why you should care.** Yes, and there is one thing to avoid: never run a BMAD skill that writes
-its state file as two or more concurrent Ultracode subagents. Not for you if you want a tutorial:
-read the upstream docs.
+Keep skills that write shared state out of concurrent Ultracode work. Two writers can overwrite each
+other's updates; the upstream docs cover BMAD itself.
 
-**How to use it.** Read the diagram, then the how-to at the end. Everything else is the reasoning
-behind both.
+[The procedure below](#how-to-use-them-together) shows how to combine planning, parallel work, and review.
 
 ---
 
 ## What is BMAD
 
-BMAD (Breakthrough Method for Agile AI-Driven Development) and Ultracode are two different
-philosophies for running Claude Code at scale.
+BMAD means Breakthrough Method for Agile AI-Driven Development. It and Ultracode offer different
+ways to organize Claude Code work.
 
-BMAD turns Claude Code into a governed, human-directed team working from Markdown specifications.
-Ultracode lets Claude Opus decide on its own when to fan out into parallel sub-agents, at maximum
-(`xhigh`) reasoning effort.
+BMAD uses human-directed roles and Markdown specifications. Ultracode lets Claude Opus choose when
+to run parallel subagents, using maximum (`xhigh`) reasoning effort.
 
-**BMAD: governed and spec-driven.** You work with named personas -- analyst, product manager,
-architect -- to produce a PRD and an architecture document before any code is written.
+BMAD's analyst, product manager, and architect help you write a product requirements document (PRD)
+and an architecture document before coding.
 
-Work then stays scoped to version-controlled files under `_bmad-output/`, not chat memory, which
-is what keeps context from drifting across a long build. A developer, a UX designer, and a
-party-mode aggregator that runs several personas at once round out the 49 installed skills.
+Version-controlled files under `_bmad-output/` keep those decisions available through a long build.
+The 49 installed skills also include a developer, a user experience designer, and party mode for
+combining personas.
 
-**Ultracode: autonomous and parallel.** Activated with `/effort ultracode`, it combines `xhigh`
-reasoning with automatic workflow orchestration: Claude decides on its own when a task is big
-enough to fan out into parallel sub-agents, rather than you dictating the process.
+Run `/effort ultracode` to enable `xhigh` reasoning and automatic work assignment. Claude decides
+when a task needs parallel subagents.
 
-Each sub-agent's result is held in a script variable until the run finishes, keeping the main
-context window clean.
+The run holds each subagent's result in a script variable until it finishes. This reduces what the
+main context window must carry.
 
-BMAD's persona work also writes a file to disk -- a PRD, an architecture document, story files, a
-sprint status file -- and those files persist after the session ends.
+BMAD saves its PRD, architecture document, story files, and sprint status file to disk. They remain
+after the session ends.
 
 Install BMAD with:
 
@@ -52,14 +47,14 @@ Install BMAD with:
 npx bmad-method@6.11.0 install --yes --tools claude-code --modules bmm --directory .
 ```
 
-That puts 3.0MB and 248 files into `.claude/skills/` and `_bmad/`, none of it gitignored by
-default.
+The install adds 3.0MB across 248 files in `.claude/skills/` and `_bmad/`. Git ignores none of them
+by default.
 
-Two of the 49 skills also run Python, not just prompts. `sprint_status.py` writes the work-tracking
-file, atomically but without a lock -- two writers racing it can lose an update.
+Two of the 49 skills run Python. `sprint_status.py` replaces the work-tracking file atomically, but
+has no lock to prevent two writers from losing an update.
 
-`config_utils.py` resolves the project root fail-closed: run BMAD from the wrong place and it
-errors instead of guessing.
+`config_utils.py` stops with an error when it cannot resolve the project root. It does not guess
+when you run BMAD from the wrong directory.
 
 The 49 skills:
 
@@ -190,15 +185,15 @@ planning files become the input Ultracode's fan-out executes against.</figcaptio
 
 ## Does BMAD augment Ultracode
 
-Yes, for two things Ultracode does not keep on its own: a written project spec, and named review
-passes.
+BMAD adds a written project spec and named review passes. Ultracode does not keep either on its own.
 
-Run BMAD's planning skills once, before the first fan-out. They each produce a file, not a
-concurrent writer, so the lock issue above does not apply yet. Route BMAD's review skills into the
-fan-out once you have checked they do not write the state file.
+Run the planning skills once before starting parallel work. With one writer at a time, they cannot
+race over the state file.
 
-No, if the plan is to run BMAD's whole persona set as a fan-out. Its personas are sequential by
-design, and forcing concurrency onto them is the exact combination that races the state file.
+You can run review skills in parallel after checking that they do not write that file.
+
+Do not run the whole persona set concurrently. The personas are designed for sequential work, and
+concurrent state-file writes can lose updates.
 
 ---
 

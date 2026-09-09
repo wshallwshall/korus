@@ -978,7 +978,7 @@ class TheMailLaneShipsEverywhereOrNowhere(unittest.TestCase):
     def test_the_page_declares_that_the_lane_ships(self):
         """The anchor. If this ever flips back, the rule below is void and must be revisited."""
         text = t.read(t.REPO_ROOT / "docs" / "SESSION-MAIL.md")
-        self.assertIn("This lane now ships", text)
+        self.assertIn("The mail channel now ships", text)
 
     def test_no_cross_reference_calls_the_lane_unshipped(self):
         offenders: list[str] = []

@@ -1,31 +1,26 @@
 # Every script, and what it does
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** The inventory: every script this project ships -- all 39 of them on 2026-08-31 --
-grouped by what you are trying to do, with the page that owns each one. It was the bottom half of
-the landing page until 2026-08-16.
+Find the script for your task, then open its linked reference. The recorded inventory had 39 scripts
+on 2026-08-31 and moved off the landing page on 2026-08-16.
 
-**Why you should care.** Paths are relative to this checkout, and the site serves each at the same
-path, so
-[/scripts/coord/claim.ps1](https://claude-multisession.pages.dev/scripts/coord/claim.ps1)
-needs no clone. Not for you if you are still deciding whether to install: that is
-[the FAQ](FAQ.md).
+Paths are relative to the checkout. This site also serves them directly, including [/scripts/coord/claim.ps1](https://claude-multisession.pages.dev/scripts/coord/claim.ps1).
 
-**How to use it.** Find the row for what you want to do, then read the doc in the right-hand column.
-The controls under [Controls that run without you](#controls-that-run-without-you) run without you
-once installed.
+If you are deciding whether to install, start with [the FAQ](FAQ.md).
+
+[Installed controls](#controls-that-run-without-you) run automatically. Other rows describe commands you run yourself, scheduled work, or
+shared helpers.
 
 ---
 
-The source is also on [GitHub](https://github.com/wshallwshall/korus), the better view
-where reachable.
+You can also read the source on [GitHub](https://github.com/wshallwshall/korus).
 
-**Fetching these by hand instead of cloning?** Take `ccx.config.json` and the four shared modules
-under [Internals and installers](#internals-and-installers) as well.
+For manual downloads, also fetch `ccx.config.json` and the four shared modules listed under
+[Internals and installers](#internals-and-installers).
 
-Without them every PowerShell script here throws on its first line of body, the three Python hooks
-exit 1 on import, and the worktree gate exits 0 while enforcing nothing.
+Without those dependencies, the PowerShell scripts throw at the start of their bodies. The three
+Python hooks exit 1 on import, while the worktree gate exits 0 and enforces nothing.
 
 ## Start here
 
@@ -57,7 +52,7 @@ exit 1 on import, and the worktree gate exits 0 while enforcing nothing.
 
 ## Controls that run without you
 
-Installed once, then invoked by the harness or by git.
+Once installed, these controls run through client events or git hooks.
 
 | Script | Event | Does | Doc |
 |---|---|---|---|
@@ -74,8 +69,8 @@ Installed once, then invoked by the harness or by git.
 
 ## Scheduled jobs
 
-Its own section because a scheduler runs it, not the harness and not git, so it has no event to name
-in the column above. Nothing installs it: you register the schedule.
+You must register this job with a scheduler. No installer schedules it, and no client or git event
+triggers it.
 
 | Script | Does | Doc |
 |---|---|---|
@@ -83,8 +78,8 @@ in the column above. Nothing installs it: you register the schedule.
 
 ## Gates you have to run yourself
 
-No installer wires either of these. This repository's own CI does, in
-`.github/workflows/gates.yml`, and yours has to.
+No installer wires these checks. This repository runs them in `.github/workflows/gates.yml`; add
+them to your own continuous integration workflow too.
 
 | Script | Does | Doc |
 |---|---|---|
@@ -93,9 +88,8 @@ No installer wires either of these. This repository's own CI does, in
 
 ## Instruments for a run
 
-These fire only when something is wrong. Read
-[what broken looks like](https://claude-multisession.pages.dev/scripts/validation/README.md) before
-the first run, not after: it states what counts as broken, and when the run is over.
+These instruments report detected failures. Before running them, read [what broken looks like](https://claude-multisession.pages.dev/scripts/validation/README.md) for failure criteria
+and the run's stopping point.
 
 | Script | Does | Doc |
 |---|---|---|
@@ -106,13 +100,12 @@ the first run, not after: it states what counts as broken, and when the run is o
 | `scripts/validation/check-allocation-collisions.ps1` | Every ref, grouped by sequence number. Fires when one number maps to two paths its index row does not declare as companions | [Sequence allocation](SEQUENCE-ALLOC.md) |
 | `scripts/validation/check-session-reaping.ps1` | Liveness against last write. Fires when a live record's worktree has seen no commit and no file write for a day | [Pruning](PRUNING.md) |
 
-Nothing here gates a commit or a push. They report, and a CANNOT_TELL verdict means nothing was
-examined rather than nothing was wrong.
+These instruments report results without blocking commits or pushes. CANNOT_TELL means nothing was
+examined; it does not mean nothing was wrong.
 
 ## Internals and installers
 
-[Quickstart](QUICKSTART.md) runs the four installers in order. [Install](INSTALL.md) is the
-reference for the flags named below.
+[Quickstart](QUICKSTART.md) gives the four-installer order. [Install](INSTALL.md) explains the flags below.
 
 | Script | Does | Doc |
 |---|---|---|
@@ -121,6 +114,7 @@ reference for the flags named below.
 | `scripts/hooks/_command.ps1` | The one command splitter, dot-sourced by the worktree gate and the blanket-stage gate | [Hooks](HOOKS.md) |
 | `scripts/hooks/_gittarget.ps1` | Which repository a git command actually acts on. Dot-sourced by the worktree gate, and pulls in `_common.ps1` itself | [Hooks](HOOKS.md) |
 | `scripts/site/publish_sources.py` | Copies everything `git ls-files` tracks into the built site, which is why the paths on this page resolve without a clone | [House style](HOUSE-STYLE.md) |
+| `scripts/site/publish_revisions.py` | Validates archive hashes, publishes exact `.old.md` sources, and checks revision links and search exclusion after the Jekyll build | [House style](HOUSE-STYLE.md) |
 | `scripts/site/build_redirect.py` | Builds the forwarding site for the old GitHub Pages address, a stub per old URL. It cannot help the reader the move was made for | [House style](HOUSE-STYLE.md) |
 | `scripts/coord/session-registry.ps1` | The liveness fence: reads the client's session registry and decides whether a session is alive. Liveness may only VETO, never PERMIT -- DEAD/STALE/absent is the absence of a veto, not a permission | [Concepts](CONCEPTS.md) |
 | `scripts/coord/occupancy.ps1` | The one cwd-to-worktree matcher, returning a receipt alongside its rows (roots examined, records examined, records that could not be placed) and setting `Available` only when there was something to examine | [Concepts](CONCEPTS.md) |

@@ -1,19 +1,16 @@
 # House style: what a page here has to do
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** Each rule is one testable statement with a permanent identifier, cited in a
-review comment. They demand sentences that each carry a fact, a number, a constraint or a link, and
-prose that never describes its own structure. No rule demands a summary section.
+Write sentences that carry a fact, number, constraint, link, or instruction. Give each rule a
+permanent identifier so a reviewer can cite it. No rule requires an opening summary.
 
-**Why you should care.** Applying them costs length only where length was doing nothing. Not for
-you on generated files, on `PD` itself, or on `SECURE-DEVELOPMENT.md`, which left with
-[the standards](https://github.com/wshallwshall/secure-development-standards) and answers their
-house style now.
+These rules do not apply to generated files or to edits that would weaken `PD`, the protected-content rules.
+`SECURE-DEVELOPMENT.md` moved to [the standards repository](https://github.com/wshallwshall/secure-development-standards)
+and follows that repository's style.
 
-**How to use it.** Read `PD` first, before touching anything: it is the list of things an editor MUST
-NOT cut. The one rule that named specific sections, `PD-8`, is a tombstone -- all four went with the
-standards.
+Before editing, check `PD` for facts and limits that must survive. PD-8 remains a retired rule:
+its four named sections moved with the standards.
 
 ---
 
@@ -28,19 +25,17 @@ standards.
 | **MUST**, **MUST NOT** | Absolute. Not meeting one is a defect, not a judgment call |
 | **SHOULD** | Ignore it only for a stated reason you have weighed |
 
-An identifier is a permanent name, never a position. Reword a rule freely under the same identifier;
-change what it demands and you allocate a new one.
+Keep a rule's identifier when you change its wording. Allocate a new identifier when you change
+what the rule requires.
 
-**`PD` outranks every other section.** Where a `PD` rule and an `HS` rule disagree about the same
-text, `PD` wins. The failure this ordering prevents is an editor satisfying a length rule by deleting
-a measurement.
+`PD` takes priority over the other rules. If a length limit conflicts with preserving a
+measurement, keep the measurement and rewrite the surrounding prose.
 
 ### The numbering is shared with another repository, and this page is not the whole of it
 
-**The next free number is the one above the highest number ISSUED IN EITHER SHEET, never the lowest
-gap here.**
-[secure-development-standards](https://github.com/wshallwshall/secure-development-standards) kept
-counting after the split, so the numbers past each section are occupied, not vacant.
+Use the number above the highest one issued in either rule sheet.
+[secure-development-standards](https://github.com/wshallwshall/secure-development-standards)
+continued numbering after the split, so gaps in this sheet may already be taken.
 
 | Series | Issued here | Issued there | **Next free** |
 |---|---|---|---|
@@ -49,24 +44,26 @@ counting after the split, so the numbers past each section are occupied, not vac
 | `PD-<n>` | PD-1 to PD-8 | PD-9 to PD-13 | **PD-14** |
 | `OPEN-<n>` | OPEN-1 to OPEN-8 | none | **OPEN-9** |
 
-Read from that repository's `origin/main`, not a local clone: it runs concurrent sessions and a
-clone goes stale in the time one rule takes to write.
+Check that repository's `origin/main` before allocating a number. Concurrent edits can make a
+local copy stale while you are writing.
 
-Checked there on 2026-08-16 at commit `d393aad`, correcting a table that had understated `PD` and
-`B`: `PD-9` through `PD-13` and `B-18` were already issued there, not only `PD-9` and `B-17`. Its
-one `OPEN` mention cites this page's range, as `OPEN-1 to OPEN-6`.
+The table was checked on 2026-08-16 at `d393aad`. The earlier version listed only `PD-9` and
+`B-17`; the other repository had already issued `PD-9` through `PD-13` and `B-18`.
 
-**Neither sheet can see the other move, and both have been wrong about it.** That page says this
-one issues `OPEN-1 to OPEN-6`, true until `OPEN-7` landed. No check on either side could catch it,
-so `HS-13` and the cross-repository anchor ban exist, and the table above carries a date and a
-commit.
+Its one `OPEN` reference gave this page's range as `OPEN-1 to OPEN-6`.
+
+Neither sheet detects changes to the other. The other page's `OPEN-1 to OPEN-6` range became
+stale when `OPEN-7` was added.
+
+That gap prompted `HS-13` and the cross-repository anchor ban. The table records its check date
+and commit so readers can judge its age.
 
 ---
 
 ## OPEN: the opening
 
-The model is `standards/SECURE-DEVELOPMENT.md`, whose opening went from 99 lines to 22 when two
-orientation sections were deleted for restating the page rather than opening it.
+The opening of `standards/SECURE-DEVELOPMENT.md` fell from 99 lines to 22 after two sections
+that repeated its contents were removed. That edit supplied the model for these rules.
 
 | ID | Rule | Evidence |
 |---|---|---|
@@ -77,61 +74,66 @@ orientation sections were deleted for restating the page rather than opening it.
 
 ### OPEN-8 names one file, and that is the whole of the exemption
 
-`docs/KORUS.md` is the only page under it: a document its author asked to publish unedited. Four
-gates were red against it before this rule existed -- `OPEN-2` and `OPEN-7`, both since retired,
-the source-link scan, and `HS-20` at 94 paragraphs against a baseline of 88.
+`docs/KORUS.old.md` preserves the author's unedited account. The owner approved rewriting the
+current `docs/KORUS.md` on 2026-09-09, so the exemption now follows the archived copy.
 
-**The exemption is a tuple of exact paths, never a pattern.** `AUTHORED_VERBATIM` in
-`tests/_ccxtest.py` is its only definition, and three tests in two files read it rather than
-repeating the filename. Adding a second page is a diff someone approves, which is the point.
+Before OPEN-8, four checks failed on that account: `OPEN-2`, `OPEN-7`, the source-link scan, and
+`HS-20`. The paragraph count was 94 against a baseline of 88; the first two rules were later retired.
 
-**It is an exclusion, not a raised baseline.** Moving `BASELINE_FAT_PARAGRAPHS` from 88 to 94 would
-also have gone green, and would have handed every other page six paragraphs of new headroom. The
-ratchet still measures what it measured before.
+`AUTHORED_VERBATIM` in `tests/_ccxtest.py` lists exact paths. Three tests in two files read it.
+Adding another exempt page requires an approved change to that list.
 
-An exempt page may write `/WORKTREES` without `.html`, but only where `WORKTREES.md` is a page the
-site serves, so a mistyped target still fails. That form is not broken: the host resolves it by
-clean-URL fallback, measured on 2026-08-12 against `/WORKTREES` and `/USAGE-AWARENESS`.
+Excluding that one page kept the baseline at 88. Raising `BASELINE_FAT_PARAGRAPHS` to 94 would
+have given every other page six extra long paragraphs.
 
-What OPEN-8 does not touch: the ASCII gate, `HS-16`, every link resolving, and the site building.
-An exempt page is still one a reader has to be able to load.
+An exempt page may use `/WORKTREES` without `.html` only if `WORKTREES.md` exists on the site.
+Clean-URL fallback was checked on 2026-08-12 against `/WORKTREES` and `/USAGE-AWARENESS`.
+
+OPEN-8 does not exempt ASCII, `HS-16`, link resolution, or the site build.
 
 ### OPEN-1, OPEN-2, OPEN-4 and OPEN-7: retired 2026-08-27, and no rule replaces them
 
-Retired on the owner's instruction. `PD-6` keeps the four identifiers; none is reissued.
+The owner retired these four rules on 2026-08-27. `PD-6` keeps their identifiers, which must
+not be reused.
 
-Between them they required an opening summary on every rendered page. `OPEN-2` demanded the heading
-`## TLDR/BLUF`, spelled exactly that way, and `tests/test_docs_do_not_drift.py` gated its presence.
+The rules required an opening summary on every rendered page. `OPEN-2` required the exact
+heading `<a id="tldrbluf"></a>`, and `tests/test_docs_do_not_drift.py` checked for it.
 
-`OPEN-1` and `OPEN-7` demanded three answers inside that section -- what this is, why the reader
-should care, and how to use it -- in that order, each its own paragraph.
+`OPEN-1` and `OPEN-7` required separate paragraphs answering what this is, why readers should
+care, and how to use it, in that order.
 
-`OPEN-4` demanded a plain statement of who the page is not for, in the `Why you should care` slot.
+`OPEN-4` required the `Why you should care` paragraph to say who the page was not for.
 
-**The presence gate is deleted. The spelling ban is not.** `tests/test_docs_do_not_drift.py` still
-refuses `## In short` and `**TL;DR --**`, the two spellings the set replaced.
+The presence check was deleted. `tests/test_docs_do_not_drift.py` still rejects `## In short`
+and `**TL;DR --**`, the two replaced spellings.
 
-That ban holds a page that HAS a summary section to one spelling. It requires no page to have one.
+A page that includes a summary must use the accepted spelling. A page may omit the summary.
 
-Pages carrying a summary section keep it. Retiring a rule does not delete what was written under it.
+Retiring the rules did not delete existing summaries. The 2026-09-09 rewrite removes their
+formulaic labels from current pages; the archives preserve the earlier text.
+
+Archives are listed by exact path and SHA-256 hash in `docs/_data/page-revisions.json`. They stay
+outside current-prose ratchets because their purpose is to preserve earlier wording.
+
+`tests/test_page_revisions.py` checks those hashes, including planted changed and missing files.
+An unlisted `.old.md` file gains no exemption.
 
 ### What the four demanded before they were retired, so an old citation resolves
 
-`OPEN-1` first required four answers -- what this is, *what it costs the reader*, who it is not for,
-and where to start. It was cut to three on 2026-08-10, and cost moved into `Why you should care`.
+`OPEN-1` originally asked four questions: what this is, what it costs, who it is not for, and
+where to start. On 2026-08-10, cost moved into `Why you should care`, leaving three answers.
 
-`OPEN-2` ended with "A page **MAY** have no summary section at all" until that same day. On
-2026-08-10, 15 of the 18 rendered pages carried no summary section, so it bound almost nothing.
+Until 2026-08-10, `OPEN-2` ended with "A page **MAY** have no summary section at all". On that
+date, 15 of 18 rendered pages lacked a summary.
 
-`OPEN-7` required the three answers **verbatim and labelled**: `**What this is.**`, `**Why you
-should care.**`, `**How to use it.**`, matched by exact substring. A reworded or unbolded label read
-as absent, on purpose.
+`OPEN-7` required exact labels: `**What this is.**`, `**Why you should care.**`, and
+`**How to use it.**`. A substring check treated changed wording or missing bold as absent.
 
-2026-08-16 relaxed it to the three answers in the author's own words. The substring gate outlived
-the rule by one day, and for that day this page described a control it no longer had.
+On 2026-08-16, the rule allowed those answers in the author's words. The exact-label check
+remained for one more day, so the documented rule and the check disagreed.
 
-`OPEN-4` was reworded once under its own identifier without changing what it demanded: the
-not-for-you sentence stayed required, and was told which slot to sit in.
+`OPEN-4` was reworded once without changing its requirement. The sentence about who the page
+was not for still had to appear in the assigned paragraph.
 
 ---
 
@@ -161,42 +163,38 @@ not-for-you sentence stayed required, and was told which slot to sit in.
 
 ### HS-21: retired 2026-08-16, and the identifier is kept rather than reissued
 
-It required every `docs/FRAMEWORK-*.md` page to answer nine fixed questions in one declared order,
-gated by `tests/test_a_series_answers_one_set_of_questions.py`. The premise was that a series is
-worth more than its pages only if a reader can compare across them.
+HS-21 required each `docs/FRAMEWORK-*.md` page to answer nine questions in a fixed order.
+`tests/test_a_series_answers_one_set_of_questions.py` enforced that format for comparison.
 
-That premise needs at least two comparable pages. The BMAD page moved to a shorter, reader-directed
-shape -- what it is, how it compares to Ultracode, whether it helps, a short how-to -- leaving the
-series at one member.
+The comparison needed at least two pages. The BMAD page adopted a shorter format covering
+what it is, its relation to Ultracode, its uses, and setup, leaving one page in the series.
 
-The test's own guard said what to do about that: "if the series is genuinely gone, delete this file
-rather than leaving it to certify an empty set." Deleted, per its own instruction.
-`FRAMEWORK-spec-kit.md` keeps its nine-section shape; nothing requires a second page to match it
-now.
+The test instructed maintainers: "if the series is genuinely gone, delete this file rather
+than leaving it to certify an empty set." It was deleted.
+
+`FRAMEWORK-spec-kit.md` retained its nine sections. No other page has to match that order.
 
 ### HS-23: what the landing page stopped carrying, and why a rule was needed
 
-Nothing was wrong with any individual sentence on it. The defect was accretion: the install
-procedure, the requirements table, the vendor-surface limits and a 40-row script inventory each
-arrived on the landing page because it was the page everyone read, and each one was correct.
+The home page accumulated the install procedure, requirements, vendor limits, and a 40-row
+script inventory. Each addition was accurate, but together they made the starting point hard to find.
 
-**The reader pays for that in ordering, not in accuracy.** A developer arriving to find out whether
-to try this met the caveats before the commands, and the commands 68% of the way down a
+A new reader had to pass the caveats before reaching commands 68% of the way down a
 3,143-word page.
 
-The four owners it split into: [Quickstart](QUICKSTART.md) for the procedure,
-[Limits and requirements](LIMITS.md) for what it needs and where it stops,
-[Every script](SCRIPTS.md) for the inventory, and the landing page for routing.
+The split gave the procedure to [Quickstart](QUICKSTART.md), requirements and limits to
+[Limits and requirements](LIMITS.md), and the inventory to [Every script](SCRIPTS.md).
+The home page kept the links that help readers choose.
 
-**The rule is a cap rather than a prohibition on detail.** Detail is not the defect and `PD` still
-outranks this: the fix is always to move a fact to the page that owns it, never to delete it.
+Move a fact to its owning page when the home page gets too long. Do not delete it to meet the
+cap; `PD` still takes priority.
 
 ---
 
 ## PD: protected density, and what an editor MUST NOT cut
 
-Read this before editing. Density is not a defect here. These rules exist because the same editing
-pass that removes filler is the pass most likely to remove a measurement.
+Keep the measurements and the limits that make advice accurate. A shorter sentence is not an
+improvement if it loses either one.
 
 | ID | Rule |
 |---|---|
@@ -210,24 +208,21 @@ pass that removes filler is the pass most likely to remove a measurement.
 
 ### PD-8: retired, and the identifier is kept rather than reissued
 
-PD-8 named four sections that look like filler and are not, so an editor applying `OPEN-3` or `B-6`
-leaves them alone. All four left with
+PD-8 protected four sections from `OPEN-3` and `B-6` edits. All four moved to
 [secure-development-standards](https://github.com/wshallwshall/secure-development-standards).
-Nothing here is under it, and PD-6 forbids reissuing an identifier.
+PD-8 now covers no section here, and PD-6 prevents reusing its number.
 
-That repository does not follow them: its house style comes from its own gates. Two of the four are
-held by tests written for other reasons -- `test_rule_ids_are_stable.py` parses `## Retired rules`,
-and the selector test pins the sentinel on both sides.
+The other repository uses its own gates. Two of the four sections have tests for other
+reasons: `test_rule_ids_are_stable.py` parses `## Retired rules`, and the selector test pins both sides of its sentinel.
 
-The status-check date line and the ASVS Part 1 to Part 2 boundary marker are held by nothing at all.
-That is the condition PD-8 was written for, true again one repository over, where a rule covering it
-is proposed rather than assumed.
+No check there protects the status-check date line or the ASVS Part 1 to Part 2 boundary
+marker. A rule covering them is proposed, not established.
 
 ---
 
 ## B: banned constructions
 
-Each is drawn from prose measured in this repository, not from a general style guide.
+These bans came from prose found in this repository.
 
 | ID | Banned | Write instead |
 |---|---|---|
@@ -246,12 +241,7 @@ Each is drawn from prose measured in this repository, not from a general style g
 
 ## The standing edit protocol
 
-1. Re-derive an edit's target by heading text or a quoted sentence, never by a line number from a plan
-   or a review. Line numbers move under any edit to the same file.
-2. Before renaming or deleting any heading under `docs/`, search the repository for its text. Pages
-   here cite headings by name and link to them by anchor, and `tests/test_internal_links_resolve.py`
-   fails on an anchor whose heading has moved.
-3. Tests run from inside `tests/`: `python -m unittest discover -s . -q`. A run from the repository
-   root finds nothing and exits without testing anything.
-4. Run `scripts/coord/overlap.ps1` before starting a chunk of work. A clean merge proves lines did not
-   collide, not that intentions did not.
+1. Find the passage by its heading or exact wording. Line numbers from an earlier plan or review may have moved.
+2. Search the repository before renaming a heading. Preserve inbound anchors and run `tests/test_internal_links_resolve.py`.
+3. Run tests from `tests/` with `python -m unittest discover -s . -q`. Running discovery from the root can find no tests.
+4. Run `scripts/coord/overlap.ps1` before editing. A clean text merge does not establish that two changes serve different purposes.

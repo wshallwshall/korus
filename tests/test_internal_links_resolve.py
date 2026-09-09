@@ -147,6 +147,33 @@ def anchor_slug(heading: str) -> str:
     return re.sub(r"\s+", "-", s).strip("-")
 
 
+class ExplicitAnchor(str):
+    """A literal HTML id; heading duplicate suffixes do not apply to it."""
+
+
+def _without_comments(line: str, in_comment: bool) -> tuple[str, bool]:
+    # Code examples can contain comment delimiters without starting HTML comments.
+    scan = INLINE_CODE.sub(lambda match: " " * len(match.group()), line)
+    visible: list[str] = []
+    pos = 0
+    while pos < len(line):
+        if in_comment:
+            end = scan.find("-->", pos)
+            if end < 0:
+                break
+            pos = end + 3
+            in_comment = False
+        else:
+            start = scan.find("<!--", pos)
+            if start < 0:
+                visible.append(line[pos:])
+                break
+            visible.append(line[pos:start])
+            pos = start + 4
+            in_comment = True
+    return "".join(visible), in_comment
+
+
 def parse(text: str) -> tuple[list[str], list[tuple[int, str]]]:
     """Split a markdown file into (heading slugs, numbered lines), both excluding fenced blocks.
 
@@ -155,16 +182,23 @@ def parse(text: str) -> tuple[list[str], list[tuple[int, str]]]:
     slugs: list[str] = []
     body: list[tuple[int, str]] = []
     fenced = False
+    in_comment = False
     for lineno, line in enumerate(text.split("\n"), 1):
-        if FENCE.match(line):
+        if not in_comment and FENCE.match(line):
             fenced = not fenced
             continue
         if fenced:
             continue
+        line, in_comment = _without_comments(line, in_comment)
         m = ATX_HEADING.match(line)
         if m:
             slugs.append(anchor_slug(m.group(2)))
-        body.append((lineno, INLINE_CODE.sub("", line)))
+        # Explicit aliases keep inbound links working when an editorial rewrite
+        # replaces a heading. Only a/span anchors count, never IDs inside code.
+        visible = INLINE_CODE.sub("", line)
+        for alias in re.findall(r'<(?:a|span)\s+id=[\"\']([^\"\']+)[\"\']', visible):
+            slugs.append(ExplicitAnchor(alias))
+        body.append((lineno, visible))
     return slugs, body
 
 
@@ -173,6 +207,9 @@ def resolvable_anchors(slugs: list[str]) -> set[str]:
     seen: dict[str, int] = {}
     out: set[str] = set()
     for s in slugs:
+        if isinstance(s, ExplicitAnchor):
+            out.add(str(s))
+            continue
         n = seen.get(s, 0)
         out.add(s if n == 0 else f"{s}-{n}")
         seen[s] = n + 1
