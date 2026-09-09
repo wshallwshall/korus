@@ -131,7 +131,7 @@ three.
 
 Write one constitution that later steps can check.
 
-Run `/speckit-constitution [your rules]` once in the console session, before feature work:
+Run `/speckit-constitution [your rules]` once in the manager session, before feature work:
 
 > `/speckit-constitution Python is our primary language. All source code must adhere to OWASP ASVS
 > v5.0 Level 3 and NIST SSDF SP 800-218.`
@@ -144,7 +144,7 @@ before Phase 0 research and again after Phase 1 design.
 Set out the feature's purpose and requirements before assigning work to other sessions.
 
 Run `/speckit-specify [feature requirements]`, then `/speckit-clarify [spec-name]`. Keep both in the
-console session so a human can answer questions.
+manager session so a human can answer questions.
 
 > `/speckit-specify We need a session orchestration service that integrates with our Git-backed
 > database version control. It must handle temporary auth tokens and manage user sessions.`
@@ -173,7 +173,7 @@ fails.
 `plan.md` describes the architecture. The `tasks` command writes the ordered checklist to
 `specs/<NNN-slug>/tasks.md`.
 
-The KORUS console should read both files before assigning work to build sessions.
+The KORUS manager should read both files before assigning work to build sessions.
 
 ### Stage 4: Implement
 
@@ -251,11 +251,11 @@ The scan counted citations. Before using such a result as coverage, read the unc
 
 | Stage | KORUS session |
 |---|---|
-| constitution, specify, clarify | Console. One human-reviewed pass before work fans out |
-| plan, tasks | Console, or the builder the console hands the feature to |
+| constitution, specify, clarify | Manager. One human-reviewed pass before work fans out |
+| plan, tasks | Manager, or the builder the manager hands the feature to |
 | implement | The build session holding that feature's worktree |
 | checklist, analyze, converge | The same build session, before it hands the feature back |
-| taskstoissues | Console, if an issue tracker is in the loop |
+| taskstoissues | Manager, if an issue tracker is in the loop |
 
 Spec Kit's worktree files merge like other files. The untracked `feature.json` does not reach git,
 so it adds no work to the lander's push-and-merge role.
@@ -315,7 +315,7 @@ when a reviewer already reads every diff.
 This drops `constitution`, `clarify`, `checklist`, and `analyze`.
 
 Set an exit condition before starting. If `specify` and `clarify` produce padding instead of
-decisions the console can defend, stop and build directly.
+decisions the manager can defend, stop and build directly.
 
 ---
 

@@ -444,13 +444,11 @@ These observations concern one editor extension and may change with its version:
 
 ## Fitting it into a KORUS build
 
-Console and lander sessions are likely mail users in the [KORUS build](KORUS-BUILD.md) described by
-[KORUS](KORUS.md).
+The [KORUS build](KORUS-BUILD.md) uses a manager with builders that may run as subagents or separate sessions.
 
-The console can reach a companion VS Code review session. The lander can reach a builder on another
-account when its own weekly usage runs out.
+A subagent returns its result directly to the manager. A builder in its own session needs an explicit message route; session mail is one option.
 
-For a builder in the same desktop app and account, [Announce](COORDINATION.md) already provides delivery.
+Mail remains useful between separate sessions, such as a lander and a review session. Its client and delivery limits still apply.
 
 ---
 
@@ -458,7 +456,7 @@ For a builder in the same desktop app and account, [Announce](COORDINATION.md) a
 
 | For | Read |
 |---|---|
-| The build these console and lander sessions sit in | [Run a KORUS build](KORUS-BUILD.md) |
+| The manager and builder setup | [Run a KORUS build](KORUS-BUILD.md) |
 | The realtime channel, and who it can reach | [Coordination](COORDINATION.md) |
 | Delivering a note into a running session, mid-turn | [Steering](STEERING.md) |
 | Why held state and a message expire for opposite reasons | [Concepts](CONCEPTS.md) |

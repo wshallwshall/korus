@@ -14,7 +14,7 @@ ledger row, then exit.
 
 The authority section below controls which actions need approval.
 
-A Console or Manager supplies your brief. You may send that seat a question, but its answer goes
+Your Manager supplies your brief. You may run as a subagent or in your own session. You may send that seat a question, but its answer goes
 into the next Builder's brief. Do not expect a reply in this session.
 
 ## What it must not do
@@ -27,7 +27,7 @@ into the next Builder's brief. Do not expect a reply in this session.
 
 - Never use `--no-verify` or rename files to evade a gate. Fix the cause or report that you could not.
 
-- Never route work to retired seats. The Dispatcher is retired; use the Console or Manager that briefed you.
+- Never route work to retired seats. The Dispatcher is retired; use the Manager that briefed you.
 
 ## Its authority
 
