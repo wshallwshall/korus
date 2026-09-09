@@ -34,10 +34,13 @@ layout: null
 [
 {%- assign written = 0 -%}
 {%- for p in site.pages -%}
+{%- assign archive = site.data.page-revisions.pages | where: 'old_url', p.url | first -%}
+{%- unless archive -%}
 {%- if p.url == '/' or p.url contains '.html' -%}
 {%- if written > 0 %},{% endif -%}
 {%- assign written = written | plus: 1 %}
 {"t":{{ p.title | default: p.name | jsonify }},"u":{{ p.url | jsonify }},"x":{{ p.content | strip_html | normalize_whitespace | jsonify }}}
 {%- endif -%}
+{%- endunless -%}
 {%- endfor %}
 ]

@@ -1,233 +1,215 @@
 # The KORUS framework: Lessons learned the hard way
 
-> **Take a copy:**
-> [markdown](https://claude-multisession.pages.dev/KORUS.md)
-> or [Word document](https://claude-multisession.pages.dev/word/KORUS.docx).
+KORUS is the method I developed while using Claude Code on MessageFoundry.org, a major project I
+started in late May, 2026. I'm a senior developer, and this account records what I learned through that work.
 
-Hello, I'm a senior developer working on a major project since late May, 2026.
-(See MessageFoundry.org). This is a personally written summary of what I've learned.
+The name means Keep One Repo, Unblock Sessions. I use separate coding sessions with clear jobs,
+shared records, and checks that stop them disrupting each other's work.
 
-I call it **KORUS: Keep One Repo, Unblock Sessions**. That is the whole idea in four words:
-everything below follows from keeping one repository and stopping the sessions blocking each other.
+You can [download this Markdown](https://claude-multisession.pages.dev/KORUS.md) or read the
+[Word version](https://claude-multisession.pages.dev/word/KORUS.docx).
+The [previous Word version](https://claude-multisession.pages.dev/word/KORUS.old.docx) is also available.
 
-## BLUF/TLDR
+<a id="bluftldr"></a>
 
-The following is a framework developed during months of Claude Code work. This document and this
-site provide a starting point for new projects. This framework contains technical elements
-supporting better AI coding.
+## Start with the setup that fits your project
 
-**This page is the reasoning. If you want the commands, they are elsewhere:**
-[Quickstart](QUICKSTART.md) installs the enforcement, and
-[Run a KORUS build](KORUS-BUILD.md) is the operating procedure for the session shape in section 6.
+[Quickstart](QUICKSTART.md) installs the controls.
+[Run a KORUS build](KORUS-BUILD.md) explains the session roles and how to use them each day.
 
-**Last reviewed 2026-08-16.** The model, pricing and client advice below is the part that rots:
-check anything about plans, limits or model names against Anthropic's current documentation before
-relying on it.
+This account's model and pricing advice was last reviewed on 2026-08-16. The recommendations came
+from tools used as of 8/12/2026; they are historical observations, not a fresh review of available plans.
+
+Check current Anthropic documentation before choosing models, buying accounts, or relying on
+client behavior. Later sections also retain dated changes to the roles.
 
 ## KORUS for Multi-session AI-Coding
 
-Here is the shape of what I've learned.
+My setup combined these choices:
 
-1. Use Claude Code with Ultracode mode.
+- Claude Code with Ultracode mode.
+- Claude Code for Desktop for work across sessions, with VS Code available for reading and editing code.
+- One or more Claude Max 20x accounts, chosen for their compute cost rather than enterprise management features.
+- A manager running one or more builders, as subagents or separate sessions, with a lander handling the merge queue.
+- Worktrees and hooks to enforce the rules that prompts alone did not hold.
+- The Kynet method for communication between sessions, described in section 8.
 
-2. For multisession coding, Claude Code for Desktop works better than the VS Code extension.
-
-3. Use one or more Claude Max 20x accounts instead of Teams or Enterprise pricing.
-
-4. Set up the sessions:
-
-   **4.1.** A console, the one session you talk to. It reads the record, picks an item, writes a
-   short brief, and starts a builder for it.
-
-   **4.2.** A builder for each brief. It makes the change, commits, pushes, and opens the pull
-   request, then its process exits.
-
-   **4.3.** A lander session, which decides what enters the merge queue and in what order.
-
-   There are additional, optional sessions as described below.
-
-5. Use worktrees with hooks enforcing Claude Code's behavior.
-
-6. Use the Kynet method to enable inter-session communication (see below).
-
-I'll go through each of those and more in the following sections. Note: these recommendations are
-based on the Claude tools as of 8/12/2026. Things will change as Anthropic releases improvements.
+The reviewer and regulator roles add checks around the builders' work. The sections below explain
+the choices and their limits.
 
 ## 1. Use Claude Code with Ultracode Mode and Opus 5
 
-[Ultracode mode](https://code.claude.com/docs/en/workflows#let-claude-decide-with-ultracode)
-produces better results. Enabling it empowers Claude to launch workflows, which are a key part of
-this method. Workflows break the task into assignments handed to subagents. Ultracode also triggers
-[adversarial validation](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step),
-producing better results.
+I found [Ultracode mode](https://code.claude.com/docs/en/workflows#let-claude-decide-with-ultracode)
+useful because it lets Claude launch workflows. A workflow breaks a task into assignments for subagents.
 
-Opus 5 is presently the best mode for creating strong code. It is even slightly better than Fable 5
-at creating code and at half the price.
+It also triggers [adversarial validation](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step),
+which helped catch mistakes in my work.
 
-Unfortunately, using Ultracode and Opus 5 together is slow. The result is worth the wait, having
-fewer bugs to resolve later.
+At the time of this account, I preferred Opus 5 for code. In my experience it produced slightly
+better code than Fable 5 at half the price.
 
-That multisession method makes good use of the wait time. Since you are administering eight
-workflows, there's usually something for you to decide.
+Ultracode with Opus 5 was slow, but I spent less time fixing bugs afterward. Running several
+sessions gave me other work to review during those waits.
+
+With eight workflows active, there was usually a decision waiting for me. That describes my
+workload, not a measured speed advantage over one session.
 
 ## 2. Use Claude Code for Desktop
 
-Claude's desktop application is the best at empowering intersession communication. The VS Code
-extension lacks the strongest implementation of these as of 8/2026. As a result, running multiple
-sessions inside of VS Code generates code collisions.
+In 8/2026, I found the desktop app better at communication between sessions than the VS Code
+extension. Multiple sessions in the extension had caused code collisions.
 
-The desktop app, however, makes it difficult to see the final code. In VS Code, you always are a
-click away from the current codebase.
+VS Code made it easier to inspect the code itself. I kept it open alongside the desktop app:
+Claude generated changes in the desktop app, and I reviewed or edited them in VS Code.
 
-You might find it helpful to have a VS Code instance running alongside your Claude desktop app. Use
-the desktop app to generate the code and the VS Code to review and make manual edits.
-
-If you run more than one Claude account, set them up first:
-[Desktop accounts](DESKTOP-ACCOUNTS.md) covers one desktop instance per account, and the config root
-each one adds.
+If you use several Claude accounts, [Desktop accounts](DESKTOP-ACCOUNTS.md) explains how to set up
+one desktop instance per account and the config root each instance adds.
 
 ## 3. Subscribe to Claude Max 20x, Multiple Accounts: 60x Cheaper
 
-Yes, that header is correct: Claude's Max 20x accounts offer AI compute at 60x cheaper than the
-undiscounted API rates you pay under Teams or Enterprise plans. **If you bought the same compute Max
-20x gives you under API pricing, it would cost about $12,000.** For details, see
-[Token Accounting](https://claude-multisession.pages.dev/TOKEN-ACCOUNTING.html).
+The original account valued a Max 20x plan's compute at about $12,000 at undiscounted API rates,
+compared with a $200 monthly subscription. That is the basis for the reported 60x comparison.
 
-As a result, the Max 20x plan is the best way to affordably create your application. The individual
-accounts lack the enterprise management features but can save you thousands.
+[Token accounting](TOKEN-ACCOUNTING.md) explains the calculation and its limits. The comparison
+used the undiscounted API rates associated with Teams or Enterprise pricing in that account.
 
-You may require multiple Max 20x accounts to cover a week of heavy development. You can sign up for
-as many $200 per month accounts as you want, just use different email addresses.
+Individual accounts lack enterprise management features. In my workload, their lower compute cost
+could save thousands, and more than one account could cover a week of heavy development.
 
-**Check this against the current terms yourself before you rely on it.** I believe separate accounts
-on separate email addresses are within the terms, and that belief is mine rather than a citation: I
-am not a lawyer, and these documents change. The ones that govern it are Anthropic's
-[Usage Policy](https://www.anthropic.com/legal/aup),
+I believed separate accounts with separate email addresses were allowed, with no stated account
+count limit. That was my reading, not legal advice or a cited permission; I am not a lawyer.
+
+Check [Anthropic's Usage Policy](https://www.anthropic.com/legal/aup),
 [Consumer Terms](https://www.anthropic.com/legal/consumer-terms), and
-[the Claude Code plan guidance](https://support.anthropic.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan).
-What is definitely not allowed is sharing one account between people.
+[Claude Code plan guidance](https://support.anthropic.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)
+before relying on it.
 
-Max 20x limits your usage through five-hour session and weekly usage caps. Generally, 1% of weekly
-usage equals about 5% of session usage.
+The original guidance prohibited sharing one account between people.
 
-The per-session usage limits are a key factor in my recommendations. If you keep about eight build
-tasks running at a time, you'll normally run under the session limits. You'll use up your weekly
-limit in about two days.
+Max 20x applied both five-hour session caps and weekly caps. In my observations, 1% of weekly
+usage was roughly 5% of session usage.
 
-Splitting those tasks into separate sessions costs some intersession communication. It costs
-nothing to leave a session idle once it has ended its turn.
+About eight build tasks at a time usually stayed under my session limit. That workload used the
+weekly allowance in about two days.
 
-If you run tasks that fan out into many-agent workflows, especially /deep-research work, you'll
-need to reduce the number of tasks running.
+Separate sessions require some communication, but an idle session consumes no further compute
+after its turn ends. Tasks that launch many agents, especially `/deep-research`, require fewer concurrent tasks.
 
 ## 4. Backlog
 
-Have Claude Code create a project backlog. Then tell it to add things as they come up. Later, tell
-the console session to create a plan for building down that backlog.
+Ask Claude Code to create a project backlog and add new work as it comes up. Have the manager use
+that backlog when it plans the next build tasks.
 
 ## 5. Documentation
 
 ### 5.1 ADRs: Architecture decision records
 
-Have Claude create ADR documents for each significant build. When you ask the console session to
-create a plan, just tell it to be sure to create ADRs as needed. This gives you a build record for
-your CISO and any auditor. It also provides ongoing context for the AI.
+Create architecture decision records (ADRs) for significant build decisions. Include that
+requirement when you ask the manager to make a plan.
+
+The records give the AI ongoing context. They also give your security lead and auditors a history
+of the decisions behind the build.
 
 ### 5.2 GitHub Spec Kit
 
-GitHub's Spec Kit is a strong starting point for SDD (Spec-Driven Development). It is an antidote to
-vibe coding's flaws. See
-[this Spec Kit page](https://claude-multisession.pages.dev/FRAMEWORK-spec-kit).
+[GitHub Spec Kit](FRAMEWORK-spec-kit.md) helps structure spec-driven development: agree on what to
+build, then use that specification to guide implementation.
+
+I use it to reduce the gaps left by open-ended coding prompts.
 
 ### 5.3 ASVS register
 
-OWASP's ASVS 5 framework is a great way to harden your application against hackers. There are three
-security levels depending on what your application touches.
+The Open Worldwide Application Security Project's Application Security Verification Standard
+(ASVS) 5 defines security requirements at three levels. Choose the level that fits what your application handles.
 
-Have Claude create a register of your ASVS scores. Be sure it works against the exact wording of
-ASVS 5, not against summaries Claude creates or gets from other sources.
+Ask Claude to keep a register of ASVS scores against the exact ASVS 5 wording. Summaries from
+Claude or another source can change what a requirement asks for.
 
-Then, have Claude anchor your ASVS scores against sym/ctx anchors. Don't point at a line number in
-the code; that changes when you update the code. Sym/ctx identifies code by its shape, not by its
-position. That means the reference only changes when the actual code structure changes -- not when
-someone adds whitespace, comments, or moves unrelated code above it.
+Use `sym/ctx` anchors to connect scores to code. They identify a symbol and its surrounding
+structure, which is more stable than a line number.
+
+A line number shifts when someone adds whitespace, comments, or unrelated code above it. A
+symbol-and-context reference changes when the code structure it identifies changes.
 
 ## 6. Each Session Does One Job
 
-Be sure Ultracode and Opus 5 are enabled for each session.
+In the setup described here, each session used Ultracode and Opus 5.
+[Run a KORUS build](KORUS-BUILD.md) supplies the opening prompts, daily procedure, and recovery steps.
 
-[Run a KORUS build](KORUS-BUILD.md) is the operating procedure for this section: the opening prompt
-for each session, the daily loop, and what to do when it goes wrong.
+### 6.1 Manager session
 
-### 6.1 Console session
+The console was meant to oversee many parts of the build. It did not work, and the manager replaced it.
 
-The console is the only session you talk to. It reads the record, picks an item, writes a short
-brief, and starts a builder for it. It then polls for state instead of waiting on a message. If a
-builder hits a question its brief did not answer, the builder writes the question back to the
-console and stops, and the console starts a fresh builder with a better brief.
+The manager is the session you talk to. It reads the project record and runs one or more builders as subagents or separate sessions.
+
+Each builder gets a brief and its own worktree. The manager reads the results and resolves missing requirements before assigning more work.
+
+Subagents use the manager's account and return results directly. Separate sessions need an explicit route for questions and results.
+
+Several managers may share the repository, so their assigned paths must not conflict.
 
 ### 6.2 Builder sessions
 
-A builder takes one brief and runs it to a pull request: the change, the commit, the push, and the
-PR. Then its process exits. It never guesses at what the brief left open, and it never waits for an
-answer.
+A builder takes one brief through the change, commit, push, and pull request. It then reports to its manager. It does not guess at missing requirements or wait for an answer.
 
-Note that Anthropic is working on [Agentic Teams](https://code.claude.com/docs/en/agent-teams),
-which may be a significant enhancement once it is out of beta. For now, your builders will use
-[dynamic workflows](https://code.claude.com/docs/en/workflows). See
-[Run agents in parallel - Claude Code Docs](https://code.claude.com/docs/en/agents).
+At the time of this account, [Agentic Teams](https://code.claude.com/docs/en/agent-teams) was in beta.
+The builders used [dynamic workflows](https://code.claude.com/docs/en/workflows).
+See also [Run agents in parallel](https://code.claude.com/docs/en/agents).
 
 ### 6.3 Lander session
 
-Lander decides what enters the merge queue and in what order, and it merge-forwards. It should have
-authority to handle these independently. This is needed because multisession coding creates merge
-conflicts when the repo's head is constantly changing. This is especially true with larger
-codebases, which created extended CI times. It will not merge a pull request that no reviewer has
-labelled.
+The lander chooses which changes enter the merge queue and in what order. With authority from the
+owner, it also merges newer trunk changes into branches that need them.
+
+This matters when concurrent work keeps moving the repository's head, especially when large
+codebases take longer to test.
+
+The original account required a reviewer label before merging. That rule was retired on
+2026-09-04; use the current [Lander card](roles/lander.card.md) and repository checks for today's requirement.
 
 ### 6.4 Reviewer session
 
-This section used to describe an ASVS monitor session, which was retired on 2026-09-01.
+This section once described an ASVS monitor, a role retired on 2026-09-01.
 
-Start a reviewer for each pull request. It reads the diff. On a pass it applies the reviewed label
-and posts the head SHA it read, so you can tell which version was actually looked at. On a fail it
-posts the findings on the pull request, for whichever builder comes next. A reviewer never merges.
+Start a reviewer for each pull request. It reads the diff and records the exact head commit it
+examined. Findings go on the pull request for the next builder; the reviewer never merges.
+
+The original procedure also applied a `reviewed` label on a pass. The label-based merge gate was
+retired on 2026-09-04, as the current [Reviewer card](roles/reviewer.card.md) records.
 
 ### 6.5 Regulator session
 
-Start a regulator when a required check goes red. Its job is deciding whose failure it is: the
-pull request's, the trunk's, a flake's, or the queue's. Only the first is a builder's to fix.
-Sending the other three back is the mistake it prevents. It has no memory of earlier reds, so
-it keeps a log.
+Start a regulator when a required check fails. It determines whether the cause belongs to the
+pull request, trunk, an intermittent test failure, or the queue.
 
-**A steward is not on this list, because it is not a session.** It is a cron with no model calls.
-It reads account usage and names the account with headroom, and it cannot interrupt a session
-that is already running.
+Only a failure caused by the pull request goes back to its builder. The regulator keeps a log
+because it does not retain memory of earlier failed runs.
+
+The steward is a scheduled script, not an AI session. It reads account usage and identifies an
+account with room left. It makes no model calls and cannot interrupt a running session.
 
 ## 7. Worktrees
 
-Worktrees deconflict workflows sharing a repo. See
-[Worktrees - claude-multisession](https://claude-multisession.pages.dev/WORKTREES) and
-[Run parallel sessions with worktrees - Claude Code Docs](https://code.claude.com/docs/en/worktrees).
+Give each session its own worktree so it can edit files without changing another session's
+checkout. Read [Worktrees](WORKTREES.md) and
+[Claude Code's worktree guide](https://code.claude.com/docs/en/worktrees).
 
 ## 8. Inter-session Communication & Coordination
 
-Claude Code sessions can be configured to speak with each other. The method differs between sessions
-inside of the desktop app and those in the VS Code extension.
+Sessions can exchange messages, but the available channels differ between the desktop app and
+the VS Code extension. [Coordination](COORDINATION.md) describes the checks around their shared work.
 
-Combined with the coordination methods listed in
-[Coordination](https://claude-multisession.pages.dev/COORDINATION), the sessions can build your
-project without conflict -- mostly. When there is a conflict, a builder writes the problem to the
-console rather than guessing, and the console decides what happens next. Also see
-[Message your other Claude Code sessions - Claude Code Docs](https://code.claude.com/docs/en/cross-session-messaging)
+Conflicts still happen. A builder reports an unresolved problem to the manager, which decides
+what to do next. See [Claude Code's cross-session messaging guide](https://code.claude.com/docs/en/cross-session-messaging).
 
 ## 9. Don't Hit Usage Limits: It Causes Lost Work
 
-Anthropic has rejected enhancement requests asking to make Claude Code usage-limit aware. So, Claude
-and I built one:
-[Usage awareness: knowing when to stop.](https://claude-multisession.pages.dev/USAGE-AWARENESS)
+After Anthropic rejected requests to make Claude Code aware of usage limits, I worked with Claude
+on [usage awareness](USAGE-AWARENESS.md). That page describes the design and what it does and does not ship.
 
 ## 10. CI: Continuous Integration for Quality Code
 
-CI using GitHub Actions automates enforcement of your quality standards and prevents bugs from
-reaching the repo. See [this CI introduction](https://claude-multisession.pages.dev/CI-FOR-LEADERS.html).
+Continuous integration runs automated checks when code changes. With GitHub Actions and required
+checks, you can block changes that fail your project's standards.
+
+[CI for leaders](CI-FOR-LEADERS.md) explains how to choose checks and what their results establish.

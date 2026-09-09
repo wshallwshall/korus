@@ -1,249 +1,229 @@
 # Frequently asked questions
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** The questions an evaluator asks before installing anything, answered where they
-ask them. The first one is the one that decides whether you need this project at all.
+KORUS adds checks for sessions that share a repository. You may only need Claude Code's own
+worktrees if your sessions do separate work and a person reviews the results.
 
-**Why you should care.** Several sessions at once raise how fast work arrives, and the shared write
-surface caps what lands. Claude Code ships its own worktrees now, so the first question is which half
-of KORUS you still need.
+KORUS assumes Claude Code for Desktop. For a command to fix an installed setup, use
+[Troubleshooting](TROUBLESHOOTING.md).
 
-Not for you if you have already installed it and want a specific command.
+<a id="why-not-just-use-claude-codes-own-worktrees"></a>
 
-**How to use it.** Read the first answer. If it says you do not need this, believe it. KORUS assumes
-Claude Code for Desktop throughout.
+## Native worktrees may be enough
 
----
+`claude --worktree <name>` creates a separate checkout under `.claude/worktrees/<name>/`, with its own
+branch. The desktop app creates a worktree for each new session automatically.
 
-## Why not just use Claude Code's own worktrees?
-
-For a lot of work, that is the right answer, and it has become more right over time.
-
-`claude --worktree <name>` creates an isolated checkout under `.claude/worktrees/<name>/` on its own
-branch, and the desktop app gives every new session one automatically.
-
-While a session is isolated, Claude Code **blocks** the tool calls that would reach back into the
-main checkout. Four checks do it, and how many you get depends on the shell:
+Claude Code also checks whether an isolated session is reaching into the main checkout. The
+following behavior was read from [Claude Code's worktree documentation](https://code.claude.com/docs/en/worktrees)
+on 2026-08-16.
 
 | Check | What it blocks | Applies to |
 |---|---|---|
-| File edits | An `Edit`, `Write` or `NotebookEdit` targeting the main checkout | Any isolated session |
-| Command working directory | A command whose working directory resolves to the main checkout | Bash, PowerShell, Monitor |
-| Git redirects | `git -C`, `--git-dir`, `GIT_DIR`, `GIT_WORK_TREE`, or a `cd` into the main checkout | Bash and Monitor only |
-| Command shape | A command it cannot verify stays inside the worktree. Cannot be turned off | Bash and Monitor only |
+| File edits | `Edit`, `Write`, or `NotebookEdit` targeting the main checkout | Any isolated session |
+| Command working directory | A command running in the main checkout | Bash, PowerShell, Monitor |
+| Git redirects | `git -C`, `--git-dir`, `GIT_DIR`, `GIT_WORK_TREE`, or `cd` into the main checkout | Bash and Monitor |
+| Command shape | A command it cannot verify stays inside the worktree; this check cannot be disabled | Bash and Monitor |
 
-Read from
-[Run parallel sessions with worktrees](https://code.claude.com/docs/en/worktrees) on 2026-08-16.
+These checks apply only while a session is isolated. A session in the primary checkout gets none
+of them.
 
-**Two limits, and the second decides it here.**
+PowerShell gets the working-directory check but neither of the last two command checks. As the
+documentation puts it: "For PowerShell commands, Claude Code applies only the working-directory check."
 
-The checks apply only *while a session is isolated*. A session running in the primary gets none of
-them.
+That leaves a gap: `git -C <primary> checkout -B ...` can target the primary while the command still
+runs from a worktree. KORUS checks selected Git commands for that target.
 
-And the last two do not reach PowerShell: "For PowerShell commands, Claude Code applies only the
-working-directory check."
+## KORUS adds checks between sessions
 
-So an isolated PowerShell session keeps the first two and loses the other two. It can still run
-`git -C <primary> checkout -B ...`, because its working directory legitimately stays in the worktree
-and that is the only command check it faces.
-
-| What you need | Claude Code's own worktrees | What KORUS adds |
-|---|---|---|
-| A checkout and branch per session | Yes, and automatically in the desktop app | Nothing. Use the native one |
-| Stopping a session writing into the main checkout | Yes, while that session is isolated, including a write made by a shell redirect | The refusal for the **edit tools**, from a session that is not isolated, on any primary in its allowlist. It does not judge a command's working directory |
-| Isolating subagents from each other | Yes: `isolation: worktree` per subagent, and the same four checks cover them | Also denies a `Task`, `Agent` or `Workflow` dispatch made **from** the primary, since a subagent inherits its parent's directory |
-| Stopping `git -C <primary>` from a PowerShell command | **No.** Only the working-directory check reaches PowerShell | Refuses an enumerated set of tree-swapping git verbs in a `Bash` or `PowerShell` tool call, on a primary in its allowlist |
-| Two isolated sessions editing the same file | Not addressed. Each is isolated from the main checkout, not from the other | Refuses the second edit before it runs, naming who holds the file. Fails open when it cannot check, and says so |
-| Two sessions taking the same record number | Not addressed | Atomic allocation. The commit-time gate exists, no installer wires it, and the doctor reports it `OFF` until you do |
-| Knowing who is live, and what each is changing | Not addressed | `presence.ps1` and `overlap.ps1` |
-| Proving any of it is actually running | Not addressed | `bin/ccx-doctor.ps1` attacks every control that makes a decision, and names on each run what it could **not** prove -- the collision gate's refusal among them |
-
-Neither the gate nor the collision check sees a write that arrives another way. An agent-authored
-script carries no git verb, and `gh pr checkout <n>` carries no `git` token at all
-([Hooks](HOOKS.md)).
-
-**Two axes decide this, not one.**
-
-**Work overlap.** If two sessions never touch the same files, numbers or feature, native worktrees
-plus a human reviewer is simpler, and simpler wins.
-
-**The shell.** On PowerShell, if any session runs git against the primary, the worktree gate is what
-covers it. That holds whether or not the work overlaps: a tree swap produces no textual conflict for
-a reviewer to catch.
-
-## Is this a security boundary?
-
-**No.** It prevents accidents. It does not stop an adversary, and it is not meant to.
-
-Every control here runs as the same operating-system identity as the agent it constrains, so that
-agent can edit the hook, the allowlist and the settings file.
-
-Three documented exits need no editing at all. `--no-verify` skips a hook, once on a commit and
-again on a push. `CCX_ALLOW_DIRECT_PUSH=1` returns before the config is even read. An explicitly
-empty `protectedRefs` disables the push guard and says so on stderr.
-
-**None of them leaves a local record.** A one-shot environment prefix leaves nothing for a later run
-to find, and nothing local sees that `--no-verify` happened.
-
-There is a quieter one. Both git gates are `/bin/sh` shims that locate a python and exec the
-checker. With no python found, each prints `THE CLAIM GATE IS OFF for this commit.` or the push
-equivalent on stderr and **exits 0**, with every file still present and still looking installed.
-
-[Limits and requirements](LIMITS.md) states what to pair it with: protected branches on the remote,
-required status checks, and credentials that cannot bypass them. Evidence has to come from that
-plane, because this one keeps no record.
-
-## Can a team of developers use this?
-
-Partly, and the boundary is sharp: **the guarantees stop at the clone.**
-
-Claims and allocations live beside the git common directory, so every worktree of one clone shares
-them. A second developer on a second clone has a second registry, and both can allocate the same
-number before either lands.
-
-**The collision gate is the bigger casualty.** It refuses an edit when a live peer holds uncommitted
-changes to that file in a worktree of *your* clone. A colleague editing the same file on their own
-machine is invisible to it.
-
-The scope is not uniform, either. The push guard installs per clone; the worktree gate's allowlist
-lives under your user config directory, so it is per machine. Nothing aggregates across either, and
-the doctor says so: only this clone was examined.
-
-`scripts/hooks/seq_check.py --ci` re-runs three of its four rules against a freshly fetched trunk,
-which catches a cross-clone duplicate after the fact. No installer wires it.
-
-Allocation ownership is **not** among the three, because the registry is per-clone. A green `--ci`
-run is not evidence a number was allocated to anybody.
-
-One habit helps before any of that: `git fetch origin --prune` before you allocate, because the
-allocator's floor sweeps remote-tracking refs and will step past a peer's pushed number.
-
-For a team, treat this as a local coordination layer and put the authoritative check on the remote.
-[Sequence allocation](SEQUENCE-ALLOC.md) owns the detail.
-
-## What does it need to run?
-
-Claude Code for Desktop, `pwsh` 7.3 or newer, `git`, a `python` on `PATH`, and a `ccx.config.json`
-at the root of the repository you want governed.
-
-**Windows is the exercised path.** On Linux, path comparison stops folding case and the roster's
-self-marking degrades. macOS is not in the CI matrix at all: treat it as unmeasured rather than
-working. [Limits and requirements](LIMITS.md) has the table.
-
-## Do I need Claude Code for Desktop?
-
-**Yes. KORUS is a desktop framework.** A CLI-only or editor-extension setup is not a configuration
-this project supports, and the site does not describe one.
-
-The reason is that the coordination layer is shaped by the desktop app:
-
-- Announce delivers through `ccd_session_mgmt`, an MCP server only the desktop client provides.
-- `list_sessions` enumerates only sessions that app spawned, so an editor-extension session cannot
-  be messaged at all.
-- The desktop app gives every new session its own worktree automatically.
-- Running several sessions in the VS Code extension has run into worktree hijacking
-  ([Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md)).
-
-Some pieces do run anywhere `pwsh` does -- the worktree gate, the collision gate and the two git
-hooks are ordinary scripts. Running them without the desktop app is not KORUS, and nothing here
-tells you how far that gets you.
-
-## Does it work in CI?
-
-**Not the doctor**, and that is a decision rather than a gap. `.github/workflows/gates.yml` says why
-in its own header. The doctor fires each control on purpose, and a run that skipped those paths and
-reported green would be a worse signal than not running it at all.
-
-It stays a local, plain-terminal command.
-
-The leak gate does run in CI. `seq_check.py --ci` is written for one, and no installer wires it.
-
-**The hooks split.** The harness hooks need a Claude Code session, and under `claude -p` they take
-the synchronous path and can hold a pipeline step for their whole timeout.
-
-The two git hooks need only a commit or a push and a python. They are absent from CI because a fresh
-clone has no hooks installed, not because they could not run.
-
-## What happens when Claude Code changes the session registry format?
-
-Everything answering "who is live" degrades to "cannot tell". How that surfaces depends on which
-half changed, and the two do not look alike.
-
-**A renamed field, or a changed unit.** The records still parse and still place, so the doctor's
-counts do not move. Every verdict becomes `UNVERIFIED`, which **is** a veto -- so the gates keep
-refusing rather than waving work through. You lose precision, not the guarantee.
-
-**A moved directory.** Now there are no records, the counts go to zero, and an empty roster reads
-exactly like a real all-clear. The collision gate allows every edit in silence. The census catches
-this one; nothing inside a session does.
-
-Absence of a refusal is never evidence of absence of a peer.
-
-## How many sessions should I run?
-
-The shape this is built around is one long-lived console session and the short-lived ones it spawns.
-A builder takes a task, a reviewer reads a pull request, a regulator handles a red check, and a
-lander merges. [Run a KORUS build](KORUS-BUILD.md) has the procedure.
-
-More is not obviously better. The reported case that started this project was roughly fourteen
-sessions on one directory, and the limit there was not the tooling.
-
-**What more sessions buy is arrival rate.** Recorded 2026-09-03 to 09-04, on the largest run this
-method has had: five sessions, one per Claude account, each spawning its own workers. They opened 46
-pull requests in about three and a half hours.
-
-**Read those three figures as recorded, not as measured.** They were counted by hand during the
-run, with no command kept beside them, so nothing here reproduces them. Article XII says the same.
-
-They are still reported, because a hand count from the operator is evidence. They are labelled,
-because this project's rule is that a number without its instrument is not a measurement.
-
-**What caps it is the shared write surface.** Thirty-four of those landed over the following day, at
-a sustained two to five an hour. Thirty-three of the thirty-four merged commits touched one file, the
-item ledger.
-
-Every item's pull request updates that ledger by construction. So the contention is a property of the
-design rather than of any session, and a sixth session adds arrivals without adding service.
-
-**Queue depth is the wrong dial. Jobs per entry is the right one.** Measured by the seat doing the
-merging, on the same run: eighteen queued entries produced zero merges in an hour, against about
-twenty runners. A two-deep queue then merged both entries in twenty minutes.
-
-**What that run did not vary.** One repository, one serial merge queue, one shared ledger file, five
-accounts. It never ran the same work through a single session, so there is no baseline beside it.
-
-Those figures are a rate and a ceiling. They are not a speedup, and they cannot be turned into one.
-
-The counts above were taken on the run and are not re-derived here. They are written up in
-`.specify/memory/constitution.md`, Article XII, and in
-[roles/MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md).
-
-MANAGER.md is served on this site: `git ls-files` decides what ships, and only `docs/` is excluded
-from that copy. The constitution is not served, so read that one in the repository.
-
-### This answer and the landing page claimed a dramatic speedup, and it is withdrawn
-
-Both pages opened with: "Several sessions at once is how a build gets dramatically faster." That
-sentence is now gone from both, replaced by the rate and the ceiling above.
-
-[CI for leaders](CI-FOR-LEADERS.md#what-you-must-never-claim) already forbade it: "You cannot claim a
-speed or productivity gain. None is measured in either repository." The front page made the claim
-anyway, which is how a rule fails -- outward, on someone else's work, and never inward.
-
-The shape was the worse half. "Dramatically" is an adverb with no quantity behind it, so no reading
-could contradict it and no reading could retract it. A wrong number is the better sentence, because
-a later measurement can kill it.
-
-**What would make a speed claim sayable here.** Run one defined body of work twice, once through a
-single session and once through several, on the same repository and the same merge queue. Report both
-wall clocks with the conditions. Until someone does that, report the rate and the ceiling.
-
-## Related
-
-| For | Read |
+| Need | What KORUS adds |
 |---|---|
-| Installing it, and seeing a refusal | [Quickstart](QUICKSTART.md) |
-| What it needs, and where it stops | [Limits and requirements](LIMITS.md) |
-| Something is behaving oddly | [Troubleshooting](TROUBLESHOOTING.md) |
-| The method behind the tooling | [The KORUS framework](KORUS.md) |
+| A checkout and branch per session | Nothing beyond native worktrees; use those |
+| Block edit tools from writing into the primary | An allowlist-based gate that also applies to sessions running in the primary; it does not judge a command's working directory |
+| Keep subagents isolated | Native `isolation: worktree` supplies isolation and the four checks; KORUS also denies `Task`, `Agent`, or `Workflow` dispatch from the primary |
+| Block PowerShell commands that swap the primary tree | Checks for an enumerated set of Git verbs in `Bash` and `PowerShell` tool calls |
+| Stop two isolated sessions editing the same file | A collision gate that names the live peer holding uncommitted changes; when it cannot check, it allows the edit and says so |
+| Avoid duplicate record numbers | Atomic allocation, plus a commit-time gate that you must wire yourself; the doctor reports that gate `OFF` until wired |
+| See who is working on what | `presence.ps1` and `overlap.ps1` |
+| Check the installation | `bin/ccx-doctor.ps1` tests decision-making controls and names what it could not prove, including the collision gate's refusal |
+
+Native worktrees isolate sessions from the main checkout. They do not check for shared file edits,
+duplicate record numbers, or overlapping tasks between sessions.
+
+KORUS cannot see every write either. An agent-written script may contain no visible Git verb, and
+`gh pr checkout <n>` contains no `git` token. [Hooks](HOOKS.md) explains those gaps.
+
+Choose based on both the work and the shell. Native worktrees and a human reviewer may be enough
+when tasks share no files, numbers, or features.
+
+On PowerShell, the worktree gate also helps when a session runs Git against the primary. A branch
+switch can disrupt another session without creating a text conflict for a reviewer to find.
+
+<a id="is-this-a-security-boundary"></a>
+
+## The controls prevent accidents, not attacks
+
+Every control runs under the same operating-system account as the agent. The agent can edit its
+hooks, allowlist, and settings.
+
+| Bypass | Effect |
+|---|---|
+| `--no-verify` | Skips hooks on a commit or push |
+| `CCX_ALLOW_DIRECT_PUSH=1` | Returns before the push guard reads its config |
+| An explicitly empty `protectedRefs` | Disables the push guard and reports that on stderr |
+| No Python executable available | The two Git hook shims print that the gate is off and exit `0` |
+
+The first three bypasses leave no local record. A one-command environment setting also leaves
+nothing for a later check to find.
+
+The Git hooks use `/bin/sh` wrappers to find Python and run their checks. Without Python, the claim
+hook prints `THE CLAIM GATE IS OFF for this commit.`; the push hook prints an equivalent message.
+
+The hook files still look installed. Use remote branch protection, required status checks, and
+credentials that cannot bypass them. [Limits and requirements](LIMITS.md) has the details.
+
+<a id="can-a-team-of-developers-use-this"></a>
+
+## Checks in one clone cannot see another developer's work
+
+Claims and allocations sit beside the Git common directory. All worktrees in one clone share them;
+a second clone has its own registry.
+
+Two developers can therefore allocate the same number before either change merges. The collision
+gate also cannot see a colleague's uncommitted work on another machine.
+
+The push guard applies per clone. The worktree allowlist lives under the user config directory and
+applies per machine. The doctor examines one clone and does not combine those scopes.
+
+`scripts/hooks/seq_check.py --ci` checks three of its four rules against a freshly fetched trunk.
+It can catch a cross-clone duplicate after the fact, but no installer wires it.
+
+That check omits allocation ownership because the registry is local to each clone. Passing it does
+not prove that anyone allocated the number.
+
+Run `git fetch origin --prune` before allocating. The allocator scans remote-tracking refs, so it
+can skip numbers another developer has already pushed.
+
+For a team, use KORUS for local coordination and enforce shared rules on the remote.
+[Sequence allocation](SEQUENCE-ALLOC.md) explains the setup.
+
+<a id="what-does-it-need-to-run"></a>
+
+<a id="do-i-need-claude-code-for-desktop"></a>
+
+## Windows and Claude Code for Desktop are the supported starting point
+
+You need Claude Code for Desktop, PowerShell (`pwsh`) 7.3 or newer, Git, and `python` on `PATH`.
+The repository you govern also needs `ccx.config.json` at its root.
+
+Windows is the exercised path. On Linux, path comparisons are case-sensitive and the roster is
+less reliable at marking its own session.
+
+macOS is absent from the continuous integration (CI) test matrix. Its behavior is unmeasured.
+[Limits and requirements](LIMITS.md) lists platform details.
+
+A command-line-only or editor-extension setup is unsupported. The desktop dependency comes from
+how sessions find and contact each other:
+
+- Announce uses `ccd_session_mgmt`, a Model Context Protocol server provided only by the desktop client.
+- `list_sessions` lists only sessions that the app spawned; it cannot message editor-extension sessions.
+- The desktop app gives each new session a worktree automatically.
+- Concurrent VS Code extension sessions have encountered [worktree hijacking](RUNNING-MULTIPLE-SESSIONS.md).
+
+The worktree gate, collision gate, and Git hooks are ordinary scripts. Some parts run wherever
+`pwsh` runs, but the project has not established what protection that setup provides without the desktop app.
+
+<a id="does-it-work-in-ci"></a>
+
+## Some checks run in CI; the doctor does not
+
+Run the doctor locally in a plain terminal. It deliberately triggers each control; skipping those
+paths in CI would produce a passing result without testing them.
+
+The leak gate runs in CI. `seq_check.py --ci` supports it too, but requires manual wiring.
+
+Claude Code hooks need a session. Under `claude -p`, they run synchronously and can hold a pipeline
+step until their timeout expires.
+
+The Git hooks need only Python and a commit or push. They are absent from a fresh CI clone because
+hooks are not installed there.
+
+<a id="what-happens-when-claude-code-changes-the-session-registry-format"></a>
+
+## Registry changes can hide live sessions
+
+The session registry tells the tools who is live. A format change can affect the checks in two
+different ways.
+
+| Change | Result |
+|---|---|
+| A field is renamed or its unit changes, but records still parse and map to worktrees | Counts stay the same; verdicts become `UNVERIFIED`, which still vetoes the action |
+| The registry directory moves | Counts fall to zero; the collision gate sees an empty roster and silently allows edits |
+
+The census can reveal missing records in the second case. The session itself cannot distinguish
+that empty roster from a real absence of peers.
+
+<a id="how-many-sessions-should-i-run"></a>
+
+## More sessions can fill the merge queue faster
+
+The manager runs one or more builders, either as subagents or as separate sessions. It replaced the console, whose broad oversight approach did not work.
+
+Builders take
+tasks, reviewers read pull requests, a regulator investigates failed checks, and a lander merges.
+
+[Run a KORUS build](KORUS-BUILD.md) describes that setup. The roughly fourteen sessions sharing one
+directory in the original report did not establish a useful session limit.
+
+The largest reported run used five sessions, one per Claude account, each spawning workers. It ran
+from 2026-09-03 to 09-04.
+
+| Record from that run | Reported result |
+|---|---|
+| New pull requests | 46 in about three and a half hours |
+| Pull requests merged over the following day | 34, at a sustained two to five per hour |
+| Merged commits touching the shared item ledger | 33 of 34 |
+| Queue with eighteen entries and about twenty runners | Zero merges in an hour |
+| Queue reduced to two entries | Both merged in twenty minutes |
+
+The operator counted the initial session, pull-request, and elapsed-time figures by hand. No
+command was kept with those counts, so they are recorded observations that this repo cannot reproduce.
+
+The merging session reported the queue results. The counts are recorded in the constitution's
+Article XII and [MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md), not recalculated here.
+
+Every item's pull request had to update one shared ledger. That limited merging even when more
+sessions could produce new work. A sixth session would add arrivals without removing that constraint.
+
+This was one repository, one serial merge queue, one shared ledger, and five accounts. The run did
+not repeat the same work with a single session, so it provides no measured speedup.
+
+The site serves `MANAGER.md` through its tracked-source publishing step. Read the constitution in
+the repository; the site does not serve it.
+
+<a id="this-answer-and-the-landing-page-claimed-a-dramatic-speedup-and-it-is-withdrawn"></a>
+
+### The earlier speed claim was withdrawn
+
+The original FAQ and home page once said: "Several sessions at once is how a build gets dramatically faster."
+That claim lacked a comparison with a single session and was withdrawn.
+
+[CI for leaders](CI-FOR-LEADERS.md#what-you-must-never-claim) already prohibited that claim:
+"You cannot claim a speed or productivity gain. None is measured in either repository."
+
+To establish a speedup, run the same defined work once with a single session and once with several.
+Keep the repository and merge queue the same, and report elapsed time and conditions for both runs.
+
+<a id="related"></a>
+
+## Try it or check the limits
+
+| Next step | Guide |
+|---|---|
+| Install it and test a blocked edit | [Quickstart](QUICKSTART.md) |
+| Check requirements and blind spots | [Limits and requirements](LIMITS.md) |
+| Diagnose unexpected behavior | [Troubleshooting](TROUBLESHOOTING.md) |
+| Read the author's account of the method | [The KORUS framework](KORUS.md) |
+
+The [visibility map](LIMITS.md#g11) shows which work the collision gate can observe.

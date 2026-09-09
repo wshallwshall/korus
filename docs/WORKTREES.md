@@ -2,53 +2,50 @@
 
 ## TLDR/BLUF
 
-**What this is.** The day-to-day worktree commands. They give each session its own checkout, move
-work out of the wrong one, put the shared checkout back, and delete a worktree without losing
-commits.
+Give each concurrent session its own worktree. These commands create checkouts, rescue misplaced
+work, restore the shared primary, and remove finished worktrees while preserving commit recovery.
 
-**Why you should care.** One session's `git checkout` swaps every file under another session
-mid-task, and neither screen says so. Not for you if you run one session at a time. Not for you off
-Windows without testing first: these scripts are PowerShell 7, and Windows is the tested platform.
+A shared `git checkout` can replace another session's files without warning. These PowerShell 7
+scripts target concurrent work and have been tested on Windows; test other platforms before relying
+on them.
 
-**How to use it.** Read the section for the job you have. [`docs/CONCEPTS.md`](CONCEPTS.md) defines
-the terms this page assumes, [`INSTALL.md`](INSTALL.md) wires
-the gate and the backstop, and [`docs/PRUNING.md`](PRUNING.md) owns the automated reaper.
+[Concepts](CONCEPTS.md) defines the terms. Use [Install](INSTALL.md) for the gate and backstop, and
+[Pruning](PRUNING.md) for automatic cleanup.
 
 ---
 
-Two parallel efforts -- two agents, or a human and an agent -- cannot share a working tree: one
-`git checkout` swaps every file under the other mid-task. Each worktree has its own directory,
-branch and index over one shared git directory, history and remotes. Branch -> PR -> merge is
-unchanged.
+Each agent or human needs a separate worktree to avoid branch changes replacing a peer's files.
+Worktrees have separate directories, branches, and indexes, with shared git history and remotes.
 
-> **Platform.** These scripts are PowerShell 7, developed and exercised on Windows. They run on
-> PowerShell 7 elsewhere and the path handling is written for it, but Windows is the tested platform
-> and the one the defaults assume. Where behavior degrades off Windows it is called out below.
+The usual branch, pull request, and merge process stays the same.
+
+> These scripts use PowerShell 7 and were developed and tested on Windows. Their path handling
+> supports other platforms, but the defaults assume Windows; limits are noted below.
 
 ---
 
 ## Command reference
 
-Most of these anchor on the **primary checkout** -- the first entry of `git worktree list` -- so you
-can run them from any checkout. Three exceptions, all deliberate:
+Commands normally resolve the primary checkout from the first `git worktree list` entry. These three
+have extra location rules:
 
-- **`prune-merged.ps1` refuses** unless you run it from the primary, exiting 2 and naming both paths.
+- `prune-merged.ps1` refuses unless you run it from the primary, exiting 2 and naming both paths.
   From a linked worktree the candidate set is empty for the wrong reason.
-- **`remove.ps1` refuses** when you are standing inside the worktree you named.
-- **`bin/ccx-doctor.ps1` does not anchor at all.** With no `-Repo` it reports on your current
-  directory, which is how a long green report about the wrong clone happens.
+- `remove.ps1` refuses when you are standing inside the worktree you named.
+- `bin/ccx-doctor.ps1` does not anchor at all. With no `-Repo` it reports on your current directory,
+  which is how a long green report about the wrong clone happens.
 
-Five of the eight take `-Name`, validated against `\A[A-Za-z0-9._-]+\z`, because the name becomes a
-directory name and a branch name. `restore-primary.ps1`, `sessions.ps1` and the doctor take none.
+Five of the eight commands validate `-Name` with `\A[A-Za-z0-9._-]+\z`, since it becomes a
+directory and branch name. `restore-primary.ps1`, `sessions.ps1`, and the doctor take no name.
 
-**`prune-merged.ps1`'s `-Name` is different, and it points the dangerous way.** It is an unvalidated
-list that *restricts* the sweep to those worktrees **and confirms them past the recent-activity
-veto** -- widening the blast radius rather than narrowing it.
+`prune-merged.ps1` instead accepts an unvalidated name list. It limits the sweep to those worktrees
+and explicitly overrides their recent-activity veto.
 
-It never overrides the liveness fence, a nested worktree, or a worktree lock ([Pruning](PRUNING.md)).
+That override never bypasses liveness, nested-worktree exclusion, or a worktree lock. See
+[Pruning](PRUNING.md).
 
-**The pattern is `\A...\z` rather than `^...$` on purpose.** In .NET `$` also matches before a
-trailing newline, so the `^...$` spelling would accept a name ending in one.
+Use `\A...\z` for full .NET string matching. `^...$` also accepts a trailing newline because `$`
+matches before it.
 
 | Task | Command |
 |---|---|
@@ -61,13 +58,11 @@ trailing newline, so the `^...$` spelling would accept a name ending in one.
 | Find sessions whose transcript moved | `pwsh -NoProfile -File scripts/worktree/sessions.ps1` |
 | Prove the guards are actually live | `pwsh -NoProfile -File bin/ccx-doctor.ps1` |
 
-The knobs that change what these do live in `ccx.config.json` at the repository root. That file is
-the knob file, and announce's opt-in marker.
+Repository-root `ccx.config.json` holds the command settings and enables announce.
 
-**It is not the switch for the worktree gate or the SessionStart backstop.** Those read
-`~/.claude/hooks/ccx-gate.repos.txt` and ignore it, beyond the `prefix` knob.
-[Limits and requirements](LIMITS.md#what-actually-switches-each-control-on) has the per-control
-table.
+The worktree gate and SessionStart backstop instead use `~/.claude/hooks/ccx-gate.repos.txt`. Apart
+from the backstop's `prefix` setting, config does not control them; see
+[Limits](LIMITS.md#what-actually-switches-each-control-on).
 
 | Key | Effect on this document |
 |---|---|
@@ -80,9 +75,9 @@ table.
 
 ## Creating a worktree
 
-**The goal.** A checkout of your own, on its own branch, cut from the current remote tip.
+Create your checkout and branch from the current remote tip.
 
-**What to do.** Run one of these from any checkout of the repository:
+Run either command from any checkout of the repository:
 
 ```powershell
 pwsh -NoProfile -File scripts/worktree/new.ps1 -Name alerts
@@ -90,61 +85,55 @@ pwsh -NoProfile -File scripts/worktree/new.ps1 -Name sqltuning -Base feature/sql
 pwsh -NoProfile -File scripts/worktree/new.ps1 -Name quicklook -NoSetup
 ```
 
-**What happens next.** `new.ps1` fetches, creates the worktree, runs your setup hook, and prints
-`Worktree ready: <path> (branch '<branch>')` with the next steps.
+`new.ps1` fetches, creates the worktree, runs setup, and prints
+`Worktree ready: <path> (branch '<branch>')` with next steps.
 
-`spawn.ps1` adds an editor window, forwarding `-Name`, `-Base` and `-NoSetup`. It relies on
-`new.ps1` throwing, so no editor opens on an uncreated worktree. Editor: `CCX_EDITOR`, else
-`EDITOR`, else `code`; `-Editor` overrides. An editor not on `PATH` is reported rather than
-exiting green.
+`spawn.ps1` forwards `-Name`, `-Base`, and `-NoSetup`, then opens an editor only after creation
+succeeds. It reports an editor missing from `PATH`.
+
+`-Editor` overrides `CCX_EDITOR`, then `EDITOR`, then default `code`.
 
 ### The base is the freshly fetched remote tip, not local `main`
 
-**The trap.** Local `main` is usually behind its upstream in a repository with several worktrees. A
-worktree created off it starts stale, and *every merge-state judgment inherits the staleness* --
-including the reaper's "is this merged?" test. Nothing is visibly wrong until the merge.
+Local `main` often lags upstream in a multi-worktree repository. Starting from it creates stale work
+and stale merge judgments, including the reaper's check.
 
-**The rule.** `new.ps1` fetches first, and the default base is a **remote-tracking** ref
-(`origin/main`), never a local branch. Two details make that hold up:
+`new.ps1` fetches first and defaults to a remote-tracking ref such as `origin/main`. Two rules
+govern that fetch:
 
-- It fetches the remote **the trunk lives on**, parsed out of the base ref, rather than a hardcoded
+- It fetches the remote the trunk lives on, parsed out of the base ref, rather than a hardcoded
   `origin`. A fork-based workflow whose trunk is `upstream/main` would otherwise fetch the wrong
   remote and report success.
 - A fetch failure (offline) is a loud warning, not fatal. You can still branch off the refs you have
-   -- you just need to know that is what happened.
+  -- you just need to know that is what happened.
 
-If you pass `-Base` pointing at a **local** branch that lags its own upstream, you get a warning
-naming the branch, the count, and the remote-tracking ref to use instead. A remote-tracking base has
-no `@{upstream}` of its own, so the check simply no-ops for the default.
+An explicit local `-Base` that trails upstream triggers a warning with the branch, lag count, and
+suggested remote ref. Remote-tracking refs lack `@{upstream}`, so the default skips this check.
 
 ### Concurrent creation races `.git/config.lock`
 
-**The trap.** Two sessions run `git worktree add` at once. One fails with `could not lock config
-file .git/config: File exists`, and can leave an orphaned branch behind. The add writes the new
-branch's upstream into clone-wide `.git/config`, so isolating sessions is itself a shared write.
+Concurrent `git worktree add` calls can fail with
+`could not lock config file .git/config: File exists`, leaving an orphaned branch. Creation writes
+upstream settings into shared `.git/config`.
 
-**The rule.** `new.ps1` serialises the add behind a cross-session mutex (`Enter-CcxLock -Name
-'worktree-add'`, 90-second timeout). Three properties of that lock matter, and they are the reason
-this is a mutex rather than a retry loop:
+`new.ps1` serializes creation with `Enter-CcxLock -Name 'worktree-add'` and a 90-second timeout. The
+lock has three required properties:
 
-- **Atomic exclusive-create is the mutex.** The lock is a file created with create-new semantics; the
+- Atomic exclusive-create is the mutex. The lock is a file created with create-new semantics; the
   filesystem, not a read-then-write, decides who won.
-- **It never steals.** On timeout it fails loudly and names the holder. Breaking a lock you cannot
-  prove is abandoned re-opens exactly the race it exists to close, and there is no reliable liveness
-  signal here to prove abandonment with.
-- **The script refuses to run without it.** If `scripts/coord/lock.ps1` is missing, or does not define
+- It never steals. On timeout it fails loudly and names the holder. Breaking a lock can admit
+  simultaneous writers. No reliable liveness signal here proves that a lock is abandoned.
+- The script refuses to run without it. If `scripts/coord/lock.ps1` is missing, or does not define
   `Enter-CcxLock`, `new.ps1` throws rather than racing quietly. A safety property that degrades to
   "not applied" when a file is missing is not a safety property.
 
 ### One dependency environment per worktree
 
-**The trap.** Reusing one dependency environment across worktrees to save a minute of install time.
-An editable or linked install is bound to the **one source path** it was created from, so a test run
-from worktree B imports worktree A's code. Green here, red in CI, and no diff that explains it.
+A shared editable or linked dependency install points to its original source directory. Tests in
+worktree B can import worktree A, passing locally while CI fails.
 
-**The rule.** Each worktree gets its own environment, built inside it. That is what `setupHook` is
-for. `new.ps1` itself knows nothing about any language -- it runs the hook and reports whether it
-worked:
+Build each worktree's dependency environment inside that worktree through `setupHook`. `new.ps1`
+runs the language-specific hook and reports its result:
 
 | Contract | Detail |
 |---|---|
@@ -156,62 +145,59 @@ worked:
 | Arguments | None are passed, so a hook may declare whatever parameters it likes |
 | Exit code | A `.ps1` hook runs in a **child** `pwsh`, so its exit code is a real contract and it cannot leave state behind in the calling session |
 
-`examples/worktree-setup.ps1.example` shows the shape for a Python project and a Node project. Copy
-it to the path named by `setupHook` (shipped as `.ccx/worktree-setup.ps1`) and delete everything that
-is not yours. Two rules in it are not obvious:
+`examples/worktree-setup.ps1.example` includes Python and Node examples. Copy the parts you need to
+`setupHook` 's path, shipped as `.ccx/worktree-setup.ps1`, and follow these rules:
 
-- **Build the environment inside the worktree**, for the reason above.
-- **Install from your lockfile, not from your version ranges.** A worktree that re-resolves
-  dependencies gets whatever the registry serves today -- a different formatter from CI. With a
-  `--fix` mode in a commit hook, that formatter **rewrites your source** to match a version CI does
-  not have.
+- Build the environment inside the worktree, for the reason above.
+- Install from your lockfile, not from your version ranges. A worktree that re-resolves dependencies
+  gets whatever the registry serves today -- a different formatter from CI. With a `--fix` mode in a
+  commit hook, that formatter rewrites your source to match a version CI does not have.
 
-Two failure modes here are deliberately loud rather than silent:
+Setup reports two distinct failures:
 
-- The hook file is **not found** in the new worktree or the primary -> a warning that the worktree
-  has *not* been set up. (The worktree's own copy wins, since the hook is versioned with the branch;
-  the primary's is the fallback for a git-ignored hook, which `git worktree add` cannot deliver.)
-- The hook **exits non-zero** -> a throw that states the worktree *was* created, at which path, on
-  which branch, and is not rolled back. A bare "setup failed" reads as "nothing happened", and the
-  next session re-runs creation into a path that is now occupied.
+- The hook file is not found in the new worktree or the primary -> a warning that the worktree has
+  *not* been set up. The worktree's versioned copy takes precedence. The primary copy supports
+  git-ignored hooks that `git worktree add` cannot deliver.
+- The hook exits non-zero -> a throw that states the worktree *was* created, at which path, on which
+  branch, and is not rolled back. A bare "setup failed" reads as "nothing happened", and the next
+  session re-runs creation into a path that is now occupied.
 
-Use `-NoSetup` when you want the checkout and not the environment. The "next steps" block says out
-loud that the checkout has no environment yet.
+Use `-NoSetup` to create files without an environment. The printed next steps explicitly report that
+setup has not run.
 
 ---
 
 ## Rescuing work already in the primary
 
-**The goal.** You are half-way through a change in the shared primary, and the gate will not let you
-write there. `rescue.ps1` **moves** what you have instead of asking you to redo it.
+Use `rescue.ps1` to move unfinished work out of the shared primary when the gate blocks further
+edits.
 
-**What to do.** Name the worktree the work should move into:
+Name the destination worktree:
 
 ```powershell
 pwsh -NoProfile -File scripts/worktree/rescue.ps1 -Name alerts-fix
 ```
 
-**What happens next.** It stashes the primary's uncommitted work, creates a worktree, and pops the
-stash there. Three details:
+The script stashes primary changes, creates a worktree, and pops the stash there. Three details
+preserve the work:
 
-- **`--include-untracked`.** Without it, untracked files stay behind in the primary. The new
-  worktree then recreates them: two diverging copies, with no indication which one you are editing.
+- `--include-untracked`. Without it, untracked files stay behind in the primary. The new worktree
+  then recreates them: two diverging copies, with no indication which one you are editing.
 - **The new branch is cut from the primary's *current* commit**, not from the trunk, so the stash
   applies cleanly. This is the one case where the fetched-remote-tip rule above is deliberately not
   applied -- a rescue that conflicts is a rescue that failed.
-- **The stash is the safety net, and the recovery path is printed at the moment of failure.** If the
-  pop fails for any reason, the `finally` block prints the exact commands to list the stash and put it
-  back, plus the message it was stashed under. Mid-panic is not when someone opens a document.
+- The stash is the safety net, and the recovery path is printed at the moment of failure. If pop
+  fails, `finally` prints commands to list and restore the stash. It also prints the original stash
+  message. Mid-panic is not when someone opens a document.
 
-If the primary is clean there is nothing to rescue, and the script says so and points at `new.ps1`
-rather than creating an empty worktree.
+If the primary is clean, the script reports nothing to rescue and suggests `new.ps1`. It creates no
+empty worktree.
 
 ---
 
 ## What actually stops the failure
 
-Three mechanisms touch a `git checkout` that swaps the shared primary under another session. Only
-the first prevents it.
+Three mechanisms address primary branch changes. Only the gate prevents them:
 
 | Role | Script | What it does |
 |---|---|---|
@@ -221,13 +207,12 @@ the first prevents it.
 
 ## Restoring the primary
 
-**The goal.** Put the shared primary back on its home branch. Several sessions stand in it at once,
-so a `git checkout` there, or a detached `HEAD`, silently swaps every other session's files. The
-gate denies tree-swapping git verbs in the primary, and `restore-primary.ps1` is the way back.
+`restore-primary.ps1` returns the shared primary to its home branch after a checkout or detached
+HEAD replaced peers' files. The gate blocks ordinary tree-swapping git commands there.
 
-**A session may repair the primary; it may not hijack it.**
+A session may repair the primary but must not take it over.
 
-**What to do.** `-WhatIf` shows the switch without making it:
+Preview the switch with `-WhatIf`:
 
 ```powershell
 pwsh -NoProfile -File scripts/worktree/restore-primary.ps1
@@ -235,50 +220,45 @@ pwsh -NoProfile -File scripts/worktree/restore-primary.ps1 -Branch main
 pwsh -NoProfile -File scripts/worktree/restore-primary.ps1 -WhatIf
 ```
 
-**What happens next.** The primary switches back to its home branch, which `restore-primary.ps1`
-resolves in this order:
+The script chooses the home branch in this order:
 
 1. `-Branch`, for this run only
 2. `git config <prefix>.homeBranch`
-3. the local branch matching the configured trunk (`origin/main` -> `main`)
+3. the local branch matching the configured trunk (`origin/main` -> `main` )
 4. `main`, then `master`
 
-Step 3 exists so a project whose default branch is named something else still gets the right answer.
-It gets that answer from the same source every other script here uses, rather than from a second,
-drifting list of names.
+Step 3 supports trunks with other names using the shared config source. It avoids maintaining a
+second list of branch defaults.
 
-**The unattended backstop has no step 3.** `worktree-selfheal.ps1` goes from the config key straight
-to `main`, then `master`.
+`worktree-selfheal.ps1` lacks step 3. It tries the config key, then `main`, then `master`.
 
-That matters on a non-`main` trunk. A primary drifted off `develop`, with `main` present, is switched
-onto `main` -- unattended, at session start.
+If a primary drifts from `develop` and `main` exists, the unattended backstop can wrongly switch it
+to `main` at session start.
 
-If your trunk is not `main`, record it once and both scripts agree:
+For a non-`main` trunk, save the home branch once so both scripts agree:
 
 ```powershell
 git -C <primary> config <prefix>.homeBranch <your-trunk>
 ```
 
-**It refuses on a dirty primary.** Re-attaching would carry someone else's uncommitted work onto
-another branch or lose it, and the script cannot tell whose work it is. The refusal points at
-`rescue.ps1`.
+The script refuses a dirty primary and points to `rescue.ps1`. Switching could move or lose
+someone's uncommitted work, and the script cannot identify its owner.
 
-**`-Force` skips that refusal, it does not force the checkout.** The `git checkout` underneath
-carries no `--force` and no `-m`.
+`-Force` skips the script's dirty check only. Its underlying `git checkout` uses neither `--force`
+nor `-m`.
 
-So git still refuses when a modified tracked file differs between the two branches, which is the
-usual reason you are there. Nothing is discarded either way. `rescue.ps1` is the route.
+Git still refuses if modified tracked files differ across branches; neither path discards changes.
+Use `rescue.ps1` to move that work first.
 
 ### The SessionStart backstop, and the half-failed auto-worktree
 
-`worktree-selfheal.ps1` is the unattended repair, **wired as a SessionStart hook** by
-`install-selfheal.ps1`.
+`install-selfheal.ps1` wires `worktree-selfheal.ps1` as an unattended `SessionStart` repair hook.
 
-**The bug it exists for.** On Windows the harness's auto-worktree can half-fail: it flips the
-**primary's** `HEAD` onto the session's branch and leaves an **empty** "ghost" stub
-([`anthropics/claude-code#76590`](https://github.com/anthropics/claude-code/issues/76590)).
+On Windows, automatic worktree creation can move the primary's `HEAD` to a session branch while
+leaving an empty stub. See
+[anthropics/claude-code#76590](https://github.com/anthropics/claude-code/issues/76590).
 
-What it does, and equally what it refuses to do:
+The backstop handles each state as follows:
 
 | Situation | Action |
 |---|---|
@@ -288,75 +268,71 @@ What it does, and equally what it refuses to do:
 | This session's cwd is under `<primary>/.claude/worktrees/<name>` with **no `.git` there** | Report it as a ghost stub and tell the model to create a real worktree before editing. A real linked worktree has a `.git` **file** pointing at its private git directory; a half-failed stub has nothing there at all. That single test separates them. |
 | This session's own linked worktree is on a different branch from its recorded home | **Warn only.** Never auto-switch a linked worktree under the session standing in it. |
 
-**The dirty-tree refusal is this hook's only safety property.** `bin/ccx-doctor.ps1` drifts a
-throwaway repository, leaves an uncommitted change, and requires the backstop to decline **and to
-say why**; a repair is `RED`. Drifting a *clean* fixture passes whether or not that test is in the
-code.
+The hook's only safety check is its dirty-tree refusal. The doctor requires a reasoned refusal on a
+dirty, drifted fixture; a repair produces `RED`.
 
-It **fails open on every error path** -- exit 0, no output. It is **self-contained**: installed
-outside every working tree, it dot-sources nothing from the repository, duplicating
-`scripts/coord/_common.ps1`. A hook inside a checkout vanishes on a branch switch; a missing one is
-silent.
+A clean fixture cannot prove that guard exists.
 
-The backstop and the PreToolUse worktree gate read **one** allowlist,
-`~/.claude/hooks/ccx-gate.repos.txt`, written by both installers at one fixed name.
+Every error path exits 0 silently. The installed hook is self-contained, duplicating
+`scripts/coord/_common.ps1` rather than loading helpers from a working tree.
 
-There were once two. One installer rewrote its own unconditionally, the other seeded a copy only if
-absent, and nothing kept them in sync. A repository added through one never reached the other;
-uninstalling the gate left the backstop armed and willing to run `git checkout` on the shared
-primary.
+That keeps branch switches from removing its dependencies; a missing hook would also fail silently.
 
-Deleting that file turns both off immediately, which is the point of making the kill switch a
-**file** rather than a settings edit.
+Both installers use the same fixed allowlist, `~/.claude/hooks/ccx-gate.repos.txt`. The backstop
+and `PreToolUse` gate read it.
+
+Earlier installers kept separate files: one rewrote its list, while the other only created a missing
+copy. Changes did not propagate between them.
+
+Uninstalling the gate could leave the backstop active and able to switch the shared primary.
+
+Deleting the shared file disables both controls immediately, including in running sessions.
 
 ### The sidecar home-branch record is wrong by design
 
-`new.ps1` writes the worktree's home branch to `<git-common-dir>/worktrees/<id>/<prefix>-home-branch`.
-That path is inside the worktree's **private** git directory, so a checkout cannot move the record
-and no worktree sees any other worktree's value. The drift detector reads it.
+`new.ps1` records home in `<git-common-dir>/worktrees/<id>/<prefix>-home-branch`, inside that
+worktree's private git directory. The drift detector reads it; branch changes cannot move it or
+expose another worktree's value.
 
-**The record is wrong by design, so the detector may only warn.** It records what the worktree was
-created for, not what it should be on now, and never updates: re-branching makes it stale. Treating
-it as authoritative would "repair" an intentional change, swapping every file under a live session.
+The record preserves the creation branch and never updates after intentional branch changes. The
+detector must only warn; automatic repair could replace a live session's files.
 
-In the audit that produced this rule, most of the live worktrees mismatched their record. The file
-had two writers, creation time and bootstrap-on-first-sighting, with no update path, and the printed
-remedy would have moved a session off its real branch. Three things follow:
+During the audit, most live worktrees differed from their records. Creation and first-sighting
+bootstrap both wrote records, but neither updated them.
 
-- **Prefer the authoritative source.** `git worktree list --porcelain` needs no sidecar at all. Use
-  the record only for the question it can answer.
-- **Treat a mismatch as a question, never a verdict.** The hook warns and names both branches; the
-  human decides.
-- **Never print a destructive remediation command from a detector you have not proven correct.** The
+The suggested repair would have moved sessions off their actual branches. Apply these rules:
+
+- Prefer the authoritative source. `git worktree list --porcelain` needs no sidecar at all. Use the
+  record only for the question it can answer.
+- Treat a mismatch as a question, never a verdict. The hook warns and names both branches; the human
+  decides.
+- Never print a destructive remediation command from a detector you have not proven correct. The
   warning tells you to commit or stash first, and to run the switch yourself from a plain terminal.
 
-**The bootstrap writer can race session setup, and the result is a warning that never stops.** When
-no record exists yet, the backstop bootstraps one from whatever branch the worktree is on at that
-moment.
+When no record exists, the backstop records the worktree's current branch. That bootstrap can race
+the harness's session setup.
 
-If that happens before the harness moves the new worktree onto its session branch, "home" is
-captured as the pre-setup branch. The mismatch warning then fires on every later session start,
-forever.
+If bootstrap runs before the harness switches branches, it records the pre-setup branch. Every later
+start then repeats a stale mismatch warning.
 
-Measured here on 2026-08-05: worktree created at 09:21:50, record written at 09:21:54, harness moved
-the worktree to its session branch at 09:23:10. The warning was stale by 76 seconds, not a hijack.
+Measured here on 2026-08-05: creation at 09:21:50, record at 09:21:54, and session-branch switch at
+09:23:10. The record became stale after 76 seconds; no hijack occurred.
 
-This is the sharpest reason the detector may only warn. A harness-driven switch during session setup
-and a genuine hijack are identical in the record until you check the worktree's reflog for an agent
-tool call that caused it.
+The record alone cannot distinguish setup from hijacking. Check the worktree reflog for a branch
+change caused by an agent tool call before interpreting the warning.
 
-**Two names, one word apart.** The git config key `<prefix>.homeBranch` overrides the *primary's*
-home branch; `restore-primary.ps1` and the backstop read it. The sidecar file
-`<prefix>-home-branch` is a per-worktree creation note. Both names come from `prefix`, so a rename
-cannot split them.
+`<prefix>.homeBranch` configures the primary's home for restore and selfheal. `<prefix>-home-branch`
+records each worktree's creation branch.
+
+Both derive their names from `prefix`, preventing separate renames from splitting the convention.
 
 ---
 
 ## Removing a worktree
 
-**The goal.** Delete a finished worktree and keep a way back to its commits.
+Remove a finished worktree while preserving a route back to its commits.
 
-**What to do.** Run it from any checkout **except** the one being removed:
+Run from any checkout except the one you are removing:
 
 ```powershell
 pwsh -NoProfile -File scripts/worktree/remove.ps1 -Name alerts
@@ -364,34 +340,31 @@ pwsh -NoProfile -File scripts/worktree/remove.ps1 -Name alerts -DeleteBranch
 pwsh -NoProfile -File scripts/worktree/remove.ps1 -Name alerts -Force    # discard tracked changes too
 ```
 
-**What happens next.** The tip is printed before anything is destroyed, the worktree is removed, and
-with `-DeleteBranch` git is asked to delete the branch with `-d`.
+The script prints the tip before deleting the worktree. With `-DeleteBranch`, it then asks git to
+delete the branch using `-d`.
 
-Git cannot remove the worktree you are standing in, and the script refuses first with a message
-about what *you* did rather than letting git report the git-level problem.
+The script refuses if you stand inside the target worktree. Its message explains that location error
+before git attempts removal.
 
-**It refuses on uncommitted *tracked* changes** unless `-Force`. Untracked entries -- a dependency
-directory, build output, a scratch database -- are expected and do not block removal.
+Uncommitted tracked changes block removal unless you pass `-Force`. Untracked dependencies, build
+output, and scratch databases do not block it.
 
-**They are deleted, though, and git cannot get them back.** The removal is always
-`git worktree remove --force`, on every path, not only under `-Force`.
+**Removal deletes untracked files permanently.** Every path uses `git worktree remove --force`,
+even without the script's `-Force` flag.
 
-So an untracked `.env`, a local database or a scratch file in that worktree is gone. Git never had
-them, so neither reflog nor `fsck` will help. Look before you run this.
+Inspect `.env`, databases, and scratch files before removal. Git never stored them, so neither
+reflog nor `fsck` can recover them.
 
-> Note the deliberate asymmetry with the automated reaper, which treats untracked files as a
-> **blocker**. A human running `remove.ps1` has just looked at the directory and can say those files
-> are disposable; an unattended sweep cannot. The stricter test belongs to the tool that runs without
-> a human. Do not "fix" the difference by making them agree.
+> The automatic reaper blocks on untracked files. Manual `remove.ps1` assumes you inspected those
+> files and judged them disposable; keep this stricter rule for unattended cleanup.
 
 ### Reference the tip before anything is destroyed
 
-**The trap.** Removing a worktree can take its branch ref with it, and **a commit that is in no ref is
-also in no reflog**. There is then no `git reflog` entry to recover it from and nothing in the
-interface admits the work ever existed.
+Deleting a worktree and its branch can leave commits in no ref or reflog. The interface then offers
+no evidence that the work existed.
 
-**The rule.** The tip is resolved and printed **first**, while the branch still exists. With
-`-DeleteBranch`, it is also written to a keep-ref *before* the branch goes:
+Resolve and print the tip before deleting anything. With `-DeleteBranch`, save it in a keep-ref
+before removing the branch:
 
 ```text
 List them:    git for-each-ref refs/<prefix>/removed/
@@ -399,118 +372,106 @@ Recover one:  git branch <branch-that-was-deleted> refs/<prefix>/removed/<name>
 Drop one:     git update-ref -d refs/<prefix>/removed/<name>
 ```
 
-**The two names are not the same, and the recover line is where that bites.** The keep-ref is named
-after `-Name`, the directory component. The branch deleted is the one the worktree was *on*.
+The keep-ref uses directory `-Name`, while deletion uses the worktree's actual branch. Recovery
+must preserve that distinction.
 
-`new.ps1 -Name my-task -Branch feature/my-task` makes those differ. Using `<name>` on both sides
-recreates the branch under the wrong name. `remove.ps1` prints the branch it deleted; use that.
+`new.ps1 -Name my-task -Branch feature/my-task` gives them different names. Use the deleted branch
+name printed by `remove.ps1` when restoring it.
 
-The keep-ref costs nothing and is the difference between "recoverable" and "gone at the next `gc`".
+The keep-ref preserves commit recovery past the next `gc`.
 
 ### `git branch -d` refusing is a signal
 
-**The trap.** `-d` keeps refusing merged branches, so cleanup scripts reach for `-D`. It refuses
-because the branch is merged only into the **remote** trunk while the **local** trunk lags, as it
-usually does. Git's last protection against destroying commits is overridden for an unrelated reason.
+`git branch -d` may refuse work merged into remote trunk while local trunk lags. Using `-D` for that
+reason bypasses git's protection against losing commits.
 
-**The rule.** `remove.ps1` runs `-d`, never `-D`. If git refuses, the branch is **left in place on
-purpose**, **git's own reason is printed verbatim**, the tip is printed again, and the forcing command
-is offered. A stale ref costs nothing; a destroyed commit costs a session.
+`remove.ps1` always uses `-d`. On refusal it preserves the branch, prints git's reason verbatim and
+the tip again, then offers the forcing command.
 
-**And it deletes the branch the worktree was *on*, never `-Name`.** `-Name` is the directory
-component and cannot contain `/`; a branch name can, and `new.ps1 -Name my-task -Branch
-feature/my-task` is a documented invocation.
+It deletes the worktree's actual branch, not its directory `-Name`. Namespaced branches work with
+`new.ps1 -Name my-task -Branch feature/my-task`, though directory names cannot contain `/`.
 
-Asking git to delete `my-task` there fails with *branch not found*, which is why the refusal relays
-what git said instead of asserting a cause. It used to assert one: that the branch held commits no
-other ref has.
+Deleting `my-task` in that example gives *branch not found*. The script now relays git's reason
+instead of claiming the branch contains unique commits.
 
-So the common namespaced case sent you looking for commits that do not exist, while the real branch
-survived a run that read as a full cleanup.
+That old diagnosis sent users searching for nonexistent commits while the actual namespaced branch
+remained after apparent cleanup.
 
-A **detached** worktree has no branch to delete at all, and the script says so rather than guessing
-at one that happens to share the directory's name.
+A detached worktree has no branch to delete. The script reports that state without guessing from the
+directory name.
 
 ### Never `git worktree prune` as cleanup
 
-`git worktree prune` looks like the obvious tidy-up; `remove.ps1` does not run it. It deregisters
-**any** worktree git cannot see: a disconnected drive, an unmounted volume, a nested worktree a live
-session is about to return to. `git worktree remove` already deregisters the one you removed.
+`remove.ps1` does not run `git worktree prune`. Prune can deregister worktrees on disconnected
+drives, unmounted volumes, or temporarily missing nested paths.
 
-There is a related failure: a removal that deregisters the worktree and then fails to delete the
-directory, leaving a folder git no longer recognizes. How to recover from it is covered in
-[`docs/PRUNING.md`](PRUNING.md), which owns the unattended path.
+`git worktree remove` already deregisters its own target.
 
-For bulk cleanup use `prune-merged.ps1`. It is a dry run by default, and its rule is
-**merged AND clean AND NOT occupied**; occupancy can only ever veto a removal, never authorize one.
+Removal can also deregister a worktree before failing to delete its directory. Follow
+[Pruning](PRUNING.md) to recover that leftover folder.
+
+For bulk cleanup, `prune-merged.ps1` defaults to a dry run. It requires merged, clean, unoccupied
+worktrees; occupancy may veto removal but never authorize it.
 
 ---
 
 ## Two layouts coexist, and only one has scripted teardown
 
-There are two populations of worktree under a repository, and -- measured on the repo this tooling was
-developed in -- both populations were live at once:
+Both sibling and nested worktrees were live together in the source project:
 
 | Layout | Path | Created by | Torn down by |
 |---|---|---|---|
 | **sibling** (default) | `<parent-of-primary>/<primary-leaf>-<name>` | `new.ps1` / `spawn.ps1` / `rescue.ps1` | `remove.ps1`, `prune-merged.ps1` |
 | **nested** | `<primary>/.claude/worktrees/<name>` | the harness itself -- and these scripts too, under `worktreeLayout: nested` | `remove.ps1` only, and only for one you named |
 
-`worktreeLayout` in `ccx.config.json` selects where **we** create worktrees. Set it to `nested` and
-`new.ps1`, `spawn.ps1` and `rescue.ps1` all create at that path, so the second row is then ours as
-well as the harness's.
+`worktreeLayout` selects where `new.ps1`, `spawn.ps1`, and `rescue.ps1` create worktrees. Setting
+`nested` gives them the same layout the harness uses.
 
-**The `.claude/worktrees/` exclusion is not universal.** `Test-CcxHarnessWorktreePath` keeps those
-paths away from the **gate** and the **reaper**. `remove.ps1` never calls it, and removes whatever
-its layout resolves -- so under `nested`, `remove.ps1 -Name x` will take a nested worktree.
+`Test-CcxHarnessWorktreePath` excludes `.claude/worktrees/` paths from the gate and reaper.
+`remove.ps1` never calls it; under `nested`, `remove.ps1 -Name x` removes that named nested
+worktree.
 
-That exclusion is one named test because two rules pull in opposite directions:
+One helper handles two different requirements:
 
-- A **gate** protecting the primary must *not* govern a nested worktree. It sits under the primary's
-  path, so a plain prefix test says "inside the primary" -- but a git verb there swaps only its own
-  tree. Governing it refused the most ordinary thing a session does.
-- A **reaper** must *never* remove one. Its path can also start with `<primary>-` under some layouts,
-  so a sibling prefix scan picks it up, and removing it destroys the checkout a live session is
-  standing in.
+- A gate protecting the primary must *not* govern a nested worktree. Its path starts with primary,
+  but its git commands change only its own tree. Governing it refused the most ordinary thing a
+  session does.
+- A reaper must *never* remove one. Some nested paths also start with `<primary>-`, misleading a
+  sibling-prefix scan. Removing one can destroy a live session's checkout.
 
-Two more consequences worth knowing:
+Two related path rules also apply:
 
-- **"Sibling" is not a prefix match.** `<primary>-work/x` has the prefix but is no sibling.
-  `Test-CcxSiblingWorktreePath` requires the same parent directory, a leaf of **exactly**
-  `<primary-leaf>-<something>`, **and not a harness worktree**.
+- "Sibling" is not a prefix match. `<primary>-work/x` has the prefix but is no sibling.
+  `Test-CcxSiblingWorktreePath` requires the same parent directory, a leaf of exactly
+  `<primary-leaf>-<something>`, and not a harness worktree.
 
   Even then it only *looks* like ours: removal turns on occupancy, cleanliness and merge state.
-- **A nested checkout is git-ignored inside its parent.** The parent therefore reads perfectly clean,
-  and a `--force` removal of the parent deletes both -- leaving the nested worktree registered with no
-  directory.
+- A nested checkout is git-ignored inside its parent. The parent therefore reads perfectly clean,
+  and a `--force` removal of the parent deletes both -- leaving the nested worktree registered with
+  no directory.
 
 ### A wrong-cwd run must refuse loudly, never green no-op
 
-**The trap.** A sweep run from a linked worktree instead of the primary found no siblings from where
-it was standing. It reported nothing to consider and exited 0: a wrong-cwd run issuing a clean bill
-of health. Nobody re-runs a command that said everything was fine.
+A sweep once ran from a linked worktree, found no siblings, and exited 0. The apparent all-clear hid
+that it had searched from the wrong root.
 
-**The rule.** Anchor on the primary, never on `$PSScriptRoot/../..`. `Get-CcxPrimaryRoot` reads the
-first entry of `git worktree list --porcelain`, so every command behaves the same anywhere.
+Resolve primary through the first `git worktree list --porcelain` entry, as `Get-CcxPrimaryRoot`
+does. Do not derive it from `$PSScriptRoot/../..`.
 
-`prune-merged.ps1` exits non-zero with
-`REFUSED: this is a linked worktree, not the primary checkout`, **naming both paths**, rather than
-reporting nothing to do.
+`prune-merged.ps1` now exits nonzero with
+`REFUSED: this is a linked worktree, not the primary checkout` and names both paths.
 
-`remove.ps1` applies the same principle to the narrower case of standing inside the worktree you
-asked it to delete.
+`remove.ps1` likewise refuses when invoked inside its target.
 
-The same reasoning is why the layout formula lives in exactly one place
-(`Get-CcxWorktreePath` in `scripts/coord/_common.ps1`). It was once duplicated in four scripts and
-pattern-matched in a fifth -- which is how a rule and its enforcement can disagree without either
-being wrong on its own.
+`Get-CcxWorktreePath` in `scripts/coord/_common.ps1` owns the layout formula. Four scripts once
+duplicated it and a fifth pattern-matched it, letting rules drift apart.
 
 ---
 
 ## What a worktree does *not* isolate
 
-A worktree gives you separate files, a separate branch, a separate index and -- with a setup hook -- a
-separate dependency environment. It feels total. Five things are still shared, and each has bitten:
+Worktrees separate files, branches, indexes, and setup-hook dependency environments. These five
+resources still need shared rules:
 
 | Shared thing | Why | What to do |
 |---|---|---|
@@ -520,32 +481,31 @@ separate dependency environment. It feels total. Five things are still shared, a
 | **The AI coding assistant's project memory** | It lives outside the repository, in one directory shared by every session on the machine. Last write wins. | Reads are fine. Coordinate **writes** explicitly, or let exactly one session own them. |
 | **`.claude/` mostly does not reach a new worktree** | A project-scoped settings file is a creation-time snapshot at best, lives on one branch, and is commonly git-ignored. Anything *tracked* under `.claude/` is checked out like any other file; what is git-ignored cannot arrive at all. | Wire cross-session hooks at **user** scope, with the script installed outside every working tree. See [Install](INSTALL.md). |
 
-**Files a worktree cannot isolate at all** -- ports, a development database, a Redis keyspace, a
-package cache, a git-ignored `.env` -- are a separate class, and nothing here sees them.
-[Limits and requirements](LIMITS.md) owns that one.
+Ports, development databases, Redis keyspaces, package caches, and git-ignored `.env` files also
+remain outside these checks. See [Limits and requirements](LIMITS.md).
 
 ---
 
 ## Known limits
 
-[Limits and requirements](LIMITS.md) owns the full statement, including the entry cost this page
-never names: Claude Code for Desktop, and the scripts vendored into the repository you govern. What
-bears on these commands specifically:
+KORUS needs Claude Code for Desktop and vendored scripts in the governed repository.
+[Limits and requirements](LIMITS.md) details those needs; these platform limits affect worktree
+commands:
 
-- **PowerShell 7, Windows-first.** Most scripts are `#Requires -Version 7.3` and were exercised on
-  Windows. `$env:USERPROFILE` is Windows-only, so every home-directory lookup here uses the
-  null-safe idiom that falls back to the .NET accessor -- but Windows remains the tested platform.
+- PowerShell 7, Windows-first. Most scripts are `#Requires -Version 7.3` and were exercised on
+  Windows. Since `$env:USERPROFILE` is Windows-only, home lookups fall back safely to the .NET
+  accessor. Windows remains the tested platform.
 
-  **`worktree-selfheal.ps1` and its installer declare `-Version 7`, not 7.3.** That is why 7.0-7.2 is
+  `worktree-selfheal.ps1` and its installer declare `-Version 7`, not 7.3. That is why 7.0-7.2 is
   worse than unsupported: the backstop installs there and the gates do not.
-- **Paths fold case on Windows and macOS, not on a case-sensitive filesystem.** Use the folded form
-  for **comparison only**, never for git, the filesystem, or a human. One silent gate failure on
-  Linux CI: a lower-cased path went to `git -C`, git failed, and the rule fell through to allow.
-- **The harness's session record format is a vendor contract.** The liveness fence behind the reaper
+- Paths fold case on Windows and macOS, not on a case-sensitive filesystem. Use the folded form for
+  comparison only, never for git, the filesystem, or a human. One silent gate failure on Linux CI: a
+  lower-cased path went to `git -C`, git failed, and the rule fell through to allow.
+- The harness's session record format is a vendor contract. The liveness fence behind the reaper
   reads per-session records the harness writes; that schema can change without notice. The fence
   then reports itself unavailable and nothing is pruned -- the intended failure direction, and an
   outage.
-- **Session listings do not see every session kind.** Sessions relocated into a worktree file their
+- Session listings do not see every session kind. Sessions relocated into a worktree file their
   transcript under a different key and drop out of the list of the window they were born in.
   `sessions.ps1` is how you find them, and `-Rehome` is how you put one back:
 
@@ -558,8 +518,10 @@ bears on these commands specifically:
 
   A bare invocation only ever lists. `-Rehome` is the one action that moves anything, and it honours
   `-WhatIf`.
-- **Nothing here can prove a session is gone.** There is no heartbeat. Every occupancy verdict is the
+- Nothing here can prove a session is gone. There is no heartbeat. Every occupancy verdict is the
   absence of a veto, not a permission.
 
-Run `pwsh -NoProfile -File bin/ccx-doctor.ps1` to see which of these guards are installed and
-enforcing on this machine, rather than merely present in the repository.
+Run `pwsh -NoProfile -File bin/ccx-doctor.ps1` to check which guards are installed and enforcing on
+this machine.
+
+The [shared-state map](CONCEPTS.md#g01) separates each worktree from the records the clone shares.

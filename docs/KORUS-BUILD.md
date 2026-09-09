@@ -1,117 +1,63 @@
 # Run a KORUS build
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** The build shape, with the opening prompt for each session and what to
-expect back. The shape comes from [The KORUS framework](KORUS.md), one operator's account of months
-of Claude Code work; this page is the operating procedure for it.
+Run a KORUS build with a manager and one or more builders. Builders may be subagents or separate sessions. This procedure follows
+[The KORUS framework](KORUS.md), one operator's account of months using Claude Code.
 
-**Why you should care.** Sessions with distinct jobs beat the same sessions all doing the same job,
-because the failures that cost you work come from two sessions deciding the same thing. Not for you
-until [Quickstart](QUICKSTART.md) is done: this page assumes the gates are installed and proven.
+Distinct jobs reduce the chance that two sessions decide the same thing. Complete [Quickstart](QUICKSTART.md)
+first; this procedure assumes installed and proven gates.
 
-**How to use it.** Open the sessions in the order below. Each section states the goal, the prompt to
-paste, and what the session should do first.
+The console was meant to oversee many parts of the build. That approach did not work, so the manager replaced it.
+
+The manager assigns work to its builders and reads their results. A builder can run as a subagent or in its own session.
+
+Name that choice in each brief. Subagents return results to the manager; separate sessions need an explicit message route.
 
 ---
 
 ## The shape
 
-A seat per job. **Nothing here implements the roles**: there is no seat script, no
-role flag, and no routing. The roles are a convention you establish in each session's opening prompt
-and in your `CLAUDE.md`.
+Give each job a seat. No script, role flag, or routing implements these roles; you establish them in
+opening prompts and `CLAUDE.md`.
 
-<figure role="group">
-<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The KORUS build shape. The record feeds a console that writes one brief and spawns a builder, which edits in its own worktree on its own branch behind a dashed collision gate, then pushes its branch and opens a pull request; a reviewer reads the diff and either posts findings back on that pull request or hands it to the lander, the lander enqueues it and the merge queue merges it into the trunk, and a red check on the pull request goes to a regulator that returns only the pull request's own red to the console.">
-  <defs>
-    <marker id="korus-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
-    </marker>
-  </defs>
-  <rect x="15" y="44" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="105" y="66" font-size="12" text-anchor="middle" fill="currentColor">The record</text>
-  <text x="105" y="84" font-size="11" text-anchor="middle" fill="currentColor">backlog and plan</text>
-  <line x1="105" y1="100" x2="105" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="113" y="136" font-size="10" font-style="italic" fill="currentColor">picks an item</text>
-  <rect x="15" y="164" width="180" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="105" y="194" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Console</text>
-  <text x="105" y="212" font-size="11" text-anchor="middle" fill="currentColor">the only seat you talk to</text>
-  <line x1="195" y1="200" x2="238" y2="200" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="216" y="156" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">one brief, spawns one</text>
-  <rect x="240" y="164" width="190" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="335" y="186" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Builder</text>
-  <text x="335" y="204" font-size="11" text-anchor="middle" fill="currentColor">one brief, then it exits</text>
-  <text x="335" y="222" font-size="11" text-anchor="middle" fill="currentColor">own worktree and branch</text>
-  <line x1="335" y1="164" x2="335" y2="102" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#korus-arrow)" />
-  <text x="343" y="136" font-size="10" font-style="italic" fill="currentColor">each edit</text>
-  <rect x="240" y="44" width="190" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" />
-  <text x="335" y="66" font-size="12" text-anchor="middle" fill="currentColor">collision gate</text>
-  <text x="335" y="84" font-size="11" text-anchor="middle" fill="currentColor">refuses a file a peer holds</text>
-  <line x1="430" y1="200" x2="473" y2="200" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="451" y="156" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">pushes and opens</text>
-  <rect x="475" y="164" width="180" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="194" font-size="12" text-anchor="middle" fill="currentColor">Pull request</text>
-  <text x="565" y="212" font-size="11" text-anchor="middle" fill="currentColor">checks run here</text>
-  <line x1="525" y1="164" x2="525" y2="102" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="517" y="136" font-size="10" font-style="italic" text-anchor="end" fill="currentColor">the diff</text>
-  <rect x="475" y="44" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Reviewer</text>
-  <text x="565" y="84" font-size="11" text-anchor="middle" fill="currentColor">passes it on, or posts findings</text>
-  <line x1="605" y1="100" x2="605" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="613" y="136" font-size="10" font-style="italic" fill="currentColor">findings on a fail</text>
-  <line x1="655" y1="72" x2="698" y2="72" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="676" y="36" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">once it is read</text>
-  <rect x="700" y="44" width="160" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Lander</text>
-  <text x="780" y="84" font-size="11" text-anchor="middle" fill="currentColor">sets the merge order</text>
-  <line x1="780" y1="100" x2="780" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="788" y="136" font-size="10" font-style="italic" fill="currentColor">enqueues it</text>
-  <rect x="700" y="164" width="160" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="205" font-size="12" text-anchor="middle" fill="currentColor">Merge queue</text>
-  <line x1="780" y1="236" x2="780" y2="298" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="788" y="272" font-size="10" font-style="italic" fill="currentColor">merges</text>
-  <rect x="700" y="300" width="160" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="332" font-size="12" text-anchor="middle" fill="currentColor">Trunk</text>
-  <line x1="565" y1="236" x2="565" y2="298" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="573" y="272" font-size="10" font-style="italic" fill="currentColor">a red check</text>
-  <rect x="475" y="300" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="322" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Regulator</text>
-  <text x="565" y="340" font-size="11" text-anchor="middle" fill="currentColor">whose red is it</text>
-  <polyline points="475,328 105,328 105,238" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="290" y="320" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">only the pull request's own red</text>
-</svg>
-<figcaption>The console writes one brief and spawns a builder for it, and that builder exits when the
-brief is done. Each builder gets its own worktree and its own branch. The collision gate still
-refuses an edit to a file a peer already holds. A pull request reaches the lander only through the
-reviewer, and the merge queue is what merges. A red check goes to the regulator, which sends back
-only the pull request's own failure. The dashed box and arrow mark machinery rather than a
-seat.</figcaption>
+<a id="g04"></a>
+
+<figure class="explain-figure">
+<picture>
+<source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Reviewed pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="1027">
+</picture>
+<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
+
+The Builder uses its own worktree and branch, with the collision gate checking covered edits.
+Findings stay on the pull request for correction; the Reviewer does not merge.
+
+A role name grants no merge permission. The operator must give the Lander authority through the
+[documented route](RUNNING-MULTIPLE-SESSIONS.md); the retired review label enforces nothing.
 
 | Session | Owns | Must not |
 |---|---|---|
-| **Console** | The plan, the backlog, and which task gets briefed next | Write application code |
+| **Manager** | Its builders, their briefs, and their results | Write application code |
 | **Builder** | The change, the commit, the push, and the pull request for one brief | Guess at what the brief left open, or wait for an answer |
 | **Reviewer** | Reading the diff on one pull request, and the findings it posts there | Merge, or pass on a pull request it did not read |
 | **Regulator** | Deciding whose failure a red is: the pull request's, the trunk's, a flake's, or the queue's | Assume it remembers an earlier red |
 | **Lander** | What enters the merge queue and in what order | Merge a pull request the reviewer has not returned |
 
-**Nothing enforces that route any more.** A required check called `gate` read a `reviewed` label
-until 2026-09-04. The owner removed it. The label is now inert, so the reviewer step holds only as
-far as the seats keep it.
+The reviewer route is advisory. The owner removed the required `gate` check on 2026-09-04;
+it previously read the `reviewed` label, which now blocks nothing.
 
-**This page used to say the label was the block.** It told the lander to check for it and told the
-reviewer to apply it. Following that today costs a turn waiting on a check that will never answer.
+Earlier instructions told reviewers to apply the label and landers to wait for it. Following those
+instructions now wastes a turn on an inactive check.
 
-**The ASVS monitor session is retired.** It ran as a fifth session whose only job was keeping a
-security register current as the build sessions landed work. That seat ended on 2026-09-01.
+The ASVS monitor retired on 2026-09-01. It had been a fifth session updating the security register
+as builders completed work.
 
-**Work too large for one context is the case this shape pays off in.** An OWASP ASVS 5.0 assessment
-runs to several hundred requirements, more than one session can hold. Split across sessions, the
-cost is different unwritten rules: verdicts nobody can reconcile.
+This setup helps divide work larger than one context. An OWASP ASVS 5.0 assessment has several
+hundred requirements; separate sessions need common rules to keep their verdicts consistent.
 
-[Large assessments](https://secure-development-standards.pages.dev/ASVS-ASSESSMENT.html) is the
-method for that case.
+[Large assessments](https://secure-development-standards.pages.dev/ASVS-ASSESSMENT.html) is the method for that case.
 
 ## Before you open any session
 
@@ -120,55 +66,60 @@ method for that case.
 | Install and prove the gates | Roles are advisory; the gates are not | [Quickstart](QUICKSTART.md) |
 | Run one task end to end, by hand | You cannot size the queue until you know how long one task takes to land | [Coordination](COORDINATION.md#a-clean-merge-is-not-evidence-that-nobody-duplicated-your-work) |
 | Give each session its own worktree | Two sessions in one tree overwrite each other | [Worktrees](WORKTREES.md) |
-| Check the config root your console runs on can spawn a session | Spawning is granted per config root, not per machine, and a root without the grant refuses | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
+| Choose how each builder runs | Subagents use the manager's account and return results directly. Separate sessions need a message route | [Worker brief](WORKER-BRIEF.md) |
+| Check the spawn grant when launching a separate session | The grant applies to the launching config root. Subagents do not need it | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
 | Wire the steering hook | It only takes effect in sessions started afterwards | [Steering](STEERING.md) |
 | Write the working agreement | It only reaches sessions that start later | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Turn on Ultracode and pick Opus 5 in every session | The build shape assumes workflows and adversarial review | [The KORUS framework](KORUS.md) |
 | Be on Max 20x, and expect to need more than one account | This shape spends a weekly window in about two days. Check current plan terms yourself; that page dates from 2026-08 | [The KORUS framework](KORUS.md) |
 
-**That row is one operator's experience, not a measurement here.** The Every team ran a flow by hand
-until it was predictable before automating it. Skipping that gave them agents opening pull requests
-for finished work, and duplicate issues. **It expires** once you can predict the flow.
+The manual-trial row reflects the Every team's experience, not a measurement here. They ran the flow
+until predictable; automating sooner produced duplicate issues and PRs for finished work.
 
-**Plan on more than one account rather than treating it as a wrinkle.** Set them up before you start:
-one desktop instance per account, and each one adds a config root the installers have to reach
-([Desktop accounts](DESKTOP-ACCOUNTS.md)).
+Repeat the manual trial until you can predict the flow. Set up extra accounts before starting, with
+one desktop instance each ([Desktop accounts](DESKTOP-ACCOUNTS.md)); installers must reach every config root.
 
-## 1. Open the console
+## 1. Open the manager
 
-**The goal.** One session holds the plan, so no builder has to guess what is next.
+The manager holds its work plan and runs one or more builders. It can use subagents, separate sessions, or both.
+Each builder gets a bounded task and its own worktree.
 
-**What to paste:**
+Paste this prompt:
 
 ```text
-You are the console for this build. You plan and track; you do not write application code.
+You are the manager for this build. You plan and track; you do not write application code.
 
 Read the backlog. Produce a build plan that breaks it into tasks sized for one session each,
 and write an ADR for any decision that outlives the task that made it.
 
-Write one disposable brief per task and open a build session on it. When a builder reports a
-task blocked, its session ends: take the task back, update the backlog, and brief the next one.
+Write one complete brief per task. State whether the builder is a subagent or a separate session.
+For a subagent, receive its result directly. For a separate session, name a working message route.
+Give each builder its own worktree and branch. Check for overlapping paths before dispatch.
+When a builder reports a blocker, read it, update the backlog, and revise the brief.
 
-Do not wait on a message from a builder. Poll for state instead.
+Read each builder's result before assigning its next task. Confirm that finished work is pushed
+before closing the manager. Coordinate pull requests with the lander.
 
 Do not build. Do not merge.
 ```
 
-**What happens next.** It reads the repository and comes back with a plan and a task breakdown. Ask
-it to write the backlog to a tracked file before it briefs anything, because a plan that lives
-only in one context dies with that context.
+The manager returns a plan and task breakdown. Have it save the backlog in a tracked file before
+briefing workers, so the plan survives a lost context.
 
-## 2. Open a build session per brief
+## 2. Give each builder one brief
 
-**The goal.** One session per brief, each unable to silently overwrite the other.
+The manager starts each builder in the mode named in its brief. Give each builder its own worktree and branch.
 
-**What to paste,** into each:
+Subagents share the manager's process and account. They stop when the manager exits, so confirm that work is pushed before closing it.
+
+Paste this prompt:
 
 ```text
-You are a build session. Build the task in your brief as a workflow, then stop.
+You are a builder. Your brief names whether you run as a subagent or a separate session.
+Build the task in your brief as a workflow, then report through the route it names.
 
 If the brief leaves something open, do not guess and do not wait for an answer. Write the
-question to the console, comment it on the pull request, and stop.
+question through the route in your brief, comment it on the pull request, and stop.
 
 Before starting a task, take a claim on it with a one-line note saying what you are building:
   pwsh -NoProfile -File scripts/coord/claim.ps1 -Take "<task>" -Note "<what you are building>"
@@ -188,36 +139,31 @@ Commit at logical stops. Push your own branch and open your own pull request. Do
 the lander decides what enters the merge queue.
 ```
 
-**That prompt is a brief, and every brief runs out.**
-[Brief a worker session](WORKER-BRIEF.md) is the template for one, plus the rule that makes a worker
-ask rather than guess when it does.
+Use [Brief a worker session](WORKER-BRIEF.md) to fill out each prompt. Its rule requires a worker to ask when the brief
+leaves a needed answer open.
 
-**What happens next.** Each session announces itself to the peers it can reach, takes its claims,
-and starts building. When both reach for the same file, the second edit is normally refused rather
-than merged ([Coordination](COORDINATION.md)).
+Each builder claims its work and checks for file overlap before editing. The collision
+gate normally refuses a second session's edit to a held file ([Coordination](COORDINATION.md)).
 
-**"Normally" is doing work in that sentence.** The gate refuses only when the peer worktree is live
-**and** holds uncommitted changes to that exact path. A peer that committed and went clean is
-reported and allowed.
+The refusal requires a live peer worktree with uncommitted changes to that exact path. A peer that
+committed and went clean is reported but does not block the edit.
 
-It also fails open, and its blind spots are worth reading before you rely on it
-([Limits](LIMITS.md#what-the-collision-gate-does-not-see)).
+The gate also fails open. Check its [blind spots](LIMITS.md#what-the-collision-gate-does-not-see) before relying on it.
 
-**Why one brief per session.** A session that ends when its brief is done spends nothing while it
-waits, where a session held open to poll pays for its whole context on every pass.
+A worker that stops after one brief spends nothing waiting. A session kept open to poll pays for its
+full context on every pass.
 
-**The five-hour cap is not the binding one.** This shape spends a weekly window in about two days,
-which is why the framework page expects more than one account. That reasoning is in
-[The KORUS framework](KORUS.md).
+This setup exhausts a weekly window in about two days, before the five-hour cap becomes the main
+constraint ([The KORUS framework](KORUS.md)). That is why the framework expects multiple accounts.
 
-[Token accounting](TOKEN-ACCOUNTING.md) measures the other half: what one percent of a weekly window
-is worth, and what a month of it costs at published API rates.
+[Token accounting](TOKEN-ACCOUNTING.md) measures the value of one percent of a weekly window. It also estimates a month's
+cost at published API rates.
 
 ## 3. Open the lander
 
-**The goal.** One session owns the remote, so the trunk moves under a single decision-maker.
+The lander owns merge-order decisions so one session controls how the trunk advances.
 
-**What to paste:**
+Paste this prompt:
 
 ```text
 You are the lander. You decide what enters the merge queue and in what order, and you
@@ -236,34 +182,31 @@ Decide which of two branches on the same ground lands first, and who re-syncs af
 You arbitrate and land. You do not build.
 ```
 
-**What happens next.** It reads the branches rather than waiting to be told about them.
+The lander reads branch state instead of waiting for messages about it.
 
-**A pushed branch is the signal here**, because builders push their own. The lander reads the open
-pull requests and takes the ones the reviewer has returned to it.
+Builders push their branches. The lander reads open pull requests and takes those the reviewer has
+returned.
 
-**Read the pull request, not a label.** The reviewer's findings are comments on the pull request.
-Two required checks remain, `gates (ubuntu-latest)` and `gates (windows-latest)`, and neither
-knows whether anybody read the diff.
+Read the reviewer's comments on the pull request. The remaining required checks, `gates (ubuntu-latest)`
+and `gates (windows-latest)`, cannot establish that anyone read the diff.
 
-**Read the role page before you rely on it.** The authority is not transferable, the route is
-absolute, and a worker that cannot reach the lander is blocked rather than promoted.
-[Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) owns the full role.
+[Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) defines the lander's authority and route. Authority cannot transfer; a worker
+unable to reach the lander remains blocked from merging.
 
 ## The daily loop
 
-1. **Ask the console what is in flight.** It answers from the backlog, not from memory.
-2. **Check the builders have not collided.** A bare `overlap.ps1` gives the roster; `-File <path>`
+1. Ask the manager what is in flight. It answers from the backlog, not from memory.
+2. Check the builders have not collided. A bare `overlap.ps1` gives the roster; `-File <path>`
    answers who is in one file.
-3. **Steer rather than wait.** A session deep in the wrong approach does not see your typing until
-   its turn ends ([Steering](STEERING.md)).
-4. **Let the lander land.** It decides the order. You approve the merge in words, once, and
-   that approval does not carry to the next branch.
+3. Steer rather than wait. A session deep in the wrong approach does not see your typing until its
+   turn ends ([Steering](STEERING.md)).
+4. Let the lander land. It decides the order. You approve the merge in words, once, and that
+   approval does not carry to the next branch.
 5. **Prune what merged**, from the primary checkout. `prune-merged.ps1` refuses to run from a linked
    worktree, and every session here is in one. It removes worktrees that are merged **and** clean
    **and** unoccupied ([Pruning](PRUNING.md)).
-6. **Re-prove the gates when something surprises you.** They fail byte-identically to succeeding, so
-   a quiet week is not evidence: `pwsh -NoProfile -File <tooling>/bin/ccx-doctor.ps1 -Repo <target>`
-   ([Troubleshooting](TROUBLESHOOTING.md)).
+6. Re-prove the gates when something surprises you. They fail byte-identically to succeeding, so a
+   quiet week is not evidence: `pwsh -NoProfile -File <tooling>/bin/ccx-doctor.ps1 -Repo <target>` ([Troubleshooting](TROUBLESHOOTING.md)).
 
 ## When it goes wrong
 
@@ -273,19 +216,21 @@ absolute, and a worker that cannot reach the lander is blocked rather than promo
 | Two records took the same number | The collision git cannot see | [Sequence allocation](SEQUENCE-ALLOC.md) |
 | A session is deep in the wrong approach | Your typing queues until the turn ends | [Steering](STEERING.md) |
 | Branches will not land | Four states with three different fixes | [PRs and merges](PR-AND-MERGE.md) |
-| A peer cannot be reached at all | Extension session, or another login | [Session mail](SESSION-MAIL.md) -- a design to build, not a shipped lane |
+| A peer cannot be reached at all | Extension session, or another login | [Session mail](SESSION-MAIL.md), including its delivery limits |
 | Everything is green and you cannot tell if any of it runs | Every failure here looks like success | [Limits and requirements](LIMITS.md) |
 
 ## What this shape does not decide for you
 
-**Whether the work was any good.** The gates refuse collisions. Nothing here reviews a change, and
-CI is what turns "it merged" into "it passed" ([CI for leaders](CI-FOR-LEADERS.md)).
+The earlier version described mail as an unshipped design. The sender and drain now ship;
+[Session mail](SESSION-MAIL.md) explains which clients have been tested.
 
-**Whether you are about to run out.** Usage-limit awareness is a design on this site, not a shipped
-hook ([Usage awareness](USAGE-AWARENESS.md)).
+Gates refuse collisions but do not review quality. Continuous integration establishes whether checks
+passed ([CI for leaders](CI-FOR-LEADERS.md)).
 
-**Who writes shared state outside git.** Project memory and shared notes are last-write-wins, and
-the remedy is single-writer convention rather than a gate.
+Usage-limit awareness remains a design, with no shipped hook ([Usage awareness](USAGE-AWARENESS.md)).
+
+Assign one writer for project memory and shared notes. Those stores use last-write-wins outside git,
+with no gate to enforce ownership.
 
 ## Related
 

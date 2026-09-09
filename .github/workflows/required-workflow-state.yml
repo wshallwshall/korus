@@ -55,35 +55,66 @@ jobs:
         run: |
           set -euo pipefail
 
-          # A token without admin rights cannot read protection. Say so rather than reporting an
-          # empty required set, which would render as "nothing is required" and be believed.
-          if ! prot=$(gh api "repos/$REPO/branches/$BRANCH/protection" 2>/dev/null); then
+          # THE ENDPOINT IS THE WHOLE FIX, 2026-09-09. This read `.../branches/main/protection`,
+          # which needs admin scope. A workflow token cannot have it -- `administration` is not a
+          # key a `permissions:` block can name -- so the call ALWAYS failed, the escape branch
+          # below ran, and the job exited 0. Every scheduled run was green having audited nothing.
+          #
+          # The required CONTEXT SET is also on the plain branch endpoint, which answers with no
+          # token at all. Measured 2026-09-09 against this repository:
+          #   curl -s .../repos/wshallwshall/korus/branches/main   -> HTTP 200,
+          #     .protection.required_status_checks.contexts = the two gates legs
+          #   curl -s .../branches/main/protection                 -> HTTP 401   <- control
+          #   curl -s .../repos/wshallwshall/korus                 -> HTTP 200   <- control
+          # Both controls fired, so the 200 is a real read rather than a host answering everything.
+          #
+          # It also keeps working on a fork pull request, where no elevated token exists even in
+          # principle. A check that needs one silently stops covering fork contributions.
+          if ! branch=$(gh api "repos/$REPO/branches/$BRANCH" 2>/dev/null); then
             {
               echo "### Required workflow state"
               echo
-              echo "**COULD NOT READ branch protection**, so nothing was audited. This is not a"
-              echo "clean result. The token needs admin:repo access to read protection settings."
+              echo "**COULD NOT READ \`$BRANCH\`.** Nothing was audited, and this is a FAILURE"
+              echo "rather than a clean result. This endpoint needs no elevated scope, so a"
+              echo "refusal here is an outage or a renamed branch, not a permission gap."
             } >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            exit 1
           fi
 
-          required=$(echo "$prot" | jq -r '.required_status_checks.contexts // [] | .[]' | sort -u)
-          strict=$(echo "$prot" | jq -r '.required_status_checks.strict // false')
+          required=$(echo "$branch" | jq -r '.protection.required_status_checks.contexts // [] | .[]' | sort -u)
 
-          # Job ids and their `name:` overrides, from every workflow in the tree.
-          jobs_on_disk=$(grep -rhoE '^  [a-zA-Z0-9_-]+:' .github/workflows/*.yml \
-                          | tr -d ' :' | sort -u || true)
+          # `strict` IS NOT AUDITED, AND MUST NOT BE GUESSED. It lives only behind the admin
+          # endpoint. The previous version defaulted it to `false` with `// false`, which on this
+          # repository would have PUBLISHED A FALSE READING: strict is true here. An absent value
+          # and a false one are different facts, and only one of them is a measurement.
+          #
+          # JOBS COME FROM THE `jobs:` BLOCK, NOT FROM INDENTATION. The previous version matched
+          # any key indented two spaces, so `push`, `contents`, `group` and `cancel-in-progress`
+          # read as jobs. Measured 2026-09-09: the old pattern returned 14 names across five
+          # workflow files where six jobs exist. This awk agrees exactly with a YAML parse on all
+          # five, and needs no parser installed on the runner.
+          job_ids() {
+            awk '
+              /^jobs:[[:space:]]*(#.*)?$/ { injobs=1; next }
+              /^[^[:space:]#]/            { injobs=0 }
+              injobs && /^  [A-Za-z0-9_-]+:[[:space:]]*(#.*)?$/ {
+                sub(/:[[:space:]]*(#.*)?$/, ""); sub(/^  /, ""); print
+              }
+            ' "$1"
+          }
+
+          jobs_on_disk=$(for wf in .github/workflows/*.yml; do job_ids "$wf"; done | sort -u)
 
           {
             echo "### Required workflow state"
             echo
             echo "Read at $(date -u +%Y-%m-%dT%H:%M:%SZ) against \`$BRANCH\`."
             echo
-            echo "**Strict (branch must be up to date): \`$strict\`.**"
-            if [ "$strict" = "true" ]; then
-              echo "That is why an open PR goes BEHIND the moment anything else lands."
-              echo "\`stalled-prs.yml\` is the job that reports the consequence."
-            fi
+            echo "**WHAT THIS RUN DID NOT AUDIT.** Only the required CONTEXT SET is checked below."
+            echo "\`strict\`, \`enforce_admins\` and \`required_approving_review_count\` live only"
+            echo "behind \`/branches/$BRANCH/protection\`, which needs admin scope this workflow"
+            echo "cannot hold. They move independently of the context set, so a green here says"
+            echo "nothing about them. Widening this job needs a token a runner should not have."
             echo
             echo "#### Required contexts, live"
             if [ -z "$required" ]; then
@@ -111,14 +142,18 @@ jobs:
             [ "$unbacked" -eq 0 ] && echo "- none"
             echo
             echo "#### ORPHANED: a gate-shaped job that gates nothing"
+            echo
+            echo "_Scope: workflow files named \`*gate*\` or \`*review*\` only. That is a filename"
+            echo "proxy for gate-shaped, and on 2026-09-09 it matched ONE file. A gate-shaped job"
+            echo "in a differently named workflow is not covered, and a green here does not say"
+            echo "otherwise._"
             orphan=0
             for wf in .github/workflows/*.yml; do
               case "$(basename "$wf")" in
                 *gate*|*review*) : ;;
                 *) continue ;;
               esac
-              for job in $(grep -oE '^  [a-zA-Z0-9_-]+:' "$wf" | tr -d ' :'); do
-                case "$job" in on|permissions|concurrency|env|defaults|jobs) continue ;; esac
+              for job in $(job_ids "$wf"); do
                 if ! echo "$required" | grep -qE "^$job( \(|$)"; then
                   echo "- \`$job\` in \`$(basename "$wf")\` is required by nothing, so a red result"
                   echo "  there does not stop a merge."

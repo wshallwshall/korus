@@ -1,52 +1,48 @@
 # Steering a running session
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** A way to interrupt a session that is already mid-task. You run one command from a
-second terminal, and your message reaches that session at its **next tool call**, not after the
-current turn finishes.
+Send a running session a message from a second terminal. It receives the note at its next tool call,
+before the current turn ends.
 
-**Why you should care.** A session twenty minutes into the wrong approach cannot be reached. Typing
-at its prompt only queues your message for *after* the turn ends. Not for you if you never run a
-session long enough to want to interrupt it.
+Typing at a busy session's prompt queues your message until its turn ends. Use steering when a
+long-running session needs a correction sooner.
 
-**How to use it.** Nothing wires the delivery half for you. Do it per worktree, at
-`settings.local.json` scope, before you need it -- [Wiring it](#wiring-it) has the JSON.
+Wire delivery in each worktree's `settings.local.json` before starting the session. [Wiring it](#wiring-it)
+supplies the JSON; no installer sets it up.
 
 ---
 
-Two files, about a hundred lines between them, and no coupling to anything else in this repo:
+The feature uses two files, about a hundred lines total, with no dependency on other repository
+code:
 
 | File | Role | Kind |
 |---|---|---|
 | `bin/ccx-steer.ps1` | writes the note | user-facing command |
 | `scripts/hooks/steer-inject.ps1` | delivers the note | opt-in `PreToolUse` hook: the harness runs it before every tool call |
 
-Directory placement is the contract, not decoration. `scripts/hooks/` means "the harness invokes
-this"; `bin/` means "you invoke this". The steer command is not a hook and does not live there.
+The directories identify each script's caller. The harness invokes scripts in `scripts/hooks/`; you
+invoke commands in `bin/`.
 
 ## The problem it works around
 
-**A supported channel now reaches a session between tool calls.** Claude Code's cross-session
-messaging does: the receiving Claude reads a message between tool calls during an active turn, and
-never interrupts a running tool. Documented, from v2.1.224 and v2.1.234 on native Windows.
+Claude Code cross-session messages arrive between tool calls during an active turn. They never
+interrupt a running tool; native Windows documents this from v2.1.224 and v2.1.234.
 
-What it needs is a **name**. `SendMessage` addresses by name, and draws those names from a roster
-that stops at the config root, so it cannot name a session under a second Claude account. See
-[Session mail](SESSION-MAIL.md#who-actually-needs-this) for the measurement.
+`SendMessage` requires a session name from its roster. That roster stops at the config root, so
+it cannot name a session on another Claude account ([Session mail](SESSION-MAIL.md#who-actually-needs-this)).
 
-Claude Code also documents a session's inbox socket for a script or hook to post into. The auth line
-is published; the message line is not, so that route is not buildable from the docs today.
+Claude Code documents an inbox socket for scripts and hooks. It publishes the auth line but omits
+the message format, so the docs cannot support an implementation today.
 
-This hook needs no name and no undocumented format. Every tool call is a handoff to the harness,
-where a `PreToolUse` hook fires, and that hook's `additionalContext` lands in the model's context.
-It is addressed by project directory, which you already know.
+This hook addresses the project directory. At each tool call, the harness runs `PreToolUse`,
+whose `additionalContext` reaches the model without a session name or undocumented format.
 
 ## How it works
 
-**The goal.** Get one sentence in front of a session that is already mid-task.
+Send one sentence to the active session.
 
-**What to do.** Run this from a second terminal, in the worktree that session is working in:
+Run this from a second terminal in that session's worktree:
 
 ```powershell
 # terminal 2, while the session in that worktree is mid-task
@@ -56,15 +52,14 @@ pwsh -NoProfile -File bin/ccx-steer.ps1 "stop refactoring the parser; just fix t
 pwsh -NoProfile -File bin/ccx-steer.ps1 "..." -ProjectDir <path to the worktree>
 ```
 
-**What happens next.**
+The note follows these steps:
 
 1. The command writes your message to `<worktree>/.claude/steer.txt`.
-2. At the session's next tool call, `scripts/hooks/steer-inject.ps1` fires, finds the file, reads
-   it, **deletes it**, and re-emits the text wrapped in an envelope.
+2. At the session's next tool call, `scripts/hooks/steer-inject.ps1` fires, finds the file, reads it, **deletes
+   it**, and re-emits the text wrapped in an envelope.
 3. The session sees the note before that tool call is executed.
 
-The envelope tells the model the text arrived via a side channel and should be acted on now, not at
-the end of the turn.
+The envelope identifies a side-channel message for the model to act on immediately.
 
 The hook's output shape is fixed by the event:
 
@@ -73,15 +68,14 @@ The hook's output shape is fixed by the event:
 {"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"[STEERING NOTE ...]: ..."}}
 ```
 
-**The `hookSpecificOutput` wrapper is mandatory.** Emitting `additionalContext` at the top level
-does not deliver it, and nothing complains: the hook exits 0 and the note is simply gone.
+The `hookSpecificOutput` wrapper is required. Top-level `additionalContext` silently fails to deliver: the
+hook exits 0 and the note is lost.
 
 ## Wiring it
 
-**The goal.** Turn delivery on for one worktree. No installer in this repo wires this hook, on
-purpose.
+Enable delivery for one worktree. No installer in this repository wires the hook.
 
-**What to do.** Add this to that worktree's `.claude/settings.local.json`:
+Add this to the worktree's `.claude/settings.local.json`:
 
 <!-- no-copy -->
 ```json
@@ -104,35 +98,33 @@ purpose.
 }
 ```
 
-**Keep the escaped quotes around the path.** This is the one hook you wire by hand, so nothing
-corrects it for you. Unquoted, a checkout path containing a space -- a two-word account name, a
-redirected OneDrive profile, a `My Projects` directory -- makes `pwsh` read only the first word as
-`-File`.
+Keep the escaped quotes around the path. A space in an unquoted checkout path makes `pwsh`
+treat only its first word as `-File`.
 
-Measured: it exits 64 with a usage dump on stderr and nothing on stdout. Because this hook fails
-open, that is byte-identical to "no note waiting", which the page's own
-[fail-open section](#it-fails-open-and-what-that-costs-you) calls the failure you cannot detect.
+This affects two-word account names, redirected OneDrive profiles, and directories such as
+`My Projects`.
 
-**What happens next.** Wiring takes effect in **newly started sessions** only. Enable it before you
-need it, not while the session you want to steer is already running.
+Measured: that error exits 64, prints usage on stderr, and leaves stdout empty. The hook fails open,
+so it looks exactly like no queued note ([fail-open section](#it-fails-open-and-what-that-costs-you)).
 
-Two reasons it is local and opt-in rather than tracked and always-on:
+The wiring takes effect only in newly started sessions. Enable it before starting the session you
+want to steer.
 
-- **It costs a process spawn before every tool call.** Measured where this tooling was developed:
-  roughly 366 ms per tool call, of which about 267 ms is bare PowerShell startup and cannot be
-  optimized away. A standing tax in every session, paid for a feature you use occasionally.
-- **`*.local.*` is git-ignored** by this repo's `.gitignore`. Anything with `.local.` in its name
-  belongs to one checkout on one machine, so wiring it there opts one worktree in without opting in
+The hook is local and opt-in for two reasons:
+
+- It costs a process spawn before every tool call. Measurements here found roughly 366 ms per tool
+  call. Bare PowerShell startup accounts for about 267 ms that cannot be optimized away. A standing
+  tax in every session, paid for a feature you use occasionally.
+- **`*.local.*` is git-ignored** by this repo's `.gitignore`. A `.local.` filename
+  belongs to one checkout on one machine. Wiring it there opts in that worktree without changing
   every clone.
 
 ## Why a file, and not an environment variable
 
-An environment variable is read once, at process start. Hook wiring is resolved at session start. A
-change to either reaches the sessions you start *next*, never the one already doing the wrong thing.
-Both are configuration for future sessions dressed up as a control for the current one.
+A running process keeps the environment it received at startup. Hook wiring also resolves at session
+start, so later changes reach only future sessions.
 
-A file is different only in that the hook re-reads it on **every** run. That single property is what
-makes it able to reach a live process:
+The hook rereads the file on every run. That lets the note reach a live session:
 
 | Channel | Reaches a session that is already running | Why |
 |---|---|---|
@@ -140,17 +132,14 @@ makes it able to reach a live process:
 | Settings edit | no | hook wiring is resolved at session start |
 | File checked by a hook | **yes** | re-read on every tool call |
 
-The announce kill switch in this repo is a file for the same reason: `<state-root>/announce/OFF`,
-not only the `CCX_ANNOUNCE_DISABLE` variable. The variable stands down sessions started after you
-set it, which is precisely not the population misbehaving right now.
+The announce off-switch uses `<state-root>/announce/OFF` for the same reason. `CCX_ANNOUNCE_DISABLE` affects only
+sessions started after you set it.
 
-**Rule: anything that must reach a session already in flight -- a steering note, an emergency
-off-switch -- is a file the hook checks on every run.** Environment variables and settings are for
-sessions that have not started yet.
+A control for an active session must use a file the hook checks on every run. This includes steering
+notes and emergency off-switches; environment and settings changes affect future sessions.
 
-Two processes that share a filesystem need no IPC, no port, no daemon, and no knowledge of each
-other's identity. The write is the send, the delete is the acknowledgement. That is the entire
-protocol, which is why these two scripts share no code.
+Shared filesystem access is enough: writing sends the note, and deleting acknowledges it. The
+scripts need no port, daemon, process identity, shared code, or interprocess communication service.
 
 ## The queue is one slot deep
 
@@ -159,10 +148,9 @@ protocol, which is why these two scripts share no code.
 - Delivery is read-then-delete, and the honest bound is **at most once**. The hook checks, reads,
   deletes and emits as separate steps under no lock, and the delete lands before anything confirms
   the note reached the model. There is no history and no re-delivery.
-- **There is no expiry.** A note sits until the session's next tool call, possibly hours later and
-  in the middle of an unrelated task. Write any condition into the text so the *recipient* can
-  evaluate it: "if you have not started the migration yet, don't". Never write one only you can
-  observe.
+- There is no expiry. A note sits until the session's next tool call, possibly hours later and in
+  the middle of an unrelated task. Write any condition into the text so the *recipient* can evaluate
+  it: "if you have not started the migration yet, don't". Never write one only you can observe.
 - The command's success output is a receipt that the note was **written**, not that it was
   **delivered**. Nothing in this pair reports delivery back to you. To know it landed, see
   [It fails open, and what that costs you](#it-fails-open-and-what-that-costs-you).
@@ -175,49 +163,45 @@ protocol, which is why these two scripts share no code.
 2. `$env:CLAUDE_PROJECT_DIR`, if set,
 3. the enclosing worktree root, from `git rev-parse --show-toplevel`.
 
-If none of those produce a directory it **throws** rather than defaulting to the current directory.
-It throws again if the resolved directory has no `.claude` in it.
+The command throws if none resolves to a directory. It also throws if that directory lacks
+`.claude`; it never falls back to the current directory.
 
-Both refusals are scar tissue. An earlier version resolved against the working directory and created
-`.claude` if missing, so a command run from the wrong place printed "queued" over a note nothing
-reads. The hook reads only `<project root>/.claude/steer.txt`. A green no-op is the worst outcome.
+An earlier version used the working directory and created `.claude` when absent. It could
+report "queued" from the wrong directory even though no hook read that note.
 
-The hook mirrors this: if `CLAUDE_PROJECT_DIR` is unset it exits 0 immediately rather than searching.
+The hook reads only `<project root>/.claude/steer.txt`. If `CLAUDE_PROJECT_DIR` is unset, it exits 0 immediately without
+searching.
 
 ## Encoding
 
-Both scripts are ASCII-only, and the note is UTF-8 without a BOM (`-Encoding utf8` under PowerShell
-7). It crosses processes and cannot depend on either console's code page. `.editorconfig` pins
-UTF-8-no-BOM and LF, because other controls hash-compare an installed copy against the repo copy.
+Both scripts use ASCII. They write the note as UTF-8 without a BOM (`-Encoding utf8` in PowerShell
+7), independent of either console's code page.
 
-The message is written with `-NoNewline`, so what you typed is what arrives. The hook trims
-whitespace and skips an empty or whitespace-only note.
+`.editorconfig` pins UTF-8-no-BOM and LF because other controls compare installed and source
+hashes. `-NoNewline` preserves the typed message; the hook trims whitespace and skips blank
+notes.
 
 ## It fails open, and what that costs you
 
-The hook declares its posture in its own header: **any error exits 0**. That is right here. A
-steering convenience must never block a tool call, and a broken side channel must not break the
-session.
+The hook's header states that every error exits 0. A broken steering channel must never block a tool
+call or break the session.
 
-The price is that breakage is invisible. A hook that is not wired, cannot find its script, or throws
-on the first line emits nothing -- byte-for-byte what it emits when no note is waiting. "No note
-queued" and "never wired" look identical: silence that reads as all-clear.
+Unwired hooks, missing scripts, and immediate exceptions all emit nothing. That matches the output
+when no note waits, so silence cannot establish that steering works.
 
-One signal lives outside the failing component, and it is free:
+Check the note file outside the hook:
 
 > **The note file is the receipt.** After the session has made at least one tool call, if
 > `<worktree>/.claude/steer.txt` still exists, the hook did not run. If it is gone, it was consumed.
 
-Check the file, not the transcript. `bin/ccx-doctor.ps1` lists every settings file that wires the
-injector, by receipt, but does **not** fire it. `OK` means "wired here", not "proven to deliver". A
-`--` means "not wired anywhere it can see", which for an opt-in feature is fact, not fault.
+`bin/ccx-doctor.ps1` lists settings that wire the injector but does not run it. `OK` means
+"wired here"; `--` means no visible wiring, which is allowed for this opt-in feature.
 
 ## Proving it end to end
 
-**The goal.** Read the decision the hook emits, rather than inferring behavior from the source.
+Run the hook to inspect its actual output.
 
-**What to do.** The hook reads no stdin -- everything it needs comes from the environment and the
-file -- so you can drive it directly:
+The hook reads its environment and note file, with no stdin. Drive it directly:
 
 ```powershell
 pwsh -NoProfile -File bin/ccx-steer.ps1 "throwaway probe, ignore"
@@ -228,34 +212,30 @@ pwsh -NoProfile -File scripts/hooks/steer-inject.ps1
 Remove-Item Env:\CLAUDE_PROJECT_DIR      # do not skip this -- see below
 ```
 
-**What happens next.** Expect one line of compact JSON containing your text, and `.claude/steer.txt`
-to be gone afterwards.
+Expect one compact JSON line containing your text, followed by the removal of `.claude/steer.txt`.
 
-Three cautions:
+Use these precautions:
 
 - **Unset `CLAUDE_PROJECT_DIR` afterwards.** It outranks the worktree root in `ccx-steer.ps1`'s own
   resolution order. Left set, it silently aims every later `ccx-steer` run at the directory you
   probed from -- including notes you meant for another worktree.
-- **This consumes the note.** Probe with a throwaway message, never with one you actually queued
-  for a session.
-- **Run the copy your settings name**, not the repo copy, if the two differ. A control is enforced
-  by the file that is wired, and it can drift arbitrarily far from the file you are reading.
+- This consumes the note. Probe with a throwaway message, never with one you actually queued for a
+  session.
+- Run the copy your settings name, not the repo copy, if the two differ. A control is enforced by
+  the file that is wired, and it can drift arbitrarily far from the file you are reading.
 
-**No output does not mean the note survived.** It means the hook emitted nothing, and several of
-those paths destroy the note first: a read-then-delete that fails after the delete, or a timeout
-that kills the hook mid-run.
+An empty result does not prove the note survived. A failure after deletion or a timeout can destroy
+the note before the hook emits it.
 
-Read an empty result as "gone and undelivered", never as "still queued".
+Treat an empty result as "gone and undelivered", never "still queued".
 
 ## The trust boundary
 
-The steering note is the operator's own words, wrapped in an envelope that says so, and is meant to
-be acted on the way a prompt is. Anything that can write `<worktree>/.claude/steer.txt` can put
-words in the operator's mouth. The file is exactly as trusted as the worktree it sits in.
+The envelope identifies the note as the operator's words and gives it prompt authority. Anyone able
+to write `<worktree>/.claude/steer.txt` can impersonate the operator.
 
-The inverse matters if you reuse this channel. A message from *another session* is peer data and
-must never be obeyed as though the user said it. Do not route machine-to-machine traffic through it:
-its premise is "this came from the user", and a channel that lies about that is worse than none.
+Trust the note only as far as you trust the worktree. Never send peer-session messages through this
+channel: peer data must not acquire the user's authority.
 
 ## Limits
 
@@ -268,3 +248,5 @@ its premise is "this came from the user", and a channel that lies about that is 
 | Receipt | The command confirms the write, never the delivery. The absence of the file is your only delivery evidence. |
 | Failure mode | Fails open and silently by design; a broken hook is indistinguishable from an idle one at the session. |
 | Install | No installer wires it. `bin/ccx-doctor.ps1` reports whether it is wired, by receipt, and does not attack it. |
+
+The [mail timeline](SESSION-MAIL.md#g09) shows a different delivery path and its limits.

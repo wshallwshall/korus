@@ -1,23 +1,23 @@
 # Brief a worker session
 
-A brief is the opening prompt a coordinating session writes when it spawns a worker. This page is
-the template for one, and the standing rule that stops a worker guessing when the brief runs out.
+A worker brief tells a new session what to do and when to ask for help. The coordinating session
+writes it as the worker's opening prompt.
 
-[Run a KORUS build](KORUS-BUILD.md) owns the four-session shape and the prompt for each role. This
-page owns what a single worker's prompt has to contain.
+[Run a KORUS build](KORUS-BUILD.md) describes the manager, its builders, and each role's prompt. Use the template below to
+write one worker's brief.
 
 ---
 
 ## What a worker does today when its brief runs out
 
-It has two moves. It guesses, or it waits.
+A worker with an incomplete brief may guess or wait.
 
-**Guessing is the worse one.** The guess reaches a pull request in the shape of a decision, and a
-reviewer reads it as one. Nothing beside it marks the answer as a guess.
+A guess can reach a pull request without any sign that the worker lacked an answer. A reviewer may
+then treat it as a decision.
 
-Waiting is honest and it is not free. A waiting worker still spends metered tokens.
+Waiting avoids that guess, but a waiting worker still spends metered tokens.
 
-The channel for asking already works. The rule pointing a worker at it is what was missing.
+Workers already had a channel for questions. They needed a rule telling them to use it.
 
 ---
 
@@ -25,29 +25,32 @@ The channel for asking already works. The rule pointing a worker at it is what w
 
 ```text
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the console,
+do not guess and do not wait. Send the question through the route named in this brief,
 comment it on the pull request, and stop.
 ```
 
-The console is the session that wrote the brief. In a KORUS build that is the Console seat, which
-replaced the Dispatcher when it was retired on 2026-09-01.
+The manager writes the brief and chooses how the builder runs. It reads the result and resolves questions before assigning more work.
 
-The template below ends with this block. That copy is the one you paste, and it goes in unchanged.
+| Builder mode | Route for questions and results |
+|---|---|
+| Subagent | Return them to the manager through the subagent result |
+| Separate session | Use the explicit route in the brief, such as session mail or another tested session channel |
+
+A separate session cannot return a subagent result. Name a reachable recipient and check the channel before assigning work.
+
+Paste the template with its closing rule block unchanged.
 
 ### Why a prohibition rather than "ask if you are unsure"
 
-**Obligations decay and prohibitions hold.** Measured on the fleet this rule came from, prohibitions
-failed between 0.07 and 0.6 percent of the time. Obligations decayed between 22 and 97 percent.
+On the fleet behind this rule, prohibitions failed between 0.07 and 0.6 percent of the time.
+Obligations decayed between 22 and 97 percent.
 
-"Ask if you are unsure" is an obligation. It asks a worker to notice a feeling first, and noticing
-is the part that goes under load.
+"Ask if you are unsure" requires a worker to notice uncertainty. Under load, it may miss that cue.
 
-A prohibition names an act instead. "Am I about to guess" is a question about what the worker is
-already doing, so the check costs it nothing.
+A prohibition points to an act the worker can check: whether it is about to guess.
 
-Both channels have to exist before you paste the rule. A prohibition that removes the only route to
-the behavior it wants is itself the defect
-([Drift audit](CASE-STUDY-drift-audit.md#4-evaluate-prohibitions-as-a-set-never-one-at-a-time)).
+Set up both channels before pasting the rule. Otherwise the prohibition can remove the worker's only
+way to ask ([Drift audit](CASE-STUDY-drift-audit.md#4-evaluate-prohibitions-as-a-set-never-one-at-a-time)).
 
 ---
 
@@ -61,18 +64,17 @@ A worker that ends its turn costs nothing at all.
 | Waits on a three-minute heartbeat | 2,108 tokens per waiting minute |
 | Waits in a ten-minute sleep loop | 22,275 tokens per waiting minute |
 
-So the rule says stop, and never says wait. [Token accounting](TOKEN-ACCOUNTING.md) is what those
-figures are worth against a weekly window.
+The rule requires the worker to stop. [Token accounting](TOKEN-ACCOUNTING.md) relates those costs to a weekly window.
 
 ## The answer arrives as a new spawn
 
-Nobody wakes a stopped session and replies to it. The coordinator spawns a fresh worker with the
-answer written into its brief.
+The coordinator puts the answer in a new brief and spawns a fresh worker. It does not wake the
+stopped session to reply.
 
-**The branch and the worktree outlive the session that made them**, so the new worker continues
-rather than restarts ([Worktrees](WORKTREES.md)).
+The new worker continues on the existing branch and worktree ([Worktrees](WORKTREES.md)). Both survive the
+session that created them.
 
-That is what makes stopping safe to ask for. The only thing lost is the stopped session's context.
+Stopping loses the session's context, but preserves its work.
 
 ## The question goes to two places on purpose
 
@@ -81,42 +83,41 @@ That is what makes stopping safe to ask for. The only thing lost is the stopped 
 | Mail to the coordinating session | Crosses the account boundary. Nothing else here reaches a session under a second login |
 | A comment on the pull request | Sits beside the work, outlives the session, and a later reviewer reads it |
 
-Mail is consumed on delivery and then gone. The comment stays. Neither covers the other, which is
-why the rule names both.
+Delivery consumes the mail; the pull request comment remains for later readers. The rule requires
+both channels because they serve different needs.
 
 ### The pull request half needs a pull request
 
-A worker in the KORUS shape does not open one; the lander does
-([Run a KORUS build](KORUS-BUILD.md)). A worker asking early has nowhere to comment.
+The earlier contract assigned pull request creation to the lander. The current [Builder card](roles/builder.card.md)
+assigns it to the builder ([Run a KORUS build](KORUS-BUILD.md)).
 
-**So the brief names both addresses and the worker never picks one.** Give it the mail target, plus
-a pull request number or the issue the item came from.
+A worker may need to ask before opening its pull request. Name both destinations in the brief: the
+mail target and a pull request number or source issue.
 
 ## Sending the question
 
-**No script here implements mail.** [Session mail](SESSION-MAIL.md) is the build guide. You build
-the lane once, and every worker after that uses it.
+Mail was unshipped when this brief was written. The current [Session mail](SESSION-MAIL.md) guide names the shipped
+sender and drain and explains their setup.
 
-The one line a worker types:
+Send a question with:
 
 ```powershell
 mail.ps1 -Send -To <coordinator worktree> -Body "<the question>"
 ```
 
-Delivery happens at the recipient's next drain, not at send time. The drain consumes at `Stop`, so
-the question lands in the coordinator's context at its next turn boundary
-([Session mail](SESSION-MAIL.md#step-5-split-show-from-consume-across-two-hook-events)).
+The recipient gets the question at its next drain, when `Stop` consumes it at a turn
+boundary. Sending alone does not deliver it ([Session mail](SESSION-MAIL.md#step-5-split-show-from-consume-across-two-hook-events)).
 
-**Measured 2026-08-31** between two sessions on different Claude accounts: five messages each way,
-all delivered. One box recorded 396 messages consumed.
+On 2026-08-31, two sessions on different Claude accounts sent five messages each way. All arrived;
+one box recorded 396 consumed messages.
 
-Until that lane exists, only the comment half works, and it waits on somebody looking.
+Until mail works, questions reach only the comment thread and wait for someone to read them.
 
 ---
 
 ## What a brief must carry
 
-Five slots. Leave one out and the worker hits a question the rule then makes it stop on.
+Include all five slots. A missing slot may force the worker to ask and stop.
 
 | Slot | What goes in it |
 |---|---|
@@ -128,14 +129,13 @@ Five slots. Leave one out and the worker hits a question the rule then makes it 
 
 ### A brief only has to hold for one turn
 
-**That is the standard, and it is a much lower bar than answering everything.** A brief is good
-enough when the worker can finish one turn without guessing.
+A brief needs enough detail for the worker to finish one turn without guessing.
 
-When it stops holding, the worker asks and stops, and the next spawn carries the answer. An
-incomplete brief costs one spawn.
+When the brief no longer answers what the worker needs, it asks and stops. The next spawn carries
+the answer, so an incomplete brief costs one spawn.
 
-A guessed answer costs a pull request nobody can tell from a decided one. Write the brief you have
-and let the rule catch the rest.
+A guess can enter a pull request disguised as a decision. Write what you know in the brief, and use
+the rule to catch unanswered questions.
 
 ## The template
 
@@ -153,15 +153,19 @@ DONE. <the end state somebody else can check>
 
 Commit at logical stops, one coherent layer each. <YOUR PUSH AND PULL REQUEST RULE>
 
-ASK AT. mail.ps1 -Send -To <coordinator worktree>, and <pull request number, or the issue>.
+RUN AS. <subagent OR separate session>.
+
+ASK AT. <For a subagent: return questions in your result. For a separate session:
+name the recipient and a tested message route, such as mail.ps1 -Send -To <worktree>.>
+Record questions on <pull request number, or the issue>.
 
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the console,
+do not guess and do not wait. Send the question through the route named in this brief,
 comment it on the pull request, and stop.
 ```
 
-Keep that last block identical in every brief. A reworded prohibition is a different rule, and none
-of the measurement above stands behind it.
+Keep the last block identical in every brief. Changing the prohibition creates a different rule that
+the measurements above do not support.
 
 ---
 
@@ -174,3 +178,5 @@ of the measurement above stands behind it.
 | Which channel reaches which peer, and when | [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) |
 | The working agreement every session reads | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Judging a prohibition against the paths it closes | [Drift audit](CASE-STUDY-drift-audit.md) |
+
+The [handoff diagram](KORUS-BUILD.md#g04) places the brief between the Manager and Builder.

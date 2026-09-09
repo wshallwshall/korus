@@ -1,13 +1,14 @@
 # Playbook size and format
 
-Rules for writing a seat playbook. The evidence for each rule is in the commit that introduced
-it; `git log -p docs/PLAYBOOK-SIZE.md` carries the measurements, the sources and their limits.
+Keep playbooks within the shared context budget and preserve every rule's conditions. `git log -p
+docs/PLAYBOOK-SIZE.md` records the measurements, sources, and limits behind these rules.
 
-**A published study varied instruction-file length and found no effect on adherence.** This page
-claimed the opposite until 2026-09-05. The retraction sits here, not in a footnote, because the
-false version ran for weeks and the claim was load-bearing.
+A published study found no effect of instruction-file length on adherence. This page claimed the
+opposite until 2026-09-05.
 
-The study is arXiv 2605.10039, McMillan, 11 May 2026.
+The retraction stays prominent because the false claim supported these rules for weeks.
+
+The study is arXiv 2605.10039 by McMillan, published 11 May 2026.
 
 - 1,650 Claude Code sessions, four manipulated file-structure variables.
 - From the abstract: *"Size and conflict nulls are supported by affirmative-null Bayes factors
@@ -16,14 +17,13 @@ The study is arXiv 2605.10039, McMillan, 11 May 2026.
 - Its limits are real: one trivial compliance target, models a generation old, and no line range
   stated in the abstract.
 
-**Keep files short for CONTEXT BUDGET, not for adherence.** The budget cost is mechanical and
-documented: the file loads in full and occupies the window on every request.
+Short files use less context. An instruction file loads in full and occupies the context window on
+every request.
 
-The adherence claim is a different kind of thing. The vendor asserts it on several of its own
-pages with no experiment attached, and it now has an affirmative null standing against it. Argue
-the rule on the ground that holds.
+The vendor claims shorter files improve adherence, but attaches no experiment. The study's
+affirmative null challenges that claim; context cost remains the supported reason to shorten files.
 
-**The study's largest effect is not about files at all.** Compliance degrades as a session runs on.
+The study's largest effect concerned session length: compliance declined as the session continued.
 
 - The abstract reports about 5.6 percent lower odds of compliance per generated function
   (OR = 0.944).
@@ -32,17 +32,16 @@ the rule on the ground that holds.
 - Exploratory: found during analysis, not pre-specified, and measured on one trivial annotation.
 - Take the direction, not the dose. The lever is session length and re-anchoring, not file shape.
 
-**"No study" and "no figure" are different sentences. Do not collapse them.** A null on adherence
-does not mean no length figure binds you.
+Keep the claims separate. Evidence against a length effect on adherence does not remove a product
+limit on file size.
 
-One figure is product-enforced and is the only one here that is not a judgment. Claude Code warns
-when a single loaded memory file passes about 5 percent of the context window in characters, with
-a floor near 40,000.
+Claude Code warns when one loaded memory file exceeds about 5 percent of the context window in
+characters. The threshold has a floor near 40,000.
 
-Measured 2026-09-05 on `origin/main`, the MessageFoundry engine `CLAUDE.md` is 59,648 characters,
-so it trips that floor at 1.49x today.
+On 2026-09-05, the MessageFoundry engine `CLAUDE.md` on `origin/main` had 59,648 characters. That
+was 1.49x the floor.
 
-**Count characters, not bytes, and read the shared ref, not your checkout.**
+Measure characters from the shared ref. Byte counts and stale checkouts give different answers.
 
 - `wc -c` returns bytes and the threshold is stated in characters. That file carries 299 multi-byte
   characters, so the two answers differ.
@@ -52,31 +51,30 @@ so it trips that floor at 1.49x today.
 
 ## Cut a playbook by deleting, never by rewriting
 
-**A rewrite loses conditions. A deletion cannot.** Added 2026-09-05, after two rewrites of one
-playbook flattened conditional rules into absolutes and inverted several of them.
+Added 2026-09-05 after two rewrites lost conditions and inverted several playbook rules. Both turned
+conditional requirements into absolutes.
 
-The transform that is safe to run over a playbook has four steps, in this order.
+Use this order when cutting a playbook:
 
 1. Take out retraction history, subject to the keep-test below.
 2. Collapse duplicate copies of a fact, keeping the one a cross-reference names.
 3. Tighten table cells.
 4. Leave prose alone.
 
-**Prose is where the conditions live.** A rule with an exception, a discriminator or an expiry
-states it in a paragraph. A table row carries its condition in a column and survives compression.
-A paragraph does not.
+Paragraphs hold exceptions, conditions, and expiry terms. Table conditions have their own cells,
+which makes compression easier to check.
 
-**Test a retraction against the corpus before you remove it.** Grep every other tracked document
-for the retracted claim. A hit means the retraction is the thing refuting it, so it stays.
+Before removing a retraction, search every other tracked document for the rejected claim. Keep the
+retraction if another document still repeats it.
 
-Keep it too when it names a wrong claim a reader could reach on their own. That is the purpose the
-rule gives it: delete the error and the next session re-derives it.
+Also keep a retraction when a reader could independently reach the same wrong claim. It prevents the
+next session from restoring the error.
 
-**Assert every cut against its exact text, and require exactly one match.** A cut that finds
-nothing must raise. Otherwise a no-op edit and a real one produce the same clean run.
+Match every cut against its exact text and require exactly one match. Raise an error when nothing
+matches; otherwise an unchanged file can look successfully edited.
 
-**The yield is small, and that is the finding.** Measured across the six live playbooks --
-BUILDER, COMMON, LANDER, STEWARD, CONSOLE and MANAGER -- it removed 64 lines of 8,698.
+Across the six live playbooks, the pass removed 64 of 8,698 lines. Those files were BUILDER, COMMON,
+LANDER, STEWARD, CONSOLE, and MANAGER.
 
 ```
 git stash list                                  # nothing of ours in flight
@@ -84,19 +82,19 @@ git diff --numstat -- roles/                    # the removed count, per file
 git show HEAD:roles/BUILDER.md | wc -l          # 950 before, against 913 after
 ```
 
-STEWARD, CONSOLE and MANAGER yielded nothing. Their retractions all pass the keep-test, and
-STEWARD's own rule sheet counts them, so removing one would falsify that row.
+STEWARD, CONSOLE, and MANAGER had no removable material. Their retractions passed the keep-test, and
+STEWARD's rule sheet counted them.
 
-**Length and contradiction are different defects.** Contradictions survive a faithful compression,
-because both halves compress equally well. Cutting length does not fix them.
+Check contradictions separately from length. Faithful compression preserves both sides of a
+conflict.
 
 ## Split a playbook by when a rule fires, not by what it is about
 
-**A rule that fires on one branch of the work does not belong in the file that loads every
-session.** Added 2026-09-05, from a section-by-section audit of the longest playbook here.
+Move branch-specific instructions out of the file loaded by every session. This rule was added
+2026-09-05 after auditing the longest playbook section by section.
 
-Classify every section by when it fires: every cycle, on a named branch, once per seat lifetime,
-or never. Then place it.
+Classify each section by when it applies: every cycle, on a named branch, once per seat lifetime, or
+never.
 
 - Every-cycle and lifetime rules stay resident.
 - Branch rules move to a task file, loaded at the trigger the core names.
@@ -115,28 +113,24 @@ wc -l roles/LANDER.md                    # the line count the split must sum bac
 | Eight task files: red check, conflict, ledger, handover, instrument, relay, PR content, empty queue | 74 | 1,528 |
 | Another seat: steward, cleanup, owner, gate builder | 24 | 436 |
 
-**The acceptance check is arithmetic.** Every section lands in exactly one destination, and the
-destinations sum back to the original line count.
+Assign every section to exactly one destination. The destination line counts must add up to the
+original count.
 
-A section that goes missing then shows up as a failed sum, rather than as a file that still reads
-well without it.
+A missing section then fails the sum, even if the shortened file reads well.
 
-**Run that check before you write a single file.** A destination you mapped but gave no output
-file drops its sections silently, and a run that fails after writing leaves half a split on disk.
+Check the mapping before writing files. Every destination needs an output file, or the split can
+drop sections and leave partial results on disk.
 
-**The sum catches a loss, never a misattribution.** Moving lines between two destinations leaves
-the total unchanged, so derive each destination's count from the mapping rather than typing it.
-Measured here: a wrong pair of figures summed to the right total and read as correct.
+A correct total can hide lines assigned to the wrong destination. Derive each destination's count
+from the mapping; a wrong pair here once summed to the right total.
 
-**A prohibition stays resident whatever else moves.** A task file loads when the task starts, which
-is after the act it forbids.
+Keep prohibitions in the resident core. A task file may load only after the act it forbids.
 
-**The failure this fixes is recorded in the file itself.** LANDER.md describes a lander that read
-its grant on arrival, met a later passage while already acting, and asked the owner twice for a
-grant written 1,970 lines earlier.
+LANDER.md records a session that read its grant on arrival, then asked the Owner twice for that same
+grant. The grant was 1,970 lines earlier.
 
-It names the mechanism too: the later passage is emphatic, self-referential, and encountered while
-already acting.
+The session met a later, emphatic passage while already acting. That passage referred to itself and
+displaced the earlier grant.
 
 ## The rules
 
@@ -181,15 +175,13 @@ already acting.
 
 ## Where the durable line sits
 
-A playbook holds what never expires. Live state -- current branches, open pull requests, queue
-depth, session names, "pick up here" lists -- goes in a dated episode note.
+Keep durable rules in the playbook. Put current branches, pull requests, queue depth, session names,
+and "pick up here" lists in dated episode notes.
 
-A document that mixes the two decays into a trusted document that is wrong, and the half that
-stayed right hides it.
+When rules and live state mix, stale facts can remain trusted because the surrounding rules still
+hold.
 
 ## This page
 
-It is a rules page on purpose. An earlier version carried the literature review, the corpus
-measurements and a proposed experiment, and ran to 1,766 words: a document about documents being
-too long, made mostly of background. That version is in the history, which is where the evidence
-belongs.
+An earlier version ran to 1,766 words, including a literature review, corpus measurements, and a
+proposed experiment. Git history preserves that background.

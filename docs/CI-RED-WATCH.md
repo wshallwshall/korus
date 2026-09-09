@@ -1,49 +1,44 @@
 # Noticing a red without a session watching for it
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** A cron script that polls for pull requests your repository has labelled red, and
-starts one session per red to work out whose failure it is. It makes no model calls of its own.
+The cron watcher polls for pull requests labelled red and starts one session per failure to identify
+its cause. The script makes no model calls.
 
-**Why you should care.** A red waits until some long-lived session notices it. That session is also
-the only one your operator talks to, so a busy one leaves the red unattributed. Not for you if
-nothing labels a failing pull request: the watcher will not report on a label that does not exist.
+Without a watcher, a failure waits for a long-lived session to notice it. That session may already
+be busy with the operator.
 
-**How to use it.** Add a `ciRed` block to `ccx.config.json`, then run
-[`scripts/cron/watch-ci-red.ps1`](https://claude-multisession.pages.dev/scripts/cron/watch-ci-red.ps1)
-on a schedule. Start with `-DryRun`.
+Your repository must label failing pull requests first. Add `ciRed` to `ccx.config.json`,
+then schedule [`scripts/cron/watch-ci-red.ps1`](https://claude-multisession.pages.dev/scripts/cron/watch-ci-red.ps1); test with `-DryRun`.
 
 ---
 
 ## Nothing tells a session that a check went red
 
-GitHub cannot reach into a session. There is no event a seat can subscribe to.
+GitHub cannot directly notify a session. No event subscription reaches a seat.
 
-So the only path was: a console session polls, sees a red, and spawns a seat to attribute it. That
-makes one session a single point of failure, and it is the same session the operator is talking to.
+Previously, a console session had to poll, notice a failure, and spawn a seat to investigate. That
+made the operator's session a single point of failure.
 
-Autofix does not close this. It only wakes a session that is still live, and workers here end their
-turn when the work is done. When it does fire, it tells a builder what broke, never whose failure it
-is.
+Autofix wakes only live sessions, while workers here stop when done. When it does run, it tells a
+builder what failed without identifying who owns the failure.
 
 ## Your repository sends the signal by labelling
 
-The watcher does not read check results. Your repository labels a pull request when a required check
-fails, and the watcher polls for that label.
+The repository labels a pull request when a required check fails. The watcher polls for that label
+without reading check results.
 
-That turns noticing into one list call across every open pull request, instead of a check rollup
-fetched per pull request. It is the difference between a poll you can run every minute and one you
-cannot.
+One list call can find labelled requests across all open pull requests. Fetching each request's
+checks costs too much for a poll every minute.
 
-**This is not a push.** GitHub still cannot reach into a session. The label only makes the poll cheap
-enough to run often, which is the version you can actually have.
+The label reduces polling cost; GitHub still cannot push a message into a session.
 
-The label name is yours. The watcher reads it from `ciRed.label` and falls back to `ci-red`. Its
-receipt always says which of the two supplied the name.
+Set the label with `ciRed.label`, or use the `ci-red` fallback. Every receipt identifies
+which source supplied the name.
 
 ## What a tick costs
 
-Nothing, while your repository is quiet.
+A quiet repository uses no model tokens; the script still makes API calls.
 
 | Watcher | Cost per waiting minute |
 |---|---|
@@ -51,8 +46,8 @@ Nothing, while your repository is quiet.
 | A resident session on a ten-minute sleep loop | 22,275 metered tokens |
 | This script | Zero model tokens, plus three API calls |
 
-A model starts only after a red already exists. If your design needs a model call to decide whether
-to spawn, it is the resident session again under another name.
+A model starts only after the watcher finds a failure. Using a model to decide whether to spawn
+would restore the resident-session cost.
 
 ## Set it up
 
@@ -85,43 +80,39 @@ Run it by hand first, with `-DryRun`, and read the receipt.
 
 ## It will not start two seats on one red
 
-Two seats attributing one failure is worse than none. Each assumes the other did not.
+Two seats investigating one failure may each assume nobody else has done the work.
 
-The claim is [`scripts/coord/claim.ps1`](COORDINATION.md), the registry this project already has,
-rather than a second one invented for the watcher. It needs two guards, because that script alone
-does not cover this caller.
+The watcher uses the existing [`scripts/coord/claim.ps1`](COORDINATION.md) registry. It adds two guards because the registry
+alone does not cover repeated ticks:
 
-1. Across sessions, the claim's exclusive file create is the mutual exclusion. A peer holding the key
-   makes the take fail, and the watcher skips that red.
+1. Across sessions, the claim's exclusive file create is the mutual exclusion. A peer holding the
+   key makes the take fail, and the watcher skips that red.
 2. Across ticks, it is not. Re-taking a key you already hold is a success on purpose, so a session
    can re-assert its own claim. Every tick runs from the same worktree, so every tick would re-take
    its own claim and start a second seat.
 
-So the whole pass runs inside one lock, and the claim file is tested for before the take.
+The watcher locks the whole pass and checks for an existing claim file before taking the key.
 
-After a take succeeds, the watcher checks that the claim file it predicted actually appeared. The
-prediction repeats a path formula that `claim.ps1` owns, and a formula in two places drifts. If the
-file is missing, the run refuses and says so instead of starting a seat.
+After taking the claim, it checks that the expected file exists. The watcher repeats
+`claim.ps1`'s path formula, so a missing file may reveal drift between them.
 
-Nothing releases the claim on your behalf. The seat releases it when it is done, which is why the
-briefing carries the release command.
+If the expected claim file is missing, the watcher refuses to start a seat and reports why. The seat
+must release its own claim when done; its briefing supplies the command.
 
 ## A held claim does not mean anyone is still working the red
 
-This is the mirror of the rule above, and it costs the same thing.
+A held claim alone cannot establish whether the dispatched seat is still alive.
 
-Claims never expire. The claim also names the **watcher's own checkout** as the holder, because that
-is where `claim.ps1` gets run from. Every liveness probe in this project reads the holder's worktree,
-and that worktree is the one the cron ticks from, so it is always there.
+Claims never expire and name the watcher's checkout as holder. Existing liveness probes see that
+checkout, which remains present for cron ticks.
 
-Put those together and a seat that died one second after it started reads exactly like a seat that is
-mid-attribution. Forever. The red waits on nobody while every tick prints a line that looks like
-coverage.
+A seat that died one second after spawning therefore looks like one still investigating. The claim
+can block later ticks indefinitely without anyone handling the failure.
 
-So each spawn writes a dispatch record beside the journal. It holds the seat's process id, the start
-time that tells that id from a reused one, and the journal's length at briefing time.
+Each spawn writes a dispatch record beside the journal. It records the seat's process id, process
+start time to detect id reuse, and journal length at briefing time.
 
-A later tick reads that record and answers in three different words.
+Later ticks use the record to report one of these states:
 
 | The tick finds | It says | Exit |
 |---|---|---|
@@ -131,35 +122,32 @@ A later tick reads that record and answers in three different words.
 | The claim file itself cannot be read | `SEAT-UNKNOWN` | 1 |
 | The key is held by another worktree | `ALREADY-CLAIMED` | 0 |
 
-**The start times are compared with a one-second window, not for equality.** The two readings come
-from two different calls, and on Linux .NET derives the start time from the boot instant, which is
-itself derived.
+Start times use a one-second comparison window. On Linux, .NET derives start time from a derived
+boot instant, so separate calls need not return exactly equal values.
 
-Two reads of one live process need not agree to the tick. An exact match called a running seat gone
-on the ubuntu leg, and that sentence is the one that gets a working seat's claim released.
+An equality check marked a live seat gone on the ubuntu leg. That false report could lead someone to
+release a working seat's claim.
 
-The window only ever errs toward `ALREADY-CLAIMED`, which costs a tick. A seat runs for minutes, so
-a number reused inside one second is not a case this meets.
+The window can err toward `ALREADY-CLAIMED`, costing a tick. Seats run for minutes, so reuse of the
+same id within one second is outside this case.
 
-`SEAT-GONE` also says whether the seat appended to the journal before it went. A seat that wrote
-nothing left the red unattributed; a seat that wrote left a verdict and only failed to release its
-key, and those need different things from you.
+`SEAT-GONE` reports whether the journal grew. No new entry means the failure remains
+unattributed; a new entry means the seat left a verdict but did not release its key.
 
-**Nothing is released or respawned on the strength of that reading.** A seat that exits without
-releasing may have finished.
+The watcher never releases or respawns based on this reading. A seat may have finished before
+exiting without a release.
 
-Releasing on that inference frees the key for a second seat to re-attribute work already done.
-Respawning on it starts a session every tick for as long as the label stays on.
+Releasing that key could duplicate a completed investigation. Automatic respawn could start another
+session every tick while the label remains.
 
-The run reports what it can prove, fails, and hands you the release command.
+The run reports the evidence, fails, and prints the release command for you.
 
 ## A missing label is not an all clear
 
-Measured 2026-08-31: `CLAUDE_CONFIG_DIR` pointing at a directory that does not exist makes
-`claude agents --json` return an empty list and exit 0. No error, no warning. A mistyped root and an
-empty fleet look identical.
+Measured 2026-08-31: a nonexistent `CLAUDE_CONFIG_DIR` makes `claude agents --json` return an empty list and
+exit 0. A mistyped root looks exactly like an empty fleet.
 
-The same shape is available here three ways, so each check states the reading that proves it ran.
+The watcher checks three similar failure cases and requires a confirming response:
 
 | Check | The reading that must come back |
 |---|---|
@@ -167,33 +155,29 @@ The same shape is available here three ways, so each check states the reading th
 | The label exists on your repository | The API echoes the same label name back |
 | The open pull request list is readable | A list, of which zero is a valid length |
 
-The middle one carries the most weight. A query for a label nobody created returns an empty list and
-exits 0, so a repository that never installed the labelling half reads exactly like one with nothing
-red.
+A query for a nonexistent label returns an empty list and exit 0. Without checking the label itself,
+missing setup would look like no failures.
 
-Each finding also has to appear in the open pull request list, which is fetched separately. One that
-does not is reported and skipped rather than spawned on.
+The watcher fetches open pull requests separately and requires each finding to appear there. It
+reports and skips any finding absent from that list.
 
-**Unless that list was capped.** The open list is fetched with a `-Limit`, and a list that fills it
-may be short.
+The open list uses `-Limit`. If the list fills that limit, it may omit more open requests.
 
-A labelled pull request missing from a capped list might be closed. It might also just sit past the
-cap, and the watcher cannot tell which.
+A labelled request missing from a capped list may be closed or merely beyond the cap. The watcher
+cannot distinguish those cases.
 
-So it reports `NOT-OPEN-UNVERIFIABLE`, starts no seat, and the run ends `INCOMPLETE`. Reporting
-success there would hide the red it exists to catch. Raise `-Limit` past your open pull request
-count.
+It reports `NOT-OPEN-UNVERIFIABLE`, starts no seat, and ends `INCOMPLETE`. Raise `-Limit` above
+the open pull request count.
 
-A check that reads back nothing makes the whole run **CANNOT-LOOK**, exit 2, and no all clear. Every
-run prints what it scanned: the repository, the label, where each came from, and how many open pull
-requests it examined.
+A check with no confirming reading ends the run with `CANNOT-LOOK`, exit 2. Every run names the
+repository, label, their sources, and open pull request count scanned.
 
 ## The seat does not inherit your account
 
-A spawn hands the child the parent's whole environment. Measured 2026-09-04: 96 variables in the
-parent, and this watcher passed all of them down.
+By default, a child inherits its parent's full environment. On 2026-09-04, this watcher passed down
+all 96 parent variables.
 
-Two of those decide something the seat never gets a say in, and both fail without saying so.
+Account and billing variables can silently redirect a child's usage:
 
 | Variable | What it does to a seat that inherits it | What the watcher does |
 |---|---|---|
@@ -202,9 +186,8 @@ Two of those decide something the seat never gets a say in, and both fail withou
 | `ANTHROPIC_AUTH_TOKEN` | The same switch under a second name | Removed |
 | `ANTHROPIC_BASE_URL` | Points the child at a different host | Passed through, and named in a warning |
 
-The last row is deliberate. `ANTHROPIC_BASE_URL` is set on this machine, so it may be a proxy
-somebody chose. Removing it would break a working spawn to fix a hazard that may not be there, so
-the run reports it and leaves the call to you.
+This machine sets `ANTHROPIC_BASE_URL`, possibly for an intentional proxy. The watcher preserves it to
+avoid breaking a working spawn, and warns so you can decide.
 
 Every run prints what it removed, even when the answer is nothing:
 
@@ -213,11 +196,11 @@ Every run prints what it removed, even when the answer is nothing:
            WARNING: ANTHROPIC_BASE_URL is set in this process and is passed through to every child
 ```
 
-That line is printed on an empty result too. Otherwise "no account variable was set here" and "the
-removal never ran" are the same silence, and only one of them is safe.
+The receipt also appears when there are no results. This distinguishes no account variable being set
+from the removal step never running.
 
-**To point a seat at a specific account, set it deliberately.** `Start-Child` takes a `-ChildEnv`
-hashtable applied after the removal. What is gone is the accident, not the ability.
+To select an account, pass a `-ChildEnv` hashtable to `Start-Child`. The watcher applies
+these deliberate settings after removing inherited account variables.
 
 ### The three exit codes
 
@@ -227,37 +210,33 @@ hashtable applied after the removal. What is gone is the accident, not the abili
 | 1 | `INCOMPLETE` | It looked, and at least one red did not reach a seat |
 | 2 | `CANNOT-LOOK` | It could not establish what it was looking at |
 
-Exit 2 is reserved for a failed look, and the difference is worth keeping. A claim the watcher takes
-but cannot then see is a failure to **act**, so it ends at exit 1 with the drift named in the reason.
+Exit 2 means the watcher could not inspect the state. Taking a claim then failing to find it is an
+action failure: exit 1, with drift named as the reason.
 
-A tick that finds the pass lock held by a sibling ends at exit 2. It examined nothing, so it has no
-count to report.
+A tick blocked by a sibling's pass lock exits 2. It examined nothing and cannot report a scan count.
 
 ## The seat starts fresh and keeps a journal
 
-A worker that finished its turn has exited. Measured on the reference fleet: 740 session records
-against 2 live sessions. There is usually nobody to wake.
+Workers exit after completing their turns. The reference fleet had 740 session records and 2 live
+sessions, so there was usually no worker to wake.
 
-So the watcher starts a new session. The branch and the worktree survive, so that session continues
-the work rather than restarting it.
+The watcher starts a fresh session on the surviving branch and worktree, allowing it to continue the
+existing work.
 
-What does not survive is any memory of the last red. Each spawn appends to a journal at
-`<state-root>/ci-red/pr-<number>.md`, and the prompt tells the seat to read that file first and
-write to it last.
+The new session lacks the previous failure's context. Each spawn appends to `<state-root>/ci-red/pr-<number>.md`; the
+prompt requires reading it first and writing it last.
 
-The briefing gives the seat one job: say whose failure this is. A red belongs to the pull request, to
-the trunk, to a flake, or to the merge queue, and only the first is a builder's to fix. Sending all
-four back to a builder is the failure the seat exists to prevent.
+The seat identifies whether the failure belongs to the pull request, trunk, flake, or merge queue.
+Only the pull request's own failure goes back to the builder.
 
 ## What it does not do
 
-It does not label anything. That half lives in your repository, and the watcher treats the label as a
-contract it reads rather than a name it defines.
+Your repository owns labelling. The watcher reads that contract without defining or applying labels.
 
-It does not decide whose failure a red is. That is the seat's work, and no script can do it.
+The seat decides who owns each failure; the script cannot make that judgment.
 
-It cannot see a red on a pull request your repository failed to label. The watcher is exactly as
-complete as the labelling half you wired up.
+A failing request without the label is invisible to the watcher. Its coverage depends on your
+labelling setup.
 
 ## Related
 
@@ -265,3 +244,5 @@ complete as the labelling half you wired up.
 - [Usage awareness](USAGE-AWARENESS.md) -- why an unproven reading has to refuse rather than report
 - [CI for leaders](CI-FOR-LEADERS.md) -- what done means when the author cannot vouch for the change
 - [Every script](SCRIPTS.md) -- the full inventory, including this one
+
+The [handoff diagram](KORUS-BUILD.md#g04) shows where the Regulator receives a failed check.

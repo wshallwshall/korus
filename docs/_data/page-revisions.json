@@ -1,0 +1,362 @@
+{
+  "base_commit": "6009a590ec14f2c9e536bf9ec4c2575700ed3d37",
+  "pages": [
+    {
+      "old_url": "/404.old.html",
+      "source": "404.md",
+      "archive": "404.old.md",
+      "url": "/404.html",
+      "sha256": "6c71ce89cecac5b6a43cff1f2f3d9c75ec39139c0b642d850608c6a5a1980ca9"
+    },
+    {
+      "old_url": "/CASE-STUDY-correction-chain.old.html",
+      "source": "CASE-STUDY-correction-chain.md",
+      "archive": "CASE-STUDY-correction-chain.old.md",
+      "url": "/CASE-STUDY-correction-chain.html",
+      "sha256": "6e5fd3e69cb9609f794dab946e71a172fd0cd6ba7933dcba59dd6fed414fcf0e"
+    },
+    {
+      "old_url": "/CASE-STUDY-drift-audit.old.html",
+      "source": "CASE-STUDY-drift-audit.md",
+      "archive": "CASE-STUDY-drift-audit.old.md",
+      "url": "/CASE-STUDY-drift-audit.html",
+      "sha256": "12f6200e7a5cda61293147cac8f8bd9180d323a8587ef15164c0c9ecda3f2da3"
+    },
+    {
+      "old_url": "/CASE-STUDY-refuted-but-true.old.html",
+      "source": "CASE-STUDY-refuted-but-true.md",
+      "archive": "CASE-STUDY-refuted-but-true.old.md",
+      "url": "/CASE-STUDY-refuted-but-true.html",
+      "sha256": "de31b01cb5b22e1a0d9de144f5e65215f1303d6603f16063b0b372e724c95222"
+    },
+    {
+      "old_url": "/CI-FOR-LEADERS.old.html",
+      "source": "CI-FOR-LEADERS.md",
+      "archive": "CI-FOR-LEADERS.old.md",
+      "url": "/CI-FOR-LEADERS.html",
+      "sha256": "68b848407b9085303d983d8a6f0cf41524f247ada20ec714d82da9a08062b14c"
+    },
+    {
+      "old_url": "/CI-RED-WATCH.old.html",
+      "source": "CI-RED-WATCH.md",
+      "archive": "CI-RED-WATCH.old.md",
+      "url": "/CI-RED-WATCH.html",
+      "sha256": "479787a5564bde1989eb1a076d93792fc16c17118488ccbf54b8f0e0c65b34a8"
+    },
+    {
+      "old_url": "/CONCEPTS.old.html",
+      "source": "CONCEPTS.md",
+      "archive": "CONCEPTS.old.md",
+      "url": "/CONCEPTS.html",
+      "sha256": "cdd60e08f9b26c8f381d7887632fdf35b1dfca23ba6d5ac188c654e76ecee63c"
+    },
+    {
+      "old_url": "/COORDINATION.old.html",
+      "source": "COORDINATION.md",
+      "archive": "COORDINATION.old.md",
+      "url": "/COORDINATION.html",
+      "sha256": "80374471ca57b7a6c60314659bda69a7b75acec7aed32ff779d92f9e389d9ee7"
+    },
+    {
+      "old_url": "/DESKTOP-ACCOUNTS.old.html",
+      "source": "DESKTOP-ACCOUNTS.md",
+      "archive": "DESKTOP-ACCOUNTS.old.md",
+      "url": "/DESKTOP-ACCOUNTS.html",
+      "sha256": "52514247d7e59a4425ee1532e7fd8bf906a0150c93626d22e5305efb6cd49463"
+    },
+    {
+      "old_url": "/FAQ-HUMAN.old.html",
+      "source": "FAQ-HUMAN.md",
+      "archive": "FAQ-HUMAN.old.md",
+      "url": "/FAQ-HUMAN.html",
+      "sha256": "e82547d10b9e66ed9bcc16c67ef82e269c04ab33ceadf52cdb65cfb1030e420c"
+    },
+    {
+      "old_url": "/FAQ.old.html",
+      "source": "FAQ.md",
+      "archive": "FAQ.old.md",
+      "url": "/FAQ.html",
+      "sha256": "ba4218bd8b0eb0edafc0552feb9e337f2f2a03d082d8b9b5dec15af65c35ab61"
+    },
+    {
+      "old_url": "/FEED-THIS-TO-CLAUDE-CODE.old.html",
+      "source": "FEED-THIS-TO-CLAUDE-CODE.md",
+      "archive": "FEED-THIS-TO-CLAUDE-CODE.old.md",
+      "url": "/FEED-THIS-TO-CLAUDE-CODE.html",
+      "sha256": "1280de5885f2bb41bc64b5339fff2e4eeb201020add8aea2cae3200732506928"
+    },
+    {
+      "old_url": "/FLOWCHART-STANDARD.old.html",
+      "source": "FLOWCHART-STANDARD.md",
+      "archive": "FLOWCHART-STANDARD.old.md",
+      "url": "/FLOWCHART-STANDARD.html",
+      "sha256": "3522bd901dae272b4032ba3c645e9b7287a8205c9d64a1da3d04faa7633957e9"
+    },
+    {
+      "old_url": "/FRAMEWORK-bmad.old.html",
+      "source": "FRAMEWORK-bmad.md",
+      "archive": "FRAMEWORK-bmad.old.md",
+      "url": "/FRAMEWORK-bmad.html",
+      "sha256": "badea53aa7053fa0c5a2d07ff69df53fff9f499ce94c131a87512f1ddc21daea"
+    },
+    {
+      "old_url": "/FRAMEWORK-spec-kit.old.html",
+      "source": "FRAMEWORK-spec-kit.md",
+      "archive": "FRAMEWORK-spec-kit.old.md",
+      "url": "/FRAMEWORK-spec-kit.html",
+      "sha256": "67c47399e6d3defe432ea3b7479ae9cddf6a739c148b4b7e9e2589b567f8313b"
+    },
+    {
+      "old_url": "/HOME-HUMAN.old.html",
+      "source": "HOME-HUMAN.md",
+      "archive": "HOME-HUMAN.old.md",
+      "url": "/HOME-HUMAN.html",
+      "sha256": "dd6881d829a22f8cdfd22fb17d9446096715e4c63853bc719539c9e9bdd8d7c8"
+    },
+    {
+      "old_url": "/HOOKS.old.html",
+      "source": "HOOKS.md",
+      "archive": "HOOKS.old.md",
+      "url": "/HOOKS.html",
+      "sha256": "45a5415184f5c844ef8f7b26c905d579172047359fbd5119ba91089911548ce0"
+    },
+    {
+      "old_url": "/HOUSE-STYLE.old.html",
+      "source": "HOUSE-STYLE.md",
+      "archive": "HOUSE-STYLE.old.md",
+      "url": "/HOUSE-STYLE.html",
+      "sha256": "82014f746b20ca28af25d26e7c020d576354023bbcd0aaf344f620821b957329"
+    },
+    {
+      "old_url": "/index.old.html",
+      "source": "index.md",
+      "archive": "index.old.md",
+      "url": "/",
+      "sha256": "4a1d24082a15159c04f886757969b93c2fe5780ac39e0423e5380b3697c17b92"
+    },
+    {
+      "old_url": "/INSTALL.old.html",
+      "source": "INSTALL.md",
+      "archive": "INSTALL.old.md",
+      "url": "/INSTALL.html",
+      "sha256": "b6b269cb91c20a7311342390fc9c52d3dc306bdf4b9d092e482a81798825a1a6"
+    },
+    {
+      "old_url": "/KORUS-BUILD.old.html",
+      "source": "KORUS-BUILD.md",
+      "archive": "KORUS-BUILD.old.md",
+      "url": "/KORUS-BUILD.html",
+      "sha256": "fef0044c522c6358fc6a0c99466d7eac82b92578efdca4f18e35b95aa99b36b4"
+    },
+    {
+      "old_url": "/KORUS.old.html",
+      "source": "KORUS.md",
+      "archive": "KORUS.old.md",
+      "url": "/KORUS.html",
+      "sha256": "9d1cdcc7cf2e3d896d89d0c5b8e7219314d9dafd8b4fb7ce1f640e2ca2c7b5b0"
+    },
+    {
+      "old_url": "/LEAK-GATE.old.html",
+      "source": "LEAK-GATE.md",
+      "archive": "LEAK-GATE.old.md",
+      "url": "/LEAK-GATE.html",
+      "sha256": "dd4c730e26f3c1b2677d0f3611b295909e0f885d2078e9a00f3758f24c26729d"
+    },
+    {
+      "old_url": "/LIMITS.old.html",
+      "source": "LIMITS.md",
+      "archive": "LIMITS.old.md",
+      "url": "/LIMITS.html",
+      "sha256": "a8f4ddcd7d8b43504ec8bb307dce35fa821e9d4e54f5356febf42e9c15e00802"
+    },
+    {
+      "old_url": "/PLAYBOOK-SIZE.old.html",
+      "source": "PLAYBOOK-SIZE.md",
+      "archive": "PLAYBOOK-SIZE.old.md",
+      "url": "/PLAYBOOK-SIZE.html",
+      "sha256": "a5228547613f6c71eede3bf4a1e94ff28085d6cf09cd6c7346b59b60126c138b"
+    },
+    {
+      "old_url": "/PLAYBOOKS.old.html",
+      "source": "PLAYBOOKS.md",
+      "archive": "PLAYBOOKS.old.md",
+      "url": "/PLAYBOOKS.html",
+      "sha256": "040881dee5b85aa699549606273277d4f6fae61d0f7b5e296149482c1a3665ad"
+    },
+    {
+      "old_url": "/PR-AND-MERGE.old.html",
+      "source": "PR-AND-MERGE.md",
+      "archive": "PR-AND-MERGE.old.md",
+      "url": "/PR-AND-MERGE.html",
+      "sha256": "df4388cd05c2dec0684dec28a6f9129cb7d0f2f1dce68a6f3776240ebcf904c8"
+    },
+    {
+      "old_url": "/PRUNING.old.html",
+      "source": "PRUNING.md",
+      "archive": "PRUNING.old.md",
+      "url": "/PRUNING.html",
+      "sha256": "35bcdb416af9551b0a8c696c09d908b36e31ec5a4a9c841190ee85cddd019aba"
+    },
+    {
+      "old_url": "/QUICKSTART-HUMAN.old.html",
+      "source": "QUICKSTART-HUMAN.md",
+      "archive": "QUICKSTART-HUMAN.old.md",
+      "url": "/QUICKSTART-HUMAN.html",
+      "sha256": "8646345f93012e524e6cc58d89eb1734ac5eea1990ebc55e3eadf733d18b042b"
+    },
+    {
+      "old_url": "/QUICKSTART.old.html",
+      "source": "QUICKSTART.md",
+      "archive": "QUICKSTART.old.md",
+      "url": "/QUICKSTART.html",
+      "sha256": "49b102d17ae933845090e0ae0afbf1b2183b899cd32ff792a355265a6e6692db"
+    },
+    {
+      "old_url": "/ROLE-CARDS.old.html",
+      "source": "ROLE-CARDS.md",
+      "archive": "ROLE-CARDS.old.md",
+      "url": "/ROLE-CARDS.html",
+      "sha256": "789e0075063b5aaa4da35a349669c69e85787357d7f137f01a86bc39d32820d6"
+    },
+    {
+      "old_url": "/RUNNING-MULTIPLE-SESSIONS.old.html",
+      "source": "RUNNING-MULTIPLE-SESSIONS.md",
+      "archive": "RUNNING-MULTIPLE-SESSIONS.old.md",
+      "url": "/RUNNING-MULTIPLE-SESSIONS.html",
+      "sha256": "36624e3aed6cdc98a306f068c6907332e1ce54ca113d228fa717c0048ae557e2"
+    },
+    {
+      "old_url": "/SCRIPTS.old.html",
+      "source": "SCRIPTS.md",
+      "archive": "SCRIPTS.old.md",
+      "url": "/SCRIPTS.html",
+      "sha256": "66ab64b53e31ea5bb291fd79009f2cddb168f599216d4209fc60347bd6028cd8"
+    },
+    {
+      "old_url": "/SEATS-AND-WORKTREES.old.html",
+      "source": "SEATS-AND-WORKTREES.md",
+      "archive": "SEATS-AND-WORKTREES.old.md",
+      "url": "/SEATS-AND-WORKTREES.html",
+      "sha256": "e80d0fcbed490a7a46890b78a33a77d0728b457487ea0f407bf07e829d37a50e"
+    },
+    {
+      "old_url": "/SEQUENCE-ALLOC.old.html",
+      "source": "SEQUENCE-ALLOC.md",
+      "archive": "SEQUENCE-ALLOC.old.md",
+      "url": "/SEQUENCE-ALLOC.html",
+      "sha256": "5747180131aa65e8ee9c0482905733477cd8bdfe22de2d8f2d0d00a35904cb70"
+    },
+    {
+      "old_url": "/SESSION-MAIL.old.html",
+      "source": "SESSION-MAIL.md",
+      "archive": "SESSION-MAIL.old.md",
+      "url": "/SESSION-MAIL.html",
+      "sha256": "bcd3db3e2f7d107674fcec3422816e6b4579002aabe137251cc03b68db817ced"
+    },
+    {
+      "old_url": "/STEERING.old.html",
+      "source": "STEERING.md",
+      "archive": "STEERING.old.md",
+      "url": "/STEERING.html",
+      "sha256": "77917f6f7dbc8931003db8b3251fc645ff15261bf048c9947835572a7a5836a9"
+    },
+    {
+      "old_url": "/TIPS-AND-TRICKS.old.html",
+      "source": "TIPS-AND-TRICKS.md",
+      "archive": "TIPS-AND-TRICKS.old.md",
+      "url": "/TIPS-AND-TRICKS.html",
+      "sha256": "4a0a1589d0d84fe505ef990154ac22881714dd73a43a339bef331a83ab04e90f"
+    },
+    {
+      "old_url": "/TOKEN-ACCOUNTING.old.html",
+      "source": "TOKEN-ACCOUNTING.md",
+      "archive": "TOKEN-ACCOUNTING.old.md",
+      "url": "/TOKEN-ACCOUNTING.html",
+      "sha256": "67c1aa5ef7c23b4961e9c67282ce0a9df9f76394cd742708b68e8b8a670d232c"
+    },
+    {
+      "old_url": "/TROUBLESHOOTING.old.html",
+      "source": "TROUBLESHOOTING.md",
+      "archive": "TROUBLESHOOTING.old.md",
+      "url": "/TROUBLESHOOTING.html",
+      "sha256": "aec45064ac3736302fcc04db91d3bbf9cf50cc48b1970bde71f2fe9096b672b8"
+    },
+    {
+      "old_url": "/USAGE-AWARENESS.old.html",
+      "source": "USAGE-AWARENESS.md",
+      "archive": "USAGE-AWARENESS.old.md",
+      "url": "/USAGE-AWARENESS.html",
+      "sha256": "206db31d6b04f0eb0d839c37a701778c2c434bd04d6bb68feff50da01d086fd4"
+    },
+    {
+      "old_url": "/WORKER-BRIEF.old.html",
+      "source": "WORKER-BRIEF.md",
+      "archive": "WORKER-BRIEF.old.md",
+      "url": "/WORKER-BRIEF.html",
+      "sha256": "ad93600805fad97964c31f5a23411ba53eabb03f30473149342bf33b8843405d"
+    },
+    {
+      "old_url": "/WORKTREES.old.html",
+      "source": "WORKTREES.md",
+      "archive": "WORKTREES.old.md",
+      "url": "/WORKTREES.html",
+      "sha256": "9756cb97eeef35a6d7c463a8673a50abd9a5d8ce3febe63086aec7e88dc215aa"
+    },
+    {
+      "old_url": "/roles/builder.card.old.html",
+      "source": "roles/builder.card.md",
+      "archive": "roles/builder.card.old.md",
+      "url": "/roles/builder.card.html",
+      "sha256": "112b1d3a202d24f5d1ee0470c3c989944c8228eda8b9320ac0bd6e19abcfcb06"
+    },
+    {
+      "old_url": "/roles/console.card.old.html",
+      "source": "roles/console.card.md",
+      "archive": "roles/console.card.old.md",
+      "url": "/roles/console.card.html",
+      "sha256": "39be5d0532e71cbb3ac1dcf6781a1eca1354a2a6ad30bd472445f3e7a3acb47c"
+    },
+    {
+      "old_url": "/roles/lander.card.old.html",
+      "source": "roles/lander.card.md",
+      "archive": "roles/lander.card.old.md",
+      "url": "/roles/lander.card.html",
+      "sha256": "e7264f9cddfc72c5c36e8a876ff39403db80d7b517a91ce1e6fd0b4a6a69b07d"
+    },
+    {
+      "old_url": "/roles/manager.card.old.html",
+      "source": "roles/manager.card.md",
+      "archive": "roles/manager.card.old.md",
+      "url": "/roles/manager.card.html",
+      "sha256": "3f027c3a54c3d969ceff026d3df27091ec992f51eea54b6e811e754c080e3456"
+    },
+    {
+      "old_url": "/roles/regulator.card.old.html",
+      "source": "roles/regulator.card.md",
+      "archive": "roles/regulator.card.old.md",
+      "url": "/roles/regulator.card.html",
+      "sha256": "02a0a893baf52f4c5a3a2fecc6903faa1799266c2dfcbb49e7b9a30d6058257c"
+    },
+    {
+      "old_url": "/roles/reviewer.card.old.html",
+      "source": "roles/reviewer.card.md",
+      "archive": "roles/reviewer.card.old.md",
+      "url": "/roles/reviewer.card.html",
+      "sha256": "fa569951904fa207844ab127603f832f795710f98dfa041b35f22b3229e8645f"
+    },
+    {
+      "old_url": "/roles/steward.card.old.html",
+      "source": "roles/steward.card.md",
+      "archive": "roles/steward.card.old.md",
+      "url": "/roles/steward.card.html",
+      "sha256": "831a6a3d212b86869b6ba43c363a02d81c94258881df4d4cf9f7e53ef9c7a6f0"
+    }
+  ],
+  "downloads": [
+    {
+      "source": "word/KORUS.docx",
+      "archive": "word/KORUS.old.docx",
+      "sha256": "e24ce79ec95946133ce5e78356763d10e5ded4af01fd24234c84f72e50c02a76"
+    }
+  ]
+}

@@ -1,7 +1,5 @@
 # KORUS: keep coding sessions out of each other's way
 
-Alternate copy for review. [Original home page](index.md) | [Rewritten Quickstart](QUICKSTART-HUMAN.md) | [Rewritten FAQ](FAQ-HUMAN.md)
-
 KORUS helps you run several Claude Code sessions on one project without losing track of their work.
 It combines scripts that block common mistakes with a way to divide tasks, review changes, and merge them.
 
@@ -11,8 +9,8 @@ using Claude Code to build a real project.
 It covers model settings, account costs, project records, and work across sessions. The `korus`
 repository supplies the scripts for that last part.
 
-**Start with [Quickstart](QUICKSTART-HUMAN.md)** to install the controls and try an edit they should
-block. If you're deciding whether you need them, read the [FAQ](FAQ-HUMAN.md).
+**Start with [Quickstart](QUICKSTART.md)** to install the controls and try an edit they should
+block. If you're deciding whether you need them, read the [FAQ](FAQ.md).
 
 KORUS assumes Claude Code for Desktop. It is aimed at people who use Claude Code throughout a build;
 an occasional session may not need this setup.
@@ -46,7 +44,7 @@ Claude Code's native worktrees now prevent many writes back into the main checko
 separate checkout with its own branch and files, but shared Git history.
 
 Those checks do not coordinate edits between isolated sessions. PowerShell also has fewer command
-checks than Bash. The [FAQ](FAQ-HUMAN.md) explains where KORUS adds protection.
+checks than Bash. The [FAQ](FAQ.md) explains where KORUS adds protection.
 
 ## A blocked edit gives you time to coordinate
 
@@ -85,7 +83,7 @@ checks progress, one builds a task, one reviews it, and one decides what merges.
 Another role investigates failed checks. [Run a KORUS build](KORUS-BUILD.md) explains the arrangement.
 
 More sessions can produce work faster than the project can review and merge it. The
-[reported run in the FAQ](FAQ-HUMAN.md#more-sessions-can-fill-the-merge-queue-faster) shows that limit;
+[reported run in the FAQ](FAQ.md#more-sessions-can-fill-the-merge-queue-faster) shows that limit;
 it does not establish a productivity gain.
 
 | Decision | Guide |
@@ -122,7 +120,7 @@ rows, and [Limits and requirements](LIMITS.md) for platform support and blind sp
 
 | You want to | Read |
 |---|---|
-| Try the tooling | [Quickstart](QUICKSTART-HUMAN.md) |
+| Try the tooling | [Quickstart](QUICKSTART.md) |
 | Understand the shared-repository model | [Concepts](CONCEPTS.md) |
 | Have Claude Code assess your project | [Feed this to Claude Code](FEED-THIS-TO-CLAUDE-CODE.md) |
 | Set up session communication and merging | [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) |

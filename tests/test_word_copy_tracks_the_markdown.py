@@ -77,6 +77,7 @@ run over a page nobody edited is to read that line.
 REGENERATE WITH (from the repository root, needs pandoc):
 
     pandoc docs/KORUS.md -f gfm -t docx --toc --toc-depth=2 -o docs/word/KORUS.docx
+    pandoc docs/KORUS.old.md -f gfm -t docx --toc --toc-depth=2 -o docs/word/KORUS.old.docx
 
 That block is not decoration. `TheRecipeIsTheOneThisFileRuns` below parses it out of this docstring
 and fails if it stops agreeing with the options, the destination, or the set of documents these

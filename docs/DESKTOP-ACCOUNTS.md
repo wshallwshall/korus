@@ -2,18 +2,18 @@
 
 ## TLDR/BLUF
 
-**What this is.** Several Claude Desktop windows open at once on one Windows login, each signed in
-to a different Claude account. You get there with one shortcut per account, each pointing the app at
-its own profile directory.
+Run several Claude Desktop windows on one Windows login, each signed in to a different Claude
+account. Give each account a shortcut that uses its own profile directory.
 
-**Why you should care.** Each instance is its own sign-in and its own usage pool, so one spent pool
-does not stop the work. Each is also a config root to wire. Not for you if one account is enough, or
-if the accounts must be isolated: profiles under one Windows login are not a security boundary.
+Each instance has its own sign-in and usage pool, so work can continue when one pool runs out. Each
+config root also needs its own hooks.
 
-**How to use it.** Copy [the launcher](#the-launcher-and-the-one-line-that-is-load-bearing) once per
-account, point a shortcut at each copy, and sign in once per instance. Then run
-[the two commands](#check-it-on-your-own-machine) that say which profile and config root a session
-is on.
+Use this setup when you need several accounts. Profiles under one Windows login do not provide a
+security boundary.
+
+Copy [the launcher](#the-launcher-and-the-one-line-that-is-load-bearing) for each account, create
+its shortcut, and sign in. Use [these checks](#check-it-on-your-own-machine) to confirm the profile
+and config root.
 
 ---
 
@@ -28,29 +28,34 @@ Claude Desktop is an Electron application, installed by Squirrel under `%LOCALAP
 %LOCALAPPDATA%\AnthropicClaude\Update.exe               <- Squirrel updater, NOT always present
 ```
 
-Launch it a second time and it looks like a no-op: the window you already have takes focus. That is
-the **single-instance lock, which is keyed to the user-data directory**. Point a launch at a
-different one and you get a separate main process, renderers, GPU process, crashpad handler and
-profile.
+A second launch normally brings the existing window to the front. The single-instance lock uses the
+user-data directory to identify that instance.
+
+Choose a different directory to start a separate main process and profile. That instance also gets
+its own renderers, GPU process, and crashpad handler.
 
 ```powershell
 & "$env:LOCALAPPDATA\AnthropicClaude\app-<version>\claude.exe" --user-data-dir="$env:USERPROFILE\.claude-desktop-N"
 ```
 
-The sign-in lives inside that directory. That is what makes each instance a different account.
+Each directory stores its own sign-in, letting each instance use a different account.
 
-**Resolve the newest installed `app-*` directory. Do not hardcode a version, and do not depend on
-the stub.** A manual or backup install does not create `%LOCALAPPDATA%\AnthropicClaude\claude.exe`,
-and an install that has one can lose it on reinstall.
+Find the newest installed `app-*` directory each time. Do not hardcode a version or rely on the stub
+launcher.
 
-**`-Directory` is load-bearing here.** Blocked versions are left behind as placeholder *files* with
-the same `app-<version>` name. This machine holds `app-1.30096.1` and `app-1.30096.5` at 381 and
-563 bytes, against one real install, `app-1.25927.0` -- which sorts lowest.
+A manual or backup install does not create `%LOCALAPPDATA%\AnthropicClaude\claude.exe`.
+Reinstalling can also remove an existing stub.
+
+Use `-Directory` to exclude placeholder files left behind for blocked versions. These files share
+the `app-<version>` naming scheme.
+
+This machine has placeholder files `app-1.30096.1` and `app-1.30096.5`, sized 381 and 563 bytes.
+Its only real install, `app-1.25927.0`, sorts below both.
 
 ### Verified on 2026-08-14
 
-One shortcut was invoked exactly as Windows invokes it. The page was then written from a session
-running inside one of these instances. Each row says how the claim was established.
+The check invoked one shortcut exactly as Windows does. The author then wrote this page from a
+session inside that instance.
 
 | Claim | Evidence |
 |---|---|
@@ -60,28 +65,38 @@ running inside one of these instances. Each row says how the claim was establish
 | The default instance is unaffected | The pre-existing default-profile instance kept running throughout |
 | The bundled Claude Code honors `CLAUDE_CONFIG_DIR` | `$env:CLAUDE_CONFIG_DIR` read `.claude-account-2`, with 4 session records under that root, from a session whose parent process is the desktop app |
 
-**Corrected on 2026-08-17: the stub is gone.** A reinstall removed both
-`%LOCALAPPDATA%\AnthropicClaude\claude.exe` and `Update.exe`, breaking every launcher naming it at
-once. Read the first row as history, not as instruction.
+On 2026-08-17, a reinstall removed `%LOCALAPPDATA%\AnthropicClaude\claude.exe` and `Update.exe`.
+Every launcher naming the stub broke at once.
 
-`CLAUDE_CONFIG_DIR` was carried through on the strength of the last row, not by design: the desktop
-app's own Claude Code reads the variable its parent process set.
+The first evidence row records earlier behavior; do not use it as launch instructions.
+
+The last row verifies that bundled Claude Code reads `CLAUDE_CONFIG_DIR` from its parent process.
+That observed behavior is the basis for using the variable here.
 
 ---
 
 ## The launcher, and the one line that is load-bearing
 
-**The goal.** One shortcut per account, each opening a window already signed in to that account.
+Create one shortcut per account to reopen its signed-in window.
 
-**What to do.** Build two layers per account, and the shortcut is the thin one:
+<a id="g12"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="assets/diagrams/g12-account-boundaries-mobile.svg">
+    <img src="assets/diagrams/g12-account-boundaries.svg" width="799" height="815" alt="Two account instances have separate desktop profiles and Code config roots. Discovery scans both session registries; repository coordination stays shared." loading="lazy">
+  </picture>
+  <figcaption>The launcher sets two paths per account. The desktop profile keeps its sign-in; the Code root holds credentials, hooks, and session records. Discovery scans roots across accounts. These paths do not isolate repository state or create a security boundary. <a href="assets/diagrams/g12-account-boundaries.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
+Each account needs a launcher script and a shortcut:
 
 1. A launcher script, at `%USERPROFILE%\claude-launchers\Launch-ClaudeDesktop-N.ps1`. Replace `N`
    with the account number in each copy.
 2. A desktop shortcut targeting `powershell.exe` with
    `-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "<launcher path>"`.
-3. That shortcut's **Change Icon**, pointed at
-   `%LOCALAPPDATA%\AnthropicClaude\app-<version>\claude.exe`. Skip it and every shortcut shows the
-   PowerShell icon, leaving N accounts indistinguishable on the desktop and in the taskbar.
+3. That shortcut's Change Icon, pointed at `%LOCALAPPDATA%\AnthropicClaude\app-<version>\claude.exe`
+   . Skip it and every shortcut shows the PowerShell icon, leaving N accounts indistinguishable on
+   the desktop and in the taskbar.
 
 ```powershell
 $ClaudeConfigDir = "$env:USERPROFILE\.claude-account-N"
@@ -104,32 +119,31 @@ $claudeArgs = @("--user-data-dir=`"$UserDataDir`"") + ($args | ForEach-Object { 
 Start-Process -FilePath $ClaudeExe -ArgumentList $claudeArgs -WindowStyle Normal
 ```
 
-**What happens next.** The first run of a shortcut opens an empty profile at a login screen. Sign in
-once, and that account stays signed in behind that shortcut.
+The first run opens an empty profile at a login screen. Sign in once; that shortcut will keep using
+the account.
 
-**`-WindowStyle Normal` on `Start-Process` is load-bearing.** The shortcut runs PowerShell hidden so
-no console window lingers, and a child GUI process **inherits** that hidden state. Without it the
-app starts with no visible window at all.
+Keep `-WindowStyle Normal` on `Start-Process`. Without it, the app inherits the hidden PowerShell
+window state and starts with no visible window.
 
-**Hidden also hides every error this launcher can raise.** A missing install, an unwritable config
-root or a mistyped path prints to a console you never see, so the shortcut reads as having done
-nothing. Run the `.ps1` directly in a visible `pwsh` to see the error.
+Hidden PowerShell also hides launcher errors, including a missing install, unwritable config root,
+or mistyped path. Run the `.ps1` in visible `pwsh` to see why a shortcut did nothing.
 
-**The icon is the one version-pinned field in the setup.** It stops resolving after an update and
-has to be reset by hand. Nothing else is: the launcher re-resolves the binary on every run, which is
-the whole point of resolving it rather than writing it down.
+Only the icon path pins a version. Reset it by hand after an update removes that version; the
+launcher finds the installed binary on each run.
 
-**If an instance misbehaves, delete all three `CLAUDE_CONFIG_DIR` pieces**: the `$ClaudeConfigDir`
-assignment, the `$env:` line, and the `Test-Path`/`New-Item` block. Leave one and it points at a
-variable that no longer exists. `--user-data-dir` alone still isolates the sign-in.
+If an instance misbehaves, remove all three `CLAUDE_CONFIG_DIR` pieces: the `$ClaudeConfigDir`
+assignment, the `$env:` line, and the `Test-Path` /`New-Item` block. Any leftover reference may use
+a missing variable.
 
-**Price that before doing it.** That instance's Claude Code falls back to `~/.claude`, shared with
-every other instance: one credential store, one session registry, and `sessions.ps1` reporting
-`desktop` for all of them. Nothing on screen changes, which is what makes it easy to miss.
+`--user-data-dir` alone still gives the instance its own sign-in.
 
-`$args` is appended so a file or folder dragged onto the shortcut still reaches the app. Each
-element carries its own quotes because `Start-Process -ArgumentList` joins with spaces and quotes
-nothing, so an unquoted dropped path with a space would arrive as two arguments.
+After that removal, Claude Code uses shared `~/.claude` credentials and session records.
+`sessions.ps1` reports `desktop` for every affected instance, with no visible change in the app.
+
+Appending `$args` lets files and folders dropped onto the shortcut reach the app. Quote each element
+because `Start-Process -ArgumentList` joins with spaces without adding quotes.
+
+Without those quotes, a dropped path containing a space arrives as two arguments.
 
 ### What each directory isolates
 
@@ -142,10 +156,9 @@ nothing, so an unquoted dropped path with a space would arrive as two arguments.
 
 ### Check it on your own machine
 
-**The goal.** Find out which account a session is really on, and which profile each open window is
-running under.
+Check the session account and the profile directory used by each open window.
 
-**What to do.** Run both lines in the session you want to check.
+Run both commands in the session you want to check:
 
 ```powershell
 if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { "UNSET -- default ~/.claude" }
@@ -155,82 +168,80 @@ Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | ForEach-Object {
 } | Sort-Object -Unique
 ```
 
-**What happens next.** The first prints a full path, such as `C:\Users\<you>\.claude-account-2`.
-`UNSET` is an answer rather than a failure: no launcher sets the variable for the default instance,
-so that session is on the default root, `%USERPROFILE%\.claude`.
+The first command prints a full path, such as `C:\Users\<you>\.claude-account-2`. `UNSET` means the
+default instance uses `%USERPROFILE%\.claude`; its launcher does not set the variable.
 
-**The second prints one path per open instance**, the default one included, as `%APPDATA%\Claude`.
-A raw `.CommandLine` dump will not answer this. Bundled Claude Code processes share the name but
-carry no `--user-data-dir`, and each crashpad handler repeats the path with more flags.
+The second command prints one path per open instance, including `%APPDATA%\Claude` for the default
+profile. A raw `.CommandLine` dump includes extra processes and repeated paths.
+
+Bundled Claude Code processes share the name but lack `--user-data-dir`. Each crashpad handler
+repeats the profile path with extra flags.
 
 ---
 
 ## What the extra config roots cost the tooling here
 
-Five roots exist on the machine this was written on: `.claude`, plus `.claude-account-1` through
-`.claude-account-4`. Three consequences follow, and they do not all cut the same way.
+The source machine has five roots: `.claude` and `.claude-account-1` through `.claude-account-4`.
 
-**Installing gets multiplied.** Two installers take one config root per run:
-`install-coordination.ps1` (`-SettingsPath`) and `install-selfheal.ps1` (`-ConfigDir`). Five roots
-means five runs of each. `install-gate.ps1` alone covers every root in one run
-([INSTALL.md](INSTALL.md)).
+Two installers accept one root per run: `install-coordination.ps1` uses `-SettingsPath`, and
+`install-selfheal.ps1` uses `-ConfigDir`. Five roots require five runs of each.
 
-Every user-scope control must reach every root a session can start under: an unwired root reads as
-governed from inside a session
-([Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md)).
+`install-gate.ps1` covers every root in one run; see [INSTALL.md](INSTALL.md).
 
-**Reading crosses accounts.** The liveness fence scans every `~/.claude*` directory holding a
-session registry, so presence, occupancy and overlap see peers under other accounts
-([Coordination](COORDINATION.md)).
+Install user-scope controls in every root a session can use. An unwired root can look governed from
+inside a session; see [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md).
 
-`scripts/worktree/sessions.ps1` prints the owning login as a column, which is how "which account was
-that session in" gets answered ([Scripts](SCRIPTS.md)).
+The liveness fence scans every `~/.claude*` directory that holds a session registry. Presence,
+occupancy, and overlap therefore see peers across accounts; see [Coordination](COORDINATION.md).
 
-**Messaging does not.** `list_sessions` enumerates only sessions the app spawned, so an announce
-reaches one account, not the machine. That was not measured here; it follows from the mechanism
-under [Limits](LIMITS.md). [Session mail](SESSION-MAIL.md) states this case and the lane for it.
+The login column in `scripts/worktree/sessions.ps1` identifies the account that owns each session.
+See [Scripts](SCRIPTS.md).
+
+`list_sessions` lists only sessions the app spawned, so announce reaches one account. This follows
+from the [mechanism](LIMITS.md) and was not measured here.
+
+Use [Session mail](SESSION-MAIL.md) for the cross-account case.
 
 ---
 
 ## Behaviour to expect
 
-- **The first launch of each shortcut opens a login screen.** The profile starts empty. After
-  signing in, the session persists in that profile.
-- **MCP servers are configured per profile.** Each profile carries its own
-  `claude_desktop_config.json`, so a new instance starts with no connectors. Copy the file from
-  `%APPDATA%\Claude` to reuse the default profile's.
-- **The default profile is untouched.** It still opens from the Start menu or the taskbar, as an
+- The first launch of each shortcut opens a login screen. The profile starts empty. After signing
+  in, the session persists in that profile.
+- MCP servers are configured per profile. Each profile carries its own `claude_desktop_config.json`
+  , so a new instance starts with no connectors. Copy the file from `%APPDATA%\Claude` to reuse the
+  default profile's.
+- The default profile is untouched. It still opens from the Start menu or the taskbar, as an
   additional instance beside the numbered ones.
-- **All instances group under one taskbar icon**, because they are one executable.
-- **Deep links land wherever they land.** The protocol handler and the native-messaging bridge
-  resolve to whichever instance registered them. A `claude://` link will not reliably reach the
-  instance you meant.
-- **Each instance is a full Electron app.** Memory cost scales with the number of them.
+- All instances group under one taskbar icon, because they are one executable.
+- Deep links land wherever they land. The protocol handler and the native-messaging bridge resolve
+  to whichever instance registered them. A `claude://` link will not reliably reach the instance you
+  meant.
+- Each instance is a full Electron app. Memory cost scales with the number of them.
 
 ### Limit: This is not a trust boundary
 
-A separate Windows user account per identity gives a separate credential store and registry hive, at
-the cost of fast user switching and a duplicated environment. `--user-data-dir` was chosen because
-the requirement was several accounts, not a boundary. Revisit that if a real one is needed.
+Separate Windows user accounts give each identity its own credential store and registry hive. They
+also require fast user switching and duplicate environments.
+
+This setup uses `--user-data-dir` to support several accounts under one login. Choose separate
+Windows accounts if you need a security boundary.
 
 ---
 
 ## The icon check that reported a false match
 
-The icon came from the stub while the stub existed, and checking that it carried the real
-application icon rather than a placeholder meant extracting both icons and hashing them.
+While the stub existed, its icon was extracted and hashed alongside the real application icon. The
+comparison checked whether the stub used a placeholder.
 
-**The first comparison was wrong, and it reported a match.** It hashed a `MemoryStream` without
-rewinding it, so every input hashed as zero bytes and every value came out identical.
+The first comparison hashed a `MemoryStream` without rewinding it. Every input therefore hashed as
+zero bytes, falsely reporting identical icons.
 
-What caught it was a deliberate control. An unrelated system executable returned the *same* hash,
-which is impossible if the instrument works. Rerun with the stream rewound, the controls came out
-distinct and the stub matched the versioned binary exactly.
+An unrelated system executable produced the same hash, exposing the broken check. After rewinding
+the streams, the controls differed and the stub matched the versioned binary exactly.
 
-The lesson outlives the icons. A comparison that returns "equal" for inputs known to differ is
-measuring nothing, and with no positive control it reads as a clean pass. Confirm the instrument
-answers the question you asked. The [drift audit](CASE-STUDY-drift-audit.md) is that method at
-scale.
+Test a comparison with inputs known to differ before trusting an equal result. The
+[drift audit](CASE-STUDY-drift-audit.md) applies the same method to more controls.
 
 ---
 

@@ -1,7 +1,5 @@
 # KORUS questions, answered plainly
 
-Alternate copy for review. [Original FAQ](FAQ.md) | [Rewritten home page](HOME-HUMAN.md) | [Rewritten Quickstart](QUICKSTART-HUMAN.md)
-
 KORUS adds checks for sessions that share a repository. You may only need Claude Code's own
 worktrees if your sessions do separate work and a person reviews the results.
 
@@ -152,7 +150,9 @@ that empty roster from a real absence of peers.
 
 ## More sessions can fill the merge queue faster
 
-The usual setup has a long-lived console that assigns work to short-lived sessions. Builders take
+The manager runs one or more builders, either as subagents or as separate sessions. It replaced the console, whose broad oversight approach did not work.
+
+Builders take
 tasks, reviewers read pull requests, a regulator investigates failed checks, and a lander merges.
 
 [Run a KORUS build](KORUS-BUILD.md) describes that setup. The roughly fourteen sessions sharing one
@@ -199,7 +199,7 @@ Keep the repository and merge queue the same, and report elapsed time and condit
 
 | Next step | Guide |
 |---|---|
-| Install it and test a blocked edit | [Quickstart](QUICKSTART-HUMAN.md) |
+| Install it and test a blocked edit | [Quickstart](QUICKSTART.md) |
 | Check requirements and blind spots | [Limits and requirements](LIMITS.md) |
 | Diagnose unexpected behavior | [Troubleshooting](TROUBLESHOOTING.md) |
 | Read the author's account of the method | [The KORUS framework](KORUS.md) |

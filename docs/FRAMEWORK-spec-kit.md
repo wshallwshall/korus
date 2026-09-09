@@ -5,27 +5,26 @@ layout: default
 
 # Spec Kit 0.16.4 for a KORUS build
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** [Spec Kit](https://github.com/github/spec-kit) 0.16.4, released 2026-08-14, is
-GitHub's toolkit for Spec-Driven Development. You write the spec, the plan and the task list down
-instead of iterating in chat. This page maps its commands onto a [KORUS](KORUS.md) build.
+[Spec Kit](https://github.com/github/spec-kit) 0.16.4, released 2026-08-14, is GitHub's toolkit for Spec-Driven Development. It puts
+requirements, plans, and tasks in files that a [KORUS](KORUS.md) build can share.
 
-**Why you should care.** It installs ten skill prompts plus a committed `.specify/` scaffold --
-templates and scripts, no compiled logic, no gate. The active feature comes from a file there, not
-your git branch, so two worktrees share one pointer. Not for you if you want the upstream tutorial.
+It installs ten skill prompts and a committed `.specify/` directory of templates and scripts. It
+supplies no gate.
 
-**How to use it.** Start at [The flow](#the-flow) for the command order and which KORUS session runs
-each one. Read [Feature state is a file, not a branch](#feature-state-is-a-file-not-a-branch) before
-you cut a second worktree.
+The active feature comes from a local file. Worktrees can share that pointer if they lack their own
+`.specify/` directory.
+
+[The flow](#the-flow) gives the command order and assigns each stage to a KORUS session. Check [feature state](#feature-state-is-a-file-not-a-branch) before
+creating a second worktree.
 
 ---
 
 ## What it is, measured
 
-**Spec-Driven Development makes the written spec the source of truth, not the conversation.** Write
-the requirement down first, then hold the agent to it. [KORUS](KORUS.md) recommends it as an
-antidote to vibe coding's flaws.
+Write the requirements first, then use them to guide the agent. [KORUS](KORUS.md) recommends this practice
+to avoid relying on an evolving chat for project intent.
 
 Measured against an installation of `specify-cli` 0.16.4 on 2026-08-15:
 
@@ -36,9 +35,10 @@ Measured against an installation of `specify-cli` 0.16.4 on 2026-08-15:
 | 6 PowerShell scripts | `.specify/scripts/powershell/` | 60,677 bytes |
 | Directory convention | `specs/<NNN-slug>/` holding `spec.md`, `plan.md`, `tasks.md` | n/a |
 
-**There is no compiled logic, no analyzer, and no gate.** Nothing it installs can fail a build,
-block a commit, or reject a document. In a KORUS build, enforcement stays with your own CI -- see
-[CI for leaders](CI-FOR-LEADERS.md) -- and with whichever session reviews the diff.
+Spec Kit installs no compiled logic or analyzer. It cannot fail a build, block a commit, or reject a
+document.
+
+Your continuous integration (CI) checks and diff reviewer still enforce requirements; see [CI for leaders](CI-FOR-LEADERS.md).
 
 ---
 
@@ -46,8 +46,7 @@ block a commit, or reject a document. In a KORUS build, enforcement stays with y
 
 ### Feature state is a file, not a branch
 
-This is the mechanic that matters most for a KORUS build, where every build session works in its
-own worktree.
+Each KORUS build session needs feature state that resolves within its own worktree.
 
 - The active feature resolves from `.specify/feature.json`, key `feature_directory`.
 - `SPECIFY_FEATURE_DIRECTORY` overrides it. Priority is documented as: the environment variable,
@@ -58,15 +57,13 @@ own worktree.
   `git checkout -b`. Branch creation happens only through an optional hook or the opt-in git
   extension.
 
-**Exactly one feature is active at a time** in one scope, where a scope is the directory tree the
-commands search. Two build sessions on two features need two scopes. The next finding says when you
-get them.
+Each scope has exactly one active feature. A scope is the directory tree the commands search, so two
+sessions building different features need separate scopes.
 
 ### It resolves per worktree, until the worktree has no .specify/
 
-Measured on 2026-08-15 against `specify-cli` 0.16.4 in a repository using git worktrees.
-`Find-SpecifyRoot` walks parent directories from the current one until it finds a `.specify/`
-directory. Nothing in that walk consults git.
+On 2026-08-15, we tested `specify-cli` 0.16.4 with git worktrees. `Find-SpecifyRoot` searched parent
+directories for `.specify/` without consulting git.
 
 | Case | Result |
 |---|---|
@@ -74,13 +71,13 @@ directory. Nothing in that walk consults git.
 | Worktree on a branch predating `specify init` | Resolves to the first ancestor holding `.specify/` |
 | Two such worktrees nested under the primary | Both resolve to the primary and share one `feature.json` |
 
-**Cut every KORUS build-session worktree from a branch that already carries `.specify/`.** The
-scaffold is committed, so the worktree gets its own copy. `feature.json` is gitignored and stays
-local to that checkout, so sessions do not collide.
+Create each build worktree from a branch that already contains `.specify/`. The committed files give
+each worktree its own copy.
 
-**The trap.** A worktree cut from an older branch has no `.specify/` of its own, so the walk escapes
-to the primary. A second such worktree overwrites the first session's feature pointer, and `git
-status` stays clean in both: the pointer was never tracked.
+Git ignores `feature.json`, so each checkout keeps its feature pointer locally.
+
+An older branch may lack `.specify/`, causing the search to reach the primary checkout. Two nested
+worktrees can then overwrite the same untracked pointer while both show clean git status.
 
 [Sequence allocation](SEQUENCE-ALLOC.md) covers the same shape for feature numbering.
 
@@ -88,20 +85,21 @@ status` stays clean in both: the pointer was never tracked.
 
 ## Install and initialise
 
-**The goal.** One scaffold, committed once, that every build-session worktree inherits.
+Commit the initial `.specify/` files once so every build worktree inherits them.
 
-**What to do.** Run this at the **root of the primary checkout**, then commit what it writes. The
-`--here` form is load-bearing: without it, `specify init <name>` creates a new subdirectory and the
-scaffold lands somewhere no worktree inherits. `uv` is a prerequisite; install it first.
+Install the prerequisite `uv`, then run these commands at the primary checkout's root. Commit the
+files they create.
+
+Keep `--here`: `specify init <name>` instead creates a subdirectory that the worktrees will not
+inherit at their roots.
 
 ```
 uv tool install specify-cli
 specify init --here --integration claude --script ps
 ```
 
-**What happens next.** The ten commands land as skills and appear in the agent's slash list after it
-restarts. Cut each build-session worktree from a commit that already carries `.specify/`. Running
-`specify init` fresh in every worktree defeats the point: the scaffold is meant to be inherited.
+Restart the agent to load the ten new slash commands. Create build worktrees from the commit
+containing `.specify/`; do not initialize each worktree separately.
 
 | Fact | Detail |
 |---|---|
@@ -115,110 +113,116 @@ restarts. Cut each build-session worktree from a commit that already carries `.s
 
 ## The flow
 
-Two sequences are documented, verified against `main` and the **`v0.16.0`** tag's
-`templates/commands` tree -- an earlier tag than the 0.16.4 the rest of this page measures. Nothing
-in 0.16.1 through 0.16.4 was checked for a change to either order.
+The two sequences below were checked against `main` and `v0.16.0`'s `templates/commands` tree.
+Changes to their order in 0.16.1 through 0.16.4 were not checked.
 
 | Path | Sequence |
 |---|---|
 | Short, for smaller features | specify, plan, tasks, implement, converge |
 | Full, for production work | constitution, specify, clarify, plan, checklist, tasks, analyze, implement, converge |
 
-**The README's core-versus-optional grouping is not an execution order.** `taskstoissues` is grouped
-core and appears in neither sequence. `clarify`, `checklist` and `analyze` are grouped optional and
-sit inside the full path. Read the table above, not the grouping.
+The README groups commands by importance, not run order. It calls `taskstoissues` core, although
+neither sequence includes it.
+
+It calls `clarify`, `checklist`, and `analyze` optional, although the full sequence includes all
+three.
 
 ### Stage 1: The constitution
 
-**The goal.** One rules document that every later step is checked against.
+Write one constitution that later steps can check.
 
-**What to do.** Run `/speckit-constitution [your rules]` in the console session, once, before any
-feature work starts.
+Run `/speckit-constitution [your rules]` once in the manager session, before feature work:
 
 > `/speckit-constitution Python is our primary language. All source code must adhere to OWASP ASVS
 > v5.0 Level 3 and NIST SSDF SP 800-218.`
 
-**What happens next.** The agent writes `.specify/memory/constitution.md`. Every later planning,
-coding and debugging step checks against it, twice: before Phase 0 research and again after Phase 1
-design.
+The agent writes `.specify/memory/constitution.md`. Later planning, coding, and debugging check it
+before Phase 0 research and again after Phase 1 design.
 
 ### Stage 2: Specify, then clarify
 
-**The goal.** A spec that says WHAT and WHY, with its gaps closed before work fans out.
+Set out the feature's purpose and requirements before assigning work to other sessions.
 
-**What to do.** Run `/speckit-specify [feature requirements]`, then `/speckit-clarify [spec-name]`.
-Both belong in the console session, where a human is still in the loop.
+Run `/speckit-specify [feature requirements]`, then `/speckit-clarify [spec-name]`. Keep both in the
+manager session so a human can answer questions.
 
 > `/speckit-specify We need a session orchestration service that integrates with our Git-backed
 > database version control. It must handle temporary auth tokens and manage user sessions.`
 
-**What happens next.** `specify` writes `specs/<NNN-slug>/spec.md`: overview, user stories,
-acceptance criteria. No tech stack, no APIs, no code structure. `clarify` then checks that draft
-against the constitution, asks targeted questions in chat, and folds your answers into `spec.md`.
+`specify` writes `specs/<NNN-slug>/spec.md` with an overview, user stories, and acceptance criteria.
+It leaves out the technology stack, APIs, and code structure.
 
-**Nothing enforces that division except a self-check inside the skill prompt.** CI never sees it, so
-a leaky spec produces an over-constrained document rather than an error.
+`clarify` checks the draft against the constitution, asks questions in chat, and adds your answers
+to `spec.md`.
+
+Only a self-check in the skill prompt keeps implementation choices out of the spec. CI does not
+enforce it, so the agent may write an over-constrained spec without an error.
 
 ### Stage 3: Plan, then tasks
 
-**The goal.** HOW the feature gets built, plus the ordered work items to hand out.
+Choose how to build the feature, then create ordered work items.
 
-**What to do.** Run `/speckit-plan [spec-name]`, then `/speckit-tasks [spec-name]`.
+Run `/speckit-plan [spec-name]`, then `/speckit-tasks [spec-name]`.
 
-**What happens next.** The agent reads the spec and writes `specs/<NNN-slug>/plan.md`: HOW, not
-WHAT. A `Technical Context` section holds language, storage and testing choices. A `Complexity
-Tracking` table records any rejected alternative, populated only when the constitution check fails.
+The agent reads the spec and writes `specs/<NNN-slug>/plan.md`. Its `Technical Context` records
+language, storage, and testing choices.
 
-`plan.md` is architecture, not a checklist. The ordered work items are a separate artifact,
-`specs/<NNN-slug>/tasks.md`, written by `tasks`. A KORUS console should read both before
-splitting work across build sessions.
+The `Complexity Tracking` table records rejected alternatives only when the constitution check
+fails.
+
+`plan.md` describes the architecture. The `tasks` command writes the ordered checklist to
+`specs/<NNN-slug>/tasks.md`.
+
+The KORUS manager should read both files before assigning work to build sessions.
 
 ### Stage 4: Implement
 
-**The goal.** Working code, one task at a time, inside one build session's worktree.
+Implement one task at a time in the feature's worktree.
 
-**What to do.** Run `/speckit-implement [spec-name]` in the build session holding that feature's
-worktree.
+Run `/speckit-implement [spec-name]` in the build session holding that feature's worktree.
 
-**What happens next.** The agent works `tasks.md` top to bottom: code an item, write and run its
-tests, fix on a failing test, check it off, move on. `taskstoissues` can turn the checklist into
-tracked issues afterward.
+The agent works through `tasks.md` in order. It codes each item, writes and runs tests, fixes
+failures, and checks the item off.
 
-`checklist` sits between plan and tasks in the full sequence, `analyze` between tasks and implement.
-`checklist` builds a review checklist from the spec; `analyze` checks plan and tasks against the
-constitution and writes `specs/<NNN-slug>/analysis.md`. Skip both on a short build.
+`taskstoissues` can turn the checklist into tracked issues afterward.
+
+The full sequence runs `checklist` between plan and tasks. It creates a review checklist from the
+spec.
+
+It runs `analyze` between tasks and implement to check plan and tasks against the constitution. That
+writes `specs/<NNN-slug>/analysis.md`; the short sequence skips both commands.
 
 ### Stage 5: Handling requirement changes
 
-**The goal.** Update the documents and let the code follow. Do not prompt the agent to "just fix the
-code."
-
-**What to do.**
+Change the requirements in the documents before changing the code. Do not ask the agent to "just fix
+the code."
 
 1. Edit `spec.md` (yourself, or ask the agent to) to reflect the new requirement.
 2. Re-run `/speckit-plan`, then `/speckit-tasks`.
 3. Re-run `/speckit-implement` against the updated `tasks.md`.
 
-**What happens next.** The agent diffs the new spec against the current plan and produces a targeted
-checklist rather than a full rewrite.
+The agent compares the updated spec with the plan and produces a targeted checklist. It does not
+rewrite the whole plan.
 
 ### Stage 6: Converge, not "fix-findings"
 
-**The goal.** Close the loop: find the work the documents say is unmet, and land it.
+Find and complete work that the project documents still describe as unmet.
 
-**What to do.** Run `/speckit-converge [spec-name]`. If it appends tasks, run `implement`, then
-`converge` again.
+Run `/speckit-converge [spec-name]`. If it appends tasks, run `implement`, then `converge` again.
 
-**What happens next.** `converge` reads `spec.md`, `plan.md` and `tasks.md` as the sole source of
-intent and appends unmet work to `tasks.md`. It never edits or deletes code. Outcomes are binary:
-converged with `tasks.md` unchanged, or N tasks appended.
+`converge` uses `spec.md`, `plan.md`, and `tasks.md` as its sole statement of intent. It appends
+unmet work to `tasks.md` without editing or deleting code.
+
+It returns either converged, with `tasks.md` unchanged, or N appended tasks.
 
 There is no `/speckit-fix-findings` command and no `specs/findings.fixed.md` log in the installed
 10-skill set, checked against the live `templates/commands/` directory on 2026-08-16.
 
-**Its own description says it assesses the codebase against those three documents. Measured, it
-assesses the three documents against each other.** One build carried 22 requirements, 65 tasks and
-85 tests through the full flow, then ran `converge` three times:
+The description says `converge` checks code against the documents. In the measured build, it checked
+the documents against one another.
+
+That build had 22 requirements, 65 tasks, and 85 tests. After the full flow, it ran `converge` three
+times:
 
 | Pass | Findings | Changed code |
 |---|---|---|
@@ -227,116 +231,115 @@ assesses the three documents against each other.** One build carried 22 requirem
 | converge 2 | 5 | 1 |
 | converge 3 | 4 | 0 |
 
-2 of those 24 findings changed application code. None was a feature that did not work: no round
-found an unimplemented requirement, a failing test, or behavior contradicting the spec. The other 22
-described decisions already made, left behind by a later, correct decision.
+2 of 24 findings changed application code. No pass found an unimplemented requirement, a failing
+test, or behavior that contradicted the spec.
 
-Run it more than once -- the drift it catches is generated by the fixes you just made. If it reports
-a missing feature, the task list was wrong rather than the code.
+The other 22 findings concerned earlier decisions left in the documents after later, correct
+decisions replaced them.
+
+Repeat the check because your fixes can leave new document conflicts. In this measured build, a
+reported missing feature meant the task list was wrong.
 
 ### A citation count is not a coverage claim
 
-From the same build, a mechanical scan for requirement IDs in task text reported 40% coverage.
-Reading each uncited requirement by hand showed 87%: the scan measured citation, not coverage. If a
-KORUS build reports coverage from a requirement-ID grep, read the uncited items first.
+In the same build, a requirement-ID scan reported 40% coverage. Reading each uncited requirement by
+hand gave 87%.
+
+The scan counted citations. Before using such a result as coverage, read the uncited requirements.
 
 ### Which KORUS session runs which stage
 
 | Stage | KORUS session |
 |---|---|
-| constitution, specify, clarify | Console. One human-reviewed pass before work fans out |
-| plan, tasks | Console, or the builder the console hands the feature to |
+| constitution, specify, clarify | Manager. One human-reviewed pass before work fans out |
+| plan, tasks | Manager, or the builder the manager hands the feature to |
 | implement | The build session holding that feature's worktree |
 | checklist, analyze, converge | The same build session, before it hands the feature back |
-| taskstoissues | Console, if an issue tracker is in the loop |
+| taskstoissues | Manager, if an issue tracker is in the loop |
 
-The lander session is not involved. Spec Kit's artifacts live in the worktree and merge like any
-other file. Nothing about `feature.json` reaches git, so the lander session's push-and-merge job is
-unaffected.
+Spec Kit's worktree files merge like other files. The untracked `feature.json` does not reach git,
+so it adds no work to the lander's push-and-merge role.
 
 ---
 
 ## What failed verification
 
-Two claims in circulation read as plausible and are not true of 0.16.4:
+These two claims do not hold for 0.16.4:
 
 | Claim | Why it is wrong |
 |---|---|
 | `specify init --ai claude` selects the agent | Removed at v0.10.0. `--integration` replaced it |
 | `/speckit-specify` creates the git branch automatically | It creates the directory only. Branch creation is opt-in, through a hook or extension |
 
-A third belongs here from this page's own history. An earlier draft described a
-`/speckit-fix-findings` command and a `specs/findings.fixed.md` log in the debugging stage. Neither
-exists in the shipped template set -- see Stage 6, above.
+An earlier draft also named `/speckit-fix-findings` and `specs/findings.fixed.md` in the debugging
+stage. Neither exists in the shipped templates, as Stage 6 records.
 
 ---
 
 ## What it does not give you
 
-Adopt the practices without the tool and you lose no capability: templates are copyable files,
-commands are prompts, scripts create directories. Two things survive that test. Someone else
-maintains 134KB of prompt text, and the vocabulary is legible to another session or seat.
+You can copy the templates and prompts and create the directories yourself. The toolkit saves you
+maintaining 134KB of prompt text and gives sessions a shared vocabulary.
 
-Published criticism is cost criticism, not correctness criticism. It reports specs bloated with
-generated text, and hours spent correcting generated specs on brownfield systems. No source disputes
-a mechanical fact above.
+Published criticism reports large generated specs and hours spent correcting them for existing
+systems. Those sources criticize cost; none disputes the mechanical facts above.
 
-**There is no architecture decision record (ADR) command.** `templates/commands/` holds no
-`adr.md`. `plan.md`'s Complexity Tracking table records a rejected alternative when the constitution
-check fails; it is not a decision log. Write ADRs as work lands, as [KORUS](KORUS.md) advises.
+There is no architecture decision record (ADR) command or `templates/commands/adr.md`. `plan.md`
+records rejected alternatives only after a failed constitution check.
+
+Keep a separate decision record as work lands, as [KORUS](KORUS.md) advises.
 
 A fork, `panaversity/spec-kit-plus`, adds a native ADR command at `history/adr/NNNN-slug.md`.
 
-Two catalog extensions were checked against this gap in an earlier pass, and the pass got one of
-them wrong. The `adrkit` kill held: a compound claim whose weakest conjunct was undocumented.
+An earlier pass checked two catalog extensions for ADR support. It correctly rejected an `adrkit`
+claim because part of that compound claim lacked documentation.
 
-The `spec-kit-arch-governance` kill did not hold. Its catalog entry requires
-`speckit_version >=0.1.0`, which admits every 0.16 release, so the claim three verifiers
-unanimously killed was true. See [a claim three verifiers refuted](CASE-STUDY-refuted-but-true.md)
-before reaching for either.
+It wrongly rejected `spec-kit-arch-governance`. The catalog requires `speckit_version >=0.1.0`,
+which includes every 0.16 release.
 
-**A Spec-Kit-shaped hole is not always a hole in your organisation.** Check what already covers the
-requirement, here KORUS's own ADR habit, before installing something to fill it again.
+All three verifiers rejected that true claim; see [a claim three verifiers refuted](CASE-STUDY-refuted-but-true.md) before choosing either extension.
+
+Check your existing process before adding an extension. KORUS already calls for ADRs, even though
+Spec Kit lacks a command for them.
 
 ---
 
 ## A decision rule
 
-**Use the full sequence** when the feature is long enough that chat guidance would decay first, or
-sprawling enough to need a what-before-how gate. In a KORUS build the other trigger is already true:
-the work is always handed to another session.
+Use the full sequence for long features or work that needs clear requirements before design choices.
+Handing work to another KORUS session also makes written decisions useful.
 
-**Use the short path** -- `specify`, `plan`, `tasks`, `implement`, `converge`. Take it when the
-feature's own spec and plan would outweigh the code, or when a reviewer was already reading
-every diff. That drops `constitution`, `clarify`, `checklist` and `analyze`.
+Use `specify`, `plan`, `tasks`, `implement`, `converge` when planning would outweigh the code, or
+when a reviewer already reads every diff.
 
-**Set an exit condition when you start.** If `specify` and `clarify` produce a document that reads
-as padding rather than decisions the console would defend, stop and build directly.
+This drops `constitution`, `clarify`, `checklist`, and `analyze`.
+
+Set an exit condition before starting. If `specify` and `clarify` produce padding instead of
+decisions the manager can defend, stop and build directly.
 
 ---
 
 ## Where the evidence runs out
 
-No source addresses how Spec Kit's skill prompts interact with an existing `CLAUDE.md`, with
-pre-existing skills, or with subagent delegation. That matters for a KORUS build, whose build
-sessions already run their own sub-session workflows.
+The sources do not establish how these prompts interact with `CLAUDE.md`, existing skills, or
+subagent delegation. KORUS build sessions already use their own subsession workflows.
 
-Whether an MVP should be one feature or several is also not established. Treat both as open until
-you measure them against your own build.
+The evidence also does not settle whether a minimum viable product should use one feature or
+several. Measure both questions in your own build.
 
 ---
 
 ## Provenance, and how to re-check
 
-Install mechanics, flow sequences, and the feature-state resolution above rest on the installed code
-or on primary sources.
+The install steps, command sequences, and feature-state behavior above come from installed code or
+primary sources.
 
-To re-check any of it, in descending order of reliability:
+Recheck in this order, starting with the more reliable sources:
 
 - run `specify --version`;
 - read the installed `.claude/skills/*/SKILL.md` and `.specify/scripts/`;
 - read `.specify/integration.json`;
 - then consult an external write-up.
 
-The command list was re-verified against `github/spec-kit` `main` on 2026-08-16, against the same
-`v0.16.4` release this page already covered.
+On 2026-08-16, we rechecked the command list against `github/spec-kit` `main` and the same `v0.16.4`
+release.
