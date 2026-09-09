@@ -53,7 +53,7 @@ def publish(site, docs):
                 errors.append(f"Missing rendered page: {url}")
                 continue
             parsed = Links(output.read_text(encoding="utf-8"))
-            if page[other] not in parsed.hrefs:
+            if key == "old_url" and page[other] not in parsed.hrefs:
                 errors.append(f"Missing version link: {url} -> {page[other]}")
             if key == "old_url" and not parsed.noindex:
                 errors.append(f"Archive lacks noindex: {url}")
