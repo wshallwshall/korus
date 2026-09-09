@@ -1,27 +1,33 @@
 # Quickstart
 
-## TLDR/BLUF
+<a id="lists-under-config-roots-an-unwired-root-is-off-and-off-is-exit-1"></a>
 
-**What this is.** The install, start to finish, and then two sessions that refuse to overwrite each
-other. Eight steps, run from a plain terminal, against a repository you already have.
+<a id="the-sessionstart-backstop-one-config-root-per-run----run-it-again-for-each-root-the-doctor"></a>
 
-**Why you should care.** Step 8 is the point: you make two sessions edit one file, and watch the
-second one get refused. Until you have seen that refusal, nothing here is proven to be running. Not
-for you if you have no repository to govern yet.
+<a id="so-name-every-governed-primary-in-one-run----and-that-needs--command-not--file-see-installmd"></a>
 
-**How to use it.** Work the steps in order. KORUS assumes Claude Code for Desktop throughout, so
-check [Limits and requirements](LIMITS.md) before you start if you are not on it.
+<a id="the-worktree-gate--repo-names-the-primary-checkout-to-allowlist-it-replaces-the-allowlist"></a>
 
----
+<a id="one-copy-governs-every-worktree-of-that-clone-at-once"></a>
 
-## What you need
+<a id="the-commit-msg-claim-gate-and-pre-push-guard-into-the-target-clones-shared-githooks-where"></a>
 
-Claude Code for Desktop, `pwsh` 7.3 or newer, `git`, and a `python` on `PATH`. The full table, and
-what breaks when each is missing, is on [Limits and requirements](LIMITS.md).
+<a id="one-settings-file-whose-hooks-resolve-their-repo-per-session-at-run-time"></a>
 
-Every command below runs in a **plain terminal**, not inside a Claude Code session. All four
-installers refuse when `$env:CLAUDECODE` is `1`, because a session that can install these controls
-can remove them.
+<a id="coordination-hooks-session-banner-collision-gate-announce-takes-no-repository----it-writes"></a>
+
+<a id="what-you-need"></a>
+
+<a id="tldrbluf"></a>
+
+Install KORUS in a repository you already use, then test it with two Claude Code sessions.
+The final test asks both sessions to edit one file and checks that KORUS blocks the second edit.
+
+You need Claude Code for Desktop, PowerShell (`pwsh`) 7.3 or newer, Git, and `python` on `PATH`.
+[Limits and requirements](LIMITS.md) lists platform support and what breaks when a tool is missing.
+
+**Run the setup commands in a plain terminal outside Claude Code.** All four installers refuse
+when `$env:CLAUDECODE` is `1`. Installation stays outside the session the controls govern.
 
 ## 1. Get the tooling
 
@@ -29,34 +35,36 @@ can remove them.
 git clone https://github.com/wshallwshall/korus.git
 ```
 
-**Pin it rather than tracking `main`.** This repository runs concurrent sessions against itself, so
-`main` moves. Check out a commit you have read, and upgrade deliberately.
+Choose a commit you have reviewed and check it out before installing. `main` changes as other
+sessions work, so upgrade to a new commit deliberately.
 
-**If you cannot reach GitHub**, you are the reader this site was moved for, and there is no clone.
+If your network blocks GitHub, download the files listed in [Every script](SCRIPTS.md) into a local
+directory. The site serves them individually, including
+[scripts/coord/claim.ps1](https://claude-multisession.pages.dev/scripts/coord/claim.ps1).
 
-Every file is served here at its own path, so the fallback is to fetch the paths listed on
-[Every script](SCRIPTS.md) into a directory of your own. One example:
-[/scripts/coord/claim.ps1](https://claude-multisession.pages.dev/scripts/coord/claim.ps1)
+<a id="2-name-the-two-directories"></a>
 
-## 2. Name the two directories
+## 2. Set the source and target paths
 
-Every command says which directory it means, because the installers refuse to guess.
-
-| | |
+| Variable | Directory |
 |---|---|
-| **tooling** | This checkout. Nothing you install governs it. Scripts are copied from here and hashed against it. |
-| **target** | The repository you want governed. It gets the config file, the git hooks, and its primary checkout in the gate's allowlist. |
+| `$tooling` | The Korus checkout you just downloaded; setup copies files from here |
+| `$target` | The repository you want KORUS to govern |
+
+Replace both placeholders with your paths:
 
 ```powershell
 $tooling = "<path-to-this-checkout>"
 $target  = "<path-to-the-repo-you-want-governed>"
-Set-Location $target      # the doctor reports what it resolves FROM HERE, so stand in the target
+Set-Location $target
 ```
 
-## 3. Vendor the tooling into the target
+The target receives the config and Git hooks. Its primary checkout also goes into the worktree
+gate's allowlist. Naming it here does not install controls on the source checkout.
 
-Copy the scripts into the target and commit them, so tooling *is* target. That is the only layout in
-which the doctor can reach exit 0.
+<a id="3-vendor-the-tooling-into-the-target"></a>
+
+## 3. Copy the tooling into your repository
 
 ```powershell
 Copy-Item "$tooling/ccx.config.json" "$target/ccx.config.json"
@@ -64,101 +72,130 @@ Copy-Item "$tooling/scripts" $target -Recurse -Force
 Copy-Item "$tooling/bin" $target -Recurse -Force
 ```
 
-`-Force` is not optional. Without it, a target that already has a `scripts/` or `bin/` prints one
-red error per existing directory, ten of them on a re-run, while still copying the files.
+These commands merge the directories and overwrite matching files. Review any existing local
+changes first; committed versions remain recoverable through Git.
 
-These two lines merge into what is there rather than replacing it. Re-running them is how you
-upgrade.
+Keep `-Force`. Without it, existing directories produce errors even though files still copy. The
+original re-run reported ten such errors. Repeat the copy step when you upgrade.
 
-Then commit them, so every worktree of the target gets them.
+Edit `ccx.config.json` before committing:
 
-**Now edit `ccx.config.json`, because two keys in the shipped file will bite you.**
+| Key | What to do |
+|---|---|
+| `setupHook` | Delete it or create the named hook. The shipped value points to `.ccx/worktree-setup.ps1`, which is not included |
+| `sequences` | Remove it if you do not number records. The supplied `adr` entry otherwise adds an `OFF (opt-in)` doctor row |
 
-- `setupHook` points at `.ccx/worktree-setup.ps1`. No such file ships. Leave it and every spawn warns
-  that the worktree has NOT been set up. Delete the key, or write the hook
-  (`examples/worktree-setup.ps1.example` is the model, and [Worktrees](WORKTREES.md) has the
-  contract).
-- `sequences` declares an `adr` sequence. Leave it on a repository that numbers nothing and the
-  doctor prints an `OFF (opt-in)` row for a gate no installer wires.
+For a setup hook, use `examples/worktree-setup.ps1.example` and the contract in
+[Worktrees](WORKTREES.md). A missing hook produces a warning on every spawn.
 
-**Trap.** After vendoring there are two copies on disk. Install and audit from **one** of them.
-Installing from one and hashing against the other is exactly the drift the doctor calls `STALE`.
+Commit `scripts/`, `bin/`, and the edited config in the target so new worktrees receive them.
+Then use the target's copy for every remaining command:
 
-The separate-checkouts layout works for the worktree gate, both git hooks and the backstop. It fails
-for the three coordination hooks: they resolve their script inside whatever repository the session
-runs in, so a target without those files gets three wired hooks that resolve nothing.
+```powershell
+$tooling = $target
+```
 
-## 4. Baseline the doctor before installing anything
+Installing from one copy and auditing against another can produce `STALE` results. Keeping the
+tooling in the target is also the only layout in which the doctor can exit `0`.
+
+Separate checkouts work for the worktree gate, both Git hooks, and the backstop. The three
+coordination hooks instead look for their scripts inside the repository each session runs in.
+
+Without those files in the target, the hooks can be configured but unable to run.
+
+<a id="4-baseline-the-doctor-before-installing-anything"></a>
+
+## 4. Check the state before installation
 
 ```powershell
 pwsh -NoProfile -File "$tooling/bin/ccx-doctor.ps1" -Repo $target
 ```
 
-Expect a wall of `OFF` and exit 1. **That is the correct result.** It is the only way to tell an
-installed guardrail from a decorative one afterwards.
+On a fresh setup, expect `OFF` rows and exit `1`. Save this result so you can compare it with the
+report after installation.
 
-## 5. Install the four controls
+<a id="5-install-the-four-controls"></a>
 
-They are four rather than one because they write to genuinely different places.
+## 5. Install the controls
+
+Each installer writes to a different scope. Run these in order from the plain terminal.
+
+Install the coordination hooks. This writes one settings file; each hook resolves its repository
+when a session runs.
 
 ```powershell
-# Coordination hooks: session banner, collision gate, announce. Takes NO repository -- it writes
-# ONE settings file whose hooks resolve their repo per session at run time.
 pwsh -NoProfile -File "$tooling/scripts/coord/install-coordination.ps1"
+```
 
-# The commit-msg claim gate and pre-push guard, into the TARGET clone's shared .git/hooks, where
-# one copy governs every worktree of that clone at once.
+Install the commit-message claim gate and pre-push guard. They go into the target clone's shared
+`.git/hooks` directory and apply to all its worktrees.
+
+```powershell
 pwsh -NoProfile -File "$tooling/scripts/coord/install-git-hooks.ps1" -RepoRoot $target
+```
 
-# The worktree gate. -Repo names the PRIMARY checkout to allowlist. It REPLACES the allowlist,
-# so name every governed primary in one run -- and that needs -Command, not -File. See INSTALL.md.
+Install the worktree gate for the target's primary checkout. **This replaces the existing
+allowlist.** If you govern several primaries, name them all in one run using `-Command`;
+[Install](INSTALL.md) gives that command.
+
+```powershell
 pwsh -NoProfile -File "$tooling/scripts/worktree/install-gate.ps1" -Repo $target
+```
 
-# The SessionStart backstop. ONE config root per run -- run it again for each root the doctor
-# lists under "config roots". An unwired root is OFF, and OFF is exit 1.
+Install the SessionStart backstop for one config root:
+
+```powershell
 pwsh -NoProfile -File "$tooling/scripts/worktree/install-selfheal.ps1" -ConfigDir ~/.claude
 ```
 
-## 6. Prove the install landed on the right repository
+Repeat that command for every config root the doctor lists. An unwired root reports `OFF` and
+causes exit `1`.
+
+<a id="6-prove-the-install-landed-on-the-right-repository"></a>
+
+## 6. Check which repository the doctor examined
 
 ```powershell
 pwsh -NoProfile -File "$tooling/bin/ccx-doctor.ps1" -Repo $target
 ```
 
-The doctor's default target is the current directory, so a run started in the wrong place produces a
-long, plausible, mostly-green report about the wrong clone. These two lines say which clone it read:
+Confirm the report names your target and its tooling copy:
 
 ```powershell
 pwsh -NoProfile -File "$tooling/bin/ccx-doctor.ps1" -Repo $target |
     Select-String 'repo examined|tooling checkout'
 ```
 
-**Expect two `OFF (opt-in)` rows even on a good install.** The ASCII gate, which no installer wires,
-and the sequence gate if you left `sequences` in the config. Neither raises the exit code, which is
-the one place `OFF` is not exit 1.
+Without an explicit target, the doctor uses the current directory. A report about the wrong clone
+can look like a successful installation.
 
-The sequence one is a real hole rather than a formality: nothing at commit time defends the numbers
-you allocate. [Sequence allocation](SEQUENCE-ALLOC.md) has the hook to wire.
+You can still see two `OFF (opt-in)` rows on a good install: the ASCII gate and, if configured, the
+sequence gate. No installer wires either one, and these rows do not raise the exit code.
 
-## 7. Spawn two sessions
+If you allocate record numbers, wire the sequence check yourself. Until then, no commit-time gate
+protects those numbers. [Sequence allocation](SEQUENCE-ALLOC.md) gives the hook.
+
+<a id="7-spawn-two-sessions"></a>
+
+## 7. Create two worktrees
+
+Stay in the target repository and run:
 
 ```powershell
 pwsh -NoProfile -File "$tooling/scripts/worktree/spawn.ps1" -Name alerts
 pwsh -NoProfile -File "$tooling/scripts/worktree/spawn.ps1" -Name parser
 ```
 
-Each call creates an isolated worktree on its own branch, named after `-Name`.
+Each command creates a worktree and branch named after `-Name`. Neither `spawn.ps1` nor `new.ps1`
+takes a target flag; both use the primary checkout you are standing in.
 
-It then opens an editor window **if** one is found: `-Editor`, else `$CCX_EDITOR`, else `$EDITOR`,
-else `code`. With none of them on `PATH` it warns and prints the worktree path for you to open
-yourself. `new.ps1` skips the editor entirely.
+`spawn.ps1` looks for an editor in this order: `-Editor`, `$CCX_EDITOR`, `$EDITOR`, then `code`.
+If none is available on `PATH`, it prints a warning and the worktree path for you to open.
 
-Neither takes a target flag: both act on the primary you are standing in, so stay in the target.
+`new.ps1` skips the editor. A missing `setupHook` warning refers to the config from step 3; it does
+not prevent the collision test below.
 
-You may also see a warning that `setupHook` was not found. That is the config key from step 3, and
-it does not affect the drill below.
-
-Start a session in each worktree, then confirm they can see each other:
+Start a Claude Code session in each worktree. Then check the roster:
 
 ```powershell
 pwsh -NoProfile -File "$tooling/scripts/coord/presence.ps1"
@@ -166,19 +203,21 @@ pwsh -NoProfile -File "$tooling/scripts/coord/overlap.ps1"
 $LASTEXITCODE
 ```
 
-**Read the exit code, not the rows.** `0` is a complete roster, including one that lists nobody. `2`
-is a roster that could not be completed -- and it fires even when rows *are* listed, because two
-named peers say nothing about a third.
+| Exit code | Meaning |
+|---|---|
+| `0` | The roster is complete, even if it lists nobody |
+| `2` | The roster could not be completed, even if some peers appear |
 
-## 8. Watch a collision get refused
+Seeing two peers does not prove that a third was found.
 
-**The goal.** Prove the collision gate is live rather than merely installed.
+<a id="8-watch-a-collision-get-refused"></a>
 
-**What to do.** In session `parser`, ask it to edit a file and leave the change uncommitted. Then in
-session `alerts`, ask it to edit the same file.
+## 8. Ask both sessions to edit the same file
 
-**What happens next.** The second edit never runs. The tool call is refused, and Claude is handed
-this:
+1. Ask `parser` to edit a file and leave the change uncommitted.
+2. Ask `alerts` to edit that same file in its own worktree.
+
+The collision gate should refuse the second tool call. Claude receives a message like this:
 
 <!-- no-copy -->
 ```text
@@ -193,71 +232,65 @@ Before overriding: that session may already be doing what you are about to do.
 If you genuinely need this file, coordinate first -- or edit a different one.
 ```
 
-Read the peer line by its shape: an 8-character session id, the surface, the worktree's directory
-name, and its branch. The branch is `parser` because `spawn.ps1 -Name parser` names both. The
-`building:` line appears only when that peer has a task list to report.
+The peer line gives an 8-character session ID, the client type, the worktree directory, and the
+branch. The `building:` line appears only when that peer has a task list.
 
-That refusal is the whole product. Everything else on this site exists to widen it or to prove it is
-still there.
+Check that the edit was actually refused. A completed installer does not prove the collision gate
+can see the other session.
 
-**What it will not do.** The gate refuses on an *uncommitted* edit in a *live* worktree. A peer that
-committed its change and went clean is reported and allowed, because that work may overlap yours and
-is not worth refusing over. [Coordination](COORDINATION.md) owns the full rule.
+The refusal requires uncommitted changes in a live peer's worktree. If the peer has committed and
+its worktree is clean, KORUS reports it but allows your edit. See [Coordination](COORDINATION.md).
 
-## What you have now
+<a id="what-you-have-now"></a>
 
-Four controls, and each one covers a failure the others do not:
+## The controls cover different mistakes
 
 | Control | Refuses |
 |---|---|
-| Worktree gate | A write into the shared primary checkout, and the git verbs that swap its tree |
-| Collision gate | An edit to a file a live session has uncommitted changes in |
+| Worktree gate | Edit-tool writes into the shared primary checkout and selected Git verbs that swap its tree |
+| Collision gate | An edit to a file with uncommitted changes in a live peer's worktree |
 | `commit-msg` claim gate | A commit whose subject claims work this worktree does not hold |
 | `pre-push` guard | A direct push to a protected ref |
 
-## A seat's standing rules live in `roles/`, and nothing delivers them
+<a id="a-seats-standing-rules-live-in-roles-and-nothing-delivers-them"></a>
 
-Each seat named on [Run a KORUS build](KORUS-BUILD.md) has a **playbook**: a durable file it reads
-on arrival. Those files sit at the repository root, not under `docs/`, so **this site does not serve
-them.** Open them in your checkout.
+## Give each session its role instructions
 
-**Start at [The playbooks](PLAYBOOKS.md).** It has the seat-to-file table, and a card for each seat
-that this site does serve.
+A role's playbook is a file of standing instructions under `roles/` in your checkout.
+[The playbooks](PLAYBOOKS.md) maps roles to files and links to the role cards available on the site.
 
-**RETIRED 2026-09-08: this section sent readers to `roles/README.md`, at a URL that served
-nothing.** That file came from a private vault and still lists six seats retired on 2026-09-01 as
-live. The link pointed under `/roles/`, which resolves against `docs/roles/`, where no `README.md`
-exists.
-
-**This page carries no copy of the seat table on purpose.** A moving set gets one snapshot, and that
-is the one.
-
-Nothing routes a playbook to the session that needs it, for the reason
-[Run a KORUS build](KORUS-BUILD.md) gives. So name the file yourself, in the opening prompt:
+Name the files in the session's opening prompt:
 
 ```text
 You are the Builder. Read roles/COMMON.md, then roles/BUILDER.md, before anything else.
 ```
 
-### The playbook corpus drifts, and nothing here fixes that
+The setup described in [Run a KORUS build](KORUS-BUILD.md) does not automatically route full
+playbooks to sessions. Open those files in your checkout.
 
-A pointer is worth less when what it points at disagrees with itself. **This is a known unsolved
-problem.** No script reconciles the copies, and no check reports the drift.
+On 2026-09-08, the original guide retired its `roles/README.md` link because that address served no
+page. That file also listed six roles retired on 2026-09-01 as live. Use the playbooks page instead.
 
-| Measured 2026-09-04 | Reading |
+<a id="the-playbook-corpus-drifts-and-nothing-here-fixes-that"></a>
+
+### Playbook copies can disagree
+
+No script reconciles the copies, and no check reports their drift. The original guide recorded the
+following comparison on 2026-09-04:
+
+| Measured set | Reading |
 |---|---|
-| Editions of `roles/` on the machine this was written on | At least 2 -- this repository, and a separate private vault |
-| Filenames the two editions share | 13, and **all 13 differ in content** |
+| Editions of `roles/` on that machine | At least 2: this repository and a separate private vault |
+| Filenames shared by the editions | 13; all 13 differed in content |
 | Filenames in only one edition | 2 here, 1 in the vault |
-| Vault worktrees carrying a `roles/` copy | 62, excluding the primary |
-| Copies among those differing from the vault's own working tree | 607, against 35 that matched |
+| Vault worktrees with a `roles/` copy | 62, excluding the primary |
+| Copies compared with the vault's working tree | 607 differed; 35 matched |
 | Registered vault worktrees safe to remove | 10 of 79 |
 
-**The last two rows count different populations, so do not read them as one fraction.** The 607
-copies sit in the 62 worktrees that carry `roles/`. The 10 are counted over all 79 registered
-worktrees, most of which carry no playbook at all.
+The 607 copies came from 62 worktrees carrying `roles/`. The removal check covered all 79
+registered worktrees. Those rows use different populations.
 
-The two instruments, both run to produce the rows above:
+These commands produced the comparisons:
 
 ```powershell
 # Two editions, compared by filename and by content hash.
@@ -285,27 +318,22 @@ foreach ($d in $dirs) {
 "$($dirs.Count) worktrees, $stale stale copies"
 ```
 
-Removal safety was classified separately: a worktree is safe only when `git merge-base
---is-ancestor <tip> origin/main` succeeds **and** `git diff origin/main...<tip> --name-only` returns
-nothing.
+Removal safety was checked separately. It required both a successful
+`git merge-base --is-ancestor <tip> origin/main` and no output from
+`git diff origin/main...<tip> --name-only`.
 
-**What none of it varied.** Every comparison read **working trees**, never either repository's
-`origin/main`. So a worktree sitting on a legitimately newer branch is counted as stale here. Line
-endings were varied and changed nothing: the 13 shared files still differ with `\r` stripped.
+The comparisons used working trees, not either repository's `origin/main`. A worktree on a valid,
+newer branch could therefore count as stale. Stripping `\r` did not change the 13 shared-file differences.
 
-**These rows are what one folder of record costs when nobody holds it.** The measurement expires the
-day a check reports two copies disagreeing.
+These are historical readings from the original guide, not a fresh audit of your installation.
+They do not establish whether today's copies agree.
 
-## Next
+<a id="next"></a>
 
-**Give the sessions a working agreement.** Copy
-[CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template)
-into the target as `CLAUDE.md` and cut it to what is true there. It is where you write down what the
-gates cannot see. Keep it short: a stale one still gets acted on.
+## Set a working agreement before adding more sessions
 
-**Then scale up.** [Run a KORUS build](KORUS-BUILD.md) is the session shape this all exists to
-support: a console, a builder per task, a reviewer per pull request, and a lander.
+Copy [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) into your target as
+`CLAUDE.md`. Keep only instructions that apply to your project, including rules the gates cannot enforce.
 
-[INSTALL.md](INSTALL.md) is the record of record for the
-installers: the annotated version of these steps, and how to prove each one is live rather than
-merely merged.
+Use [Run a KORUS build](KORUS-BUILD.md) to add a console, a builder per task, a reviewer per pull
+request, and a lander. [Install](INSTALL.md) gives the full installer reference and verification steps.

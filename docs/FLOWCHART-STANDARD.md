@@ -1,17 +1,15 @@
 # Fluent 2 flowchart design standard
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** The owner's Fluent 2 Flowchart Design Spec, version 1.0.0, stored whole as this
-project's standard for flowcharts. It carries design tokens, nine shape definitions, three status
-variants, arrow and connector styles, dark-mode overrides and a component API.
+Use version 1.0.0 of the owner's Fluent 2 Flowchart Design Spec for flowcharts. It defines
+design tokens, nine shapes, three status variants, connectors, dark-mode overrides, and a component interface.
 
-**Why you should care.** Section 7 promises WCAG AA contrast. Measured against the spec's own token
-values, 18 pairings miss it. The audit names both sides of each pairing, so you know which ones
-before you build a component.
+The contrast audit found 18 color pairings below the thresholds promised in section 7. Check
+those findings before using the palette in a component.
 
-**How to use it.** Read [the contrast audit](#contrast-audit-against-section-7) first, then build
-from [the specification](#the-specification-as-supplied) below it.
+The [contrast audit](#contrast-audit-against-section-7) names the affected colors. The
+[specification](#the-specification-as-supplied) preserves the owner's source text and token values.
 
 ---
 
@@ -26,7 +24,8 @@ from [the specification](#the-specification-as-supplied) below it.
 | Supplied on | 2026-08-31 |
 | Stored here on | 2026-08-31 |
 
-The spec is the owner's text. Nothing in it was reworded, renumbered or retuned to fit this page.
+The supplied specification remains unchanged apart from heading depth. The audit and guidance
+around it have been edited for clarity.
 
 ## What changed between the supplied file and the copy below
 
@@ -35,32 +34,30 @@ The spec is the owner's text. Nothing in it was reworded, renumbered or retuned 
 | Every heading dropped one level, so `#` became `##` | One H1 per page, which is what the site title is built from |
 | Nothing else | Tables, token names, token values and prose are byte-for-byte the source |
 
-**The supplied file carried no emoji and no non-ASCII character of any kind.** A scan of all 473
-lines returned an empty set, so no glyph was stripped and none was lost.
+All 473 lines of the supplied file were ASCII. The scan found no emoji or other non-ASCII
+characters, so none were removed.
 
-Sections 4.1, 4.2 and 4.3 already name the Fluent icon token for each status:
-`CheckmarkCircle16Filled`, `Warning16Filled` and `DismissCircle16Filled`. That name is what an
-implementer needs.
+Sections 4.1, 4.2, and 4.3 name the status icons: `CheckmarkCircle16Filled`, `Warning16Filled`,
+and `DismissCircle16Filled`. Use those Fluent icon tokens when implementing the states.
 
 ## Contrast audit against section 7
 
-Every ratio below was computed with the WCAG relative-luminance formula over the spec's own hex
-values, on 2026-08-31. Both sides of each pairing are named, because a ratio without its background
-is not a measurement.
+The ratios were calculated on 2026-08-31 using the WCAG relative-luminance formula and the
+spec's hex values. Each row names the foreground and background that produced its result.
 
 ### What section 7 promises, and what that pulls in
 
-Section 7 writes one contrast sentence, and it covers text only: 4.5:1 for normal text, 3:1 for
-large text at 18pt or above. It does not name graphics.
+Section 7 requires 4.5:1 contrast for normal text and 3:1 for text at least 18pt. Its contrast
+sentence does not mention graphics.
 
-It does say the combinations must meet WCAG AA. WCAG 2.1 AA includes SC 1.4.11 Non-text Contrast at
-3:1, which covers a border that carries meaning. So the stroke rows below are in scope.
+The same section requires WCAG AA compliance. WCAG 2.1 AA includes SC 1.4.11 Non-text Contrast,
+which requires 3:1 for graphics such as borders that convey meaning.
 
-**The large-text clause applies to nothing in this spec.** WCAG counts text as large at 18pt (24px),
-or 14pt bold (18.66px). The biggest label token here is `fontSizeBase400` at 16px.
+WCAG treats text as large at 18pt (24px), or 14pt bold (18.66px). This spec's largest label
+token is `fontSizeBase400` at 16px, so none of its labels qualify.
 
-Every label in the spec is therefore normal text and needs 4.5:1. The 3:1 line in section 7 is dead
-wording, not a relaxation any shape can claim.
+Every label therefore needs 4.5:1 contrast. No shape can use section 7's lower 3:1 text
+threshold with the supplied label sizes.
 
 ### Light palette, text at 4.5 to 1
 
@@ -77,13 +74,13 @@ wording, not a relaxation any shape can claim.
 | `colorNeutralForegroundOnBrand` `#ffffff` | `colorBrandBackgroundHover` `#115ea3` | 6.66 | PASS |
 | `colorNeutralForegroundDisabled` `#bdbdbd` | `colorNeutralBackground2` `#f5f5f5` | 1.72 | Fails the number, exempt |
 
-The disabled row is the one exemption. WCAG 1.4.3 excludes text that is part of an inactive control,
-so it is not counted among the 18 failures.
+WCAG 1.4.3 exempts text in inactive controls. The disabled row fails the numerical threshold
+but is not one of the 18 counted failures.
 
 ### Light palette, the 80 percent sublabel
 
-Sections 4.1, 4.2 and 4.3 set the status sublabel to its foreground token at 80 percent opacity.
-Composited over its own fill, that is a different colour, and it is 12px normal text.
+Sections 4.1, 4.2, and 4.3 set status sublabels to 80 percent opacity. Blending the foreground
+with its fill changes the effective color; the 12px text still requires 4.5:1.
 
 | Effective foreground | Background | Ratio | Verdict |
 |---|---|---|---|
@@ -107,9 +104,8 @@ Composited over its own fill, that is a different colour, and it is 12px normal 
 | `colorPaletteYellowBorderActive` `#835b00` | `colorPaletteYellowBackground2` `#fff4ce` | 5.51 | PASS |
 | `colorPaletteRedBorderActive` `#c50f1f` | `colorPaletteRedBackground2` `#fde7e9` | 5.14 | PASS |
 
-**The default shape has no visible edge.** Section 2 fills a resting shape with
-`colorNeutralBackground1` and borders it with `colorNeutralStroke1` at 1px. On a canvas of the same
-`#ffffff`, that border is the only thing separating shape from page, at 1.53:1.
+Section 2 fills a resting shape with `colorNeutralBackground1` and uses a 1px
+`colorNeutralStroke1` border. On a `#ffffff` canvas, that border is the only visible boundary, at 1.53:1.
 
 ### Dark palette, text at 4.5 to 1
 
@@ -152,8 +148,8 @@ Composited over its own fill, that is a different colour, and it is 12px normal 
 
 ### Five tokens have no dark override, and two failures follow from that
 
-Section 6 lists 15 override rows. These five tokens appear in section 1 and in no override row, so a
-dark theme built from section 6 alone keeps their light values:
+Section 6 lists 15 override rows. Five tokens from section 1 have no override and therefore
+keep their light values in a dark theme built from this table:
 
 | Token | Value it keeps in dark mode |
 |---|---|
@@ -163,16 +159,16 @@ dark theme built from section 6 alone keeps their light values:
 | `colorPaletteYellowBorderActive` | `#835b00` |
 | `colorNeutralForegroundDisabled` | `#bdbdbd` |
 
-`colorNeutralForegroundOnBrand` flips to `#000000` in dark mode while `colorBrandBackgroundHover`
-stays `#115ea3`. Black on that blue is 3.15:1, so a hovered brand shape loses its label.
+In dark mode, `colorNeutralForegroundOnBrand` changes to `#000000`, while
+`colorBrandBackgroundHover` stays `#115ea3`. That produces 3.15:1 contrast for a hovered brand label.
 
-The three status border tokens stay at their light values against dark fills. Two of them land below
-3:1 there, which is the second consequence of the same gap.
+The three status borders also retain light-theme values against dark fills. Two fall below
+3:1, as the table shows.
 
 ### The findings, and what to do about them
 
-**Do not edit the token values in the copy below.** They are the owner's, and the record of what was
-supplied is worth more than a patched table. These are findings against the spec.
+Keep the supplied token values unchanged in the specification below. Apply any repairs in
+your component and record the difference from the source.
 
 | Finding | Where | Count |
 |---|---|---|
@@ -181,25 +177,22 @@ supplied is worth more than a patched table. These are findings against the spec
 | A neutral stroke never reaches 3:1 against either surface | Sections 1.1 and 6 | 8 |
 | A status border below 3:1 on a dark surface | The section 6 gap | 4 |
 
-That is 18 pairings. An implementer has four decisions to make before shipping a component:
+The table totals 18 failing pairings. Before shipping a component, make these changes:
 
-1. Render the status sublabel at full opacity, or pick a darker value for it. The 80 percent rule
-   costs the label its contrast in four of six cases.
-2. Give `colorBrandBackgroundHover` a dark override, or keep the label white on it in dark mode.
-3. Do not let a neutral stroke be the only cue that a shape exists. Pair it with the shadow tokens
-   from section 1.4, or with a fill that differs from the canvas.
-4. Give the three status border tokens dark overrides. Section 6 sets their matching foreground
-   tokens and stops there.
+1. Use full opacity or a color with enough contrast for each status sublabel. Five of the six supplied 80 percent pairings fail.
+2. Add a dark override for `colorBrandBackgroundHover`, or keep its label white in dark mode.
+3. Give shapes a visible boundary with the section 1.4 shadows or a fill that differs from the canvas.
+4. Add dark overrides for all three status border tokens; section 6 currently overrides only their matching foregrounds.
 
-The focus ring in section 7 is the one control that holds throughout. `colorBrandStroke1` measures
-5.38:1 in light and 5.87:1 in dark against `colorNeutralBackground1`.
+The section 7 focus ring passes in both themes. `colorBrandStroke1` against
+`colorNeutralBackground1` measures 5.38:1 in light mode and 5.87:1 in dark mode.
 
 ## The superseded Fluent 2 handoff
 
-An earlier alias-token document from the same owner mapped Fluent 2 tokens to diagram roles. Its
-token names match this spec. Several of its values do not.
+An earlier document from the owner mapped Fluent 2 alias tokens to diagram roles. It used
+the same token names but differed in several values.
 
-**It is superseded, not deleted.** A reader holding a copy needs to know it is no longer current.
+That earlier document is superseded. Keep it as a record rather than using it as the current palette.
 
 | Token | Earlier value | This spec | Effect |
 |---|---|---|---|
@@ -207,23 +200,22 @@ token names match this spec. Several of its values do not.
 | `colorNeutralForeground2` | `#737373` | `#616161` | A secondary label goes from 4.46:1 to 6.19:1 |
 | `colorNeutralBackground1` | `#F8F8F8` | `#ffffff` | The default surface is now pure white |
 
-The earlier pairing of `#737373` on its own `#F8F8F8` measured 4.46:1, under the 4.5 that document
-promised. Against `#f5f5f5` it measured 4.35:1.
+The earlier `#737373` on `#F8F8F8` pairing measured 4.46:1, below its promised 4.5:1. Against
+`#f5f5f5`, it measured 4.35:1.
 
-This spec's `#616161` is darker and clears the threshold on every background it is assigned to. That
-half of the older document's problem is fixed.
+This spec uses the darker `#616161`, which passes on every background assigned to it. That
+resolves the older document's secondary-text failure.
 
-**Only the three values above were supplied to this session.** The earlier document's full token list
-was not, so this page cannot say whether its other values changed.
+Only those three earlier values were available to the session that made the first comparison.
+It could not assess changes to the rest of that token list.
 
 ### Seven more failing pairings from the earlier palettes
 
-The full material reached another session the same day, so the gap above is now partly closed. Two
-palettes were supplied on 2026-08-31 for restyling a working-model diagram: Microsoft **Fluent**, a
-hex palette with a role table, and Microsoft **Fluent 2**, the alias-token document named above.
+Another session received the full material on 2026-08-31. It included a Microsoft Fluent hex
+palette and role table, plus the Fluent 2 alias-token document, for restyling a working-model diagram.
 
-Each maps a token to a job, and each demands WCAG AA at 4.5 to 1 in its own accessibility section.
-**Seven assignments cannot meet it.**
+Both palettes assign tokens to roles and require WCAG AA text contrast at 4.5:1. Seven
+assignments failed the applicable thresholds:
 
 | Foreground | Background | Ratio | Target | Assigned role |
 |---|---|---|---|---|
@@ -235,32 +227,29 @@ Each maps a token to a job, and each demands WCAG AA at 4.5 to 1 in its own acce
 | Gray 36 `#C2C2C2` | Gray 4 `#F8F8F8` | **1.68** | 3.0 | optional-path strokes |
 | Gray 20 `#DEDEDE` | Gray 4 `#F8F8F8` | **1.27** | 3.0 | note connectors |
 
-The last two rows are graphics rather than text, so their target is the 3 to 1 of SC 1.4.11, the
-same clause the stroke rows above are measured against.
+The final two rows are graphics. Their 3:1 target comes from SC 1.4.11, as with the stroke
+rows in the audit above.
 
-**Four corrections held when the palettes were applied.** They are stated as rules because each one
-survived a restyle:
+Four corrections held when the palettes were applied:
 
 - Secondary text goes one step darker than the palette assigns.
 - Hairline strokes go to a mid grey near 3 to 1, not the near-invisible light greys.
 - Light greys serve as panel fills, never as a surface behind text.
 - Text on a brand-filled shape takes the on-brand token, never the neutral foreground.
 
-**The method was the lowest ratio, not a spot check.** Every pairing that actually occurs in the
-restyled diagram was measured in both themes, and the lowest ratio across them decides. Sampling a
-few representative pairs passes a palette whose worst case is the one nobody sampled.
+The check measured every pairing used in the diagram in both themes, then took the lowest
+ratio. Sampling only selected pairings could miss the failing combination.
 
-**Every row above names both sides, and that is the point.** An earlier statement of these seven
-figures named no background, and four of them did not reproduce. The conclusion survived
-recomputation and got worse. The figures did not survive it at all.
+An earlier report omitted backgrounds from these seven figures. Four ratios could not be
+reproduced. Recalculation confirmed the contrast problem but replaced the figures; each row now names both colors.
 
 ## Implementing the dark palette in CSS
 
-Define the whole light palette on bare `:root`. Redefine only the token values under the two dark
-selectors, and never give a colour its only definition inside a media block or a theme block.
+Define every light-palette token on `:root`. Override values under both dark selectors; never
+put a color's only definition inside a theme or media block.
 
-The viewer has three states, not two. An explicit choice stamps `data-theme` on the root element,
-and the default system setting stamps nothing at all.
+The viewer has three states: explicit light, explicit dark, and the system default. An
+explicit choice sets `data-theme` on the root element; the system setting leaves it unset.
 
 ```css
 :root {
@@ -328,11 +317,11 @@ and the default system setting stamps nothing at all.
 }
 ```
 
-The five tokens with no override row keep their `:root` values, which is what the audit above
-measured. Adding an override for them changes the spec, not the CSS shape.
+The five tokens without overrides retain their `:root` values, as measured in the audit.
+Adding overrides changes those supplied values but uses the same CSS structure.
 
-Paint the canvas from `--colorNeutralBackground1` explicitly. A transparent surface borrows the host
-page's colour, and then every ratio in this audit is measured against something else.
+Set the canvas color explicitly from `--colorNeutralBackground1`. A transparent canvas takes
+the host page's color, which may differ from the background used in the audit.
 
 ---
 

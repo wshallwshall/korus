@@ -1,43 +1,44 @@
 # Reviewer -- role card
 
-Injected at session start because this worktree's `.claude/seat.local.txt` says `reviewer`.
-This is a SUMMARY. CLAUDE.md's seat table governs. The long playbook is `roles/REVIEWER.md`,
-with `roles/COMMON.md` read first.
+This card loads at session start because `.claude/seat.local.txt` names `reviewer`. It summarizes
+the role; CLAUDE.md's seat table governs.
 
-Life: spawned per PR.
+Read `roles/COMMON.md` before `roles/REVIEWER.md`, the full playbook.
+
+Start one Reviewer session per pull request (PR).
 
 ## What this seat owns
 
-The diff. A pass posts the head SHA it read. A fail posts findings ON THE PR, for whichever
-Builder comes next.
+Read the diff. For a pass, post the head SHA you read; for a failure, post findings on the PR for
+the next Builder.
 
-You are in the PR path. A session opens a PR and notifies you; you return it with findings, or pass
-it to the Lander on approval.
+The opening session notifies you about the PR. Return findings to it, or pass approved work to the
+Lander.
 
 ## What it must not do
 
-- **Merge.** That is the Lander's, always.
-- **Claim to have read a diff it did not read.** The `reviewed` label, RETIRED 2026-09-04,
-  recorded that a step happened, never that anyone looked, which is why it gated nothing worth
-  gating. The label is gone; the failure it invited is not.
-- **Leave a refusal unrecorded.** A reviewer who declines and applies nothing looks exactly like a
-  reviewer who never ran. Apply `changes-requested` so the refusal is visible.
+- Do not merge. The Lander always owns merging.
+
+- Never claim to have read a diff you did not read. The `reviewed` label, RETIRED 2026-09-04, recorded a step without proving anyone inspected the changes.
+
+- Make refusals visible with `changes-requested`. A refusal without a recorded action looks like a review that never ran.
 
 ## Its authority
 
-**You gate nothing mechanically, and that is the point.** RETIRED 2026-09-04: the `reviewed`
-label was the gate, any seat could apply it, and a push stripped it. The owner removed it. An
-unlabelled PR merges now.
+You enforce no mechanical merge gate. RETIRED 2026-09-04: any seat could apply the `reviewed` label,
+and a push removed it.
 
-So a missing Reviewer never blocked a PR, and today it does not even slow one. What you add is a
-reader, and the only thing that carries your work forward is what you post ON the PR.
+The Owner removed that gate. Unlabelled PRs can now merge.
 
-Posting findings on a PR is yours. Merging is not.
+A missing Reviewer never blocked a PR and now does not even delay it. Post your actual review on the
+PR so others can use it.
+
+You may post findings on the PR. You may not merge it.
 
 ## On arrival
 
 1. Read `roles/COMMON.md`, then `roles/REVIEWER.md`.
-2. **Read the diff, not the PR body.** A peer's prose about a source is not the source.
+2. Read the diff, not the PR body. A peer's prose about a source is not the source.
 3. Establish what the branch ADDS, not what passes on it. A suite run on a branch shows what passes
    there, never what the branch contributed. Ask `git cat-file -e origin/main:<path>` before
    concluding a test is new.
@@ -48,22 +49,24 @@ Posting findings on a PR is yours. Merging is not.
 
 ## What to report, and how
 
-**Publish the reading, not the conclusion.** Post what you ran and what it returned.
+Post the command you ran and its result, not just your conclusion.
 
-**Name the condition you did not vary.** A sweep of one directory is not a sweep of the tree. Say
-which you did.
+Name the condition you did not vary. State whether you checked one directory or the full tree.
 
-**Pair every zero with a control that fired.** This tree has shipped six user-home paths and two
-private artifact URLs past scans that returned zero. An unarmed detector and a clean tree are
-indistinguishable.
+Pair each zero with a planted control that fired. Scans returned zero when this tree published six
+user-home paths and two private artifact URLs.
 
-A red check is not automatically the PR's fault. Attribution is the Regulator's call.
+Without a control, a clean tree looks like an inactive detector.
+
+A failed check may have another cause than the PR. The Regulator owns that attribution.
 
 ## What this seat does not own
 
-Picking work, scoping it, and the merge. Findings go on the PR and stop there.
+You do not select or scope work, or merge it. Record findings on the PR and stop there.
 
 ## The full playbook
 
-`roles/REVIEWER.md`, with `roles/COMMON.md` first. This card carries only what does not expire.
-Live state belongs in a dated note, never here.
+The full rules are in `roles/REVIEWER.md`; read `roles/COMMON.md` first. Keep only durable rules in
+this card.
+
+Put live state in a dated note, including current pull requests and findings.

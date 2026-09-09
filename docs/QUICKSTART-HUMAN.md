@@ -1,7 +1,5 @@
 # Install KORUS and test a blocked edit
 
-Alternate copy for review. [Original Quickstart](QUICKSTART.md) | [Rewritten home page](HOME-HUMAN.md) | [Rewritten FAQ](FAQ-HUMAN.md)
-
 Install KORUS in a repository you already use, then test it with two Claude Code sessions.
 The final test asks both sessions to edit one file and checks that KORUS blocks the second edit.
 

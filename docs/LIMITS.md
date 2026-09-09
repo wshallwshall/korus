@@ -2,16 +2,14 @@
 
 ## TLDR/BLUF
 
-**What this is.** What KORUS needs to run, and the places it stops working. Both were on the
-landing page, above the first command, until 2026-08-16.
+KORUS needs the desktop client and separately installed controls. These requirements and limits
+moved off the landing page on 2026-08-16; they had appeared above its first command.
 
-**Why you should care.** These controls do not share one on-switch, and the collision gate has more
-blind spots than the one everybody knows about. Read this before you trust a quiet session. Not for
-you if you have not installed anything yet, in which case start at [Quickstart](QUICKSTART.md).
+Start with [Quickstart](QUICKSTART.md) if you have not installed KORUS. A quiet session alone cannot
+tell you whether its controls work.
 
-**How to use it.** Check the requirements table, then read
-[what actually switches each control on](#what-actually-switches-each-control-on). If you run more
-than one session against a single checkout, read the collision gate section as well.
+Check the requirements and [switches for each control](#what-actually-switches-each-control-on). If
+sessions share a checkout, check the collision gate limits too.
 
 ---
 
@@ -28,34 +26,34 @@ than one session against a single checkout, read the collision gate section as w
 | **`ccx.config.json` at the target repo root** | Announce stays inert there, and every knob falls back to its default. It is **not** the opt-in for the other three user-scope hooks. |
 | **A plain terminal to install from** | All four installers throw when `$env:CLAUDECODE` is `1`. A session that can install these controls can remove them. |
 
-PowerShell 7 runs on Linux and macOS, but Windows is the exercised path. Self-marking and path
-case-folding degrade elsewhere.
+PowerShell 7 runs on Linux and macOS; Windows receives the practical testing. Self-marking and path
+case-folding degrade on other platforms.
 
-**There is no `ccx` on `PATH`.** Where these documents say `ccx doctor`, they mean
+There is no `ccx` command on `PATH`. Here, `ccx doctor` means
 `pwsh -NoProfile -File <this-checkout>/bin/ccx-doctor.ps1`.
-[MIT](https://claude-multisession.pages.dev/LICENSE).
 
-**Running the test suite additionally needs `pandoc`.** It is pinned by version and digest in CI, and
-`tests/test_word_copy_tracks_the_markdown.py` fails rather than skips without it.
+The code uses the [MIT license](https://claude-multisession.pages.dev/LICENSE).
+
+The test suite also needs `pandoc`, pinned by version and digest in continuous integration (CI).
+Without it, `tests/test_word_copy_tracks_the_markdown.py` fails instead of skipping.
 
 ### Why a vendored layout is a requirement
 
-The three coordination hooks install as shims that re-resolve their script at run time. Both bases
-they resolve from sit inside the *session's own* repository: the primary checkout, and the worktree
-top level. The tooling checkout is never one of them.
+The three coordination hooks install as shims that find their scripts at runtime. They search the
+session repository's primary checkout and worktree root, never the separate tooling checkout.
 
-So in a separate-checkouts layout the shims resolve nothing. You get a wired `settings.json`, no
-session banner, no collision gate and no announce. The doctor models the same two bases and scores
-each unresolved row RED, which is why it cannot reach exit 0 there.
+With separate checkouts, the shims find no scripts despite their entries in `settings.json`. The
+session gets no banner, collision gate, or announce.
 
-The worktree gate, both git hooks and the backstop do not care about the layout.
-[Quickstart](QUICKSTART.md) step 3 is the procedure.
+The doctor checks the same two locations and marks each missing script RED. It cannot exit 0 in this
+layout.
+
+The worktree gate, both git hooks, and the backstop work with either layout. Follow
+[Quickstart](QUICKSTART.md) step 3 to vendor the scripts.
 
 ### What actually switches each control on
 
-The requirements table above is not one switch repeated. Each control keys on something different,
-and a reader who deletes `ccx.config.json` to opt a repository out will find three of them still
-running.
+Each control has its own switch. Deleting `ccx.config.json` leaves three user-scope hooks running.
 
 | Control | Switched on by | Does not read |
 |---|---|---|
@@ -66,16 +64,16 @@ running.
 | Announce | `ccx.config.json` present at the repo root | The allowlist |
 | `commit-msg` and `pre-push` | Installation into that clone's `.git/hooks` | The allowlist |
 
-**Deleting the allowlist turns off the two controls that act on a shared checkout**, everywhere and
-at once. That is the documented kill switch.
+Delete the allowlist to turn off both controls that act on shared checkouts. This documented kill
+switch affects every listed checkout at once.
 
-**The config file's location rule is not uniform.** Announce tests the repository root and refuses to
-walk up. Every other consumer walks up from the current directory. A config one level above the root
-therefore satisfies the git-hook checkers and the doctor while leaving announce inert.
+Announce checks only the repository root for its config; other consumers search upward from the
+current directory. A config above the root satisfies git-hook checkers and the doctor, but leaves
+announce off.
 
 ## Platform support
 
-`.github/workflows/gates.yml` holds the CI matrix, and it names two operating systems.
+The CI matrix in `.github/workflows/gates.yml` names two operating systems.
 
 | Platform | Status | What degrades |
 |---|---|---|
@@ -85,72 +83,71 @@ therefore satisfies the git-hook checkers and the doctor while leaving announce 
 | **PowerShell 7.0-7.2** | **Worse than unsupported** | Only `install-selfheal.ps1` declares `-Version 7`, so it installs while every other installer refuses. You get the hook that runs `git checkout` on your shared primary, and none of the gates |
 | **Windows PowerShell 5.1** | Unsupported | 26 scripts carry `#Requires -Version 7.3` and refuse to start. Three carry no `#Requires` at all, and those fail quietly instead |
 
-**The 5.1 refusal is not uniform, and the exceptions are the dangerous half.** `announce-session.ps1`
-and `steer-inject.ps1` have no version guard. Both are declared fail-open: the dot-source fails, the
-hook stands down, and the exit code is 0. You are not stopped. You are ignored.
+On PowerShell 5.1, `announce-session.ps1` and `steer-inject.ps1` have no version guard. Both fail
+open: dot-sourcing fails, the hook stops, and exit 0 allows work to continue.
 
-CI is not the doctor. The runners install a pinned, digest-verified `pandoc`, then run the ASCII
-gate, the leak scan, a parse of every shipped `.ps1` and the test suite. They never run `ccx doctor`:
-some controls it fires need a live second session and a peer worktree.
+CI installs pinned, digest-verified `pandoc`, runs the ASCII and leak gates, parses every shipped
+`.ps1`, and runs the tests. It never runs `ccx doctor`, whose checks can need a live second
+session and peer worktree.
 
-**The leak scan in CI is structural-only** unless the `CCX_FORBIDDEN_TOKENS` repository secret is
-set. Shape detectors are armed; private-name detectors are empty. A green run has not cleared any
-private name, and the workflow says so in capitals on every run.
+The CI leak scan checks structural patterns unless the `CCX_FORBIDDEN_TOKENS` repository secret is
+set. Without it, private-name detectors are empty.
 
-So a green Linux run says the scripts parse and the suite passes there. Whether the hooks, the
-gates and the roster behave on Linux in a real session is not established by it.
+A green run therefore clears no private names. The workflow prints that limit in capitals on every
+run.
 
-The pandoc step also explains the macOS gap. The workflow refuses to guess a pandoc for any runner
-other than Linux or Windows, rather than install an unverified one.
+A green Linux run proves that scripts parse and tests pass there. It does not establish how hooks,
+gates, or the roster behave in a real Linux session.
+
+The pandoc install step accepts only Linux and Windows runners. It refuses an unverified install on
+other platforms, leaving macOS outside the matrix.
 
 ## Session discovery rests on a vendor surface this project does not own
 
-Everything answering "who is live, and where" reads `<config-root>/sessions/<pid>.json` -- a record
-the *client* writes, whose shape, location and lifetime belong to the client. Three consequences
-follow.
+Session discovery reads `<config-root>/sessions/<pid>.json`. The client controls these records'
+format, location, and lifetime.
 
-**Announce needs the desktop client.** It delivers through `ccd_session_mgmt`, an MCP server a plain
-CLI install lacks. The hook never sends: it asks the model to, so nothing is delivered and the model
-says so.
+Announce asks the model to deliver through the desktop-only `ccd_session_mgmt` Model Context
+Protocol (MCP) server. A plain CLI install lacks that server, so delivery fails and the model
+reports it.
 
-**This is why KORUS is a desktop framework rather than a preference.** Announce is one of the
-coordination surfaces shaped by the desktop client, alongside the two below and the automatic
-worktree every new desktop session gets.
+KORUS depends on desktop coordination, session discovery, and the automatic worktree created for
+each new desktop session.
 
-Some scripts here run anywhere `pwsh` does. Running them without the desktop app is not KORUS, and
-nothing here measures how far it gets you.
+Some scripts can run anywhere `pwsh` runs. Their use without the desktop app is unmeasured and falls
+outside the supported KORUS setup.
 
-**The desktop app's own session list is incomplete.** `list_sessions` enumerates only sessions *that
-app itself spawned*. An editor-extension session is never registered, so it cannot be messaged. It
-is authoritative for who can be **messaged**, the on-disk records for who **exists**.
+`list_sessions` lists only sessions the desktop app spawned. Editor-extension sessions never
+register there and cannot receive messages.
 
-**A schema change degrades to "cannot tell", not to a wrong answer.** Rename a field or change
-`startedAt`'s unit and every fence says it cannot tell. That verdict is a veto, so the gates keep
-refusing rather than waving edits through. Designed for in `scripts/coord/session-registry.ps1`.
+Use that list to find message recipients and the on-disk records to find existing sessions.
 
-**Only one kind of change shows up in the doctor's census.** A moved directory drops records read to
-zero. A renamed field or a changed unit leaves that count untouched, because those records still
-parse and still place. A healthy count is not evidence the schema still matches.
+A renamed field or changed `startedAt` unit makes the liveness fence report "cannot tell". That
+answer vetoes work; `scripts/coord/session-registry.ps1` keeps the gates refusing.
 
-**Of the two, a moved directory is the one to fear.** Zero records reads as a genuine all-clear.
-Nobody is live, so no fence has anything to veto, and the collision gate allows every edit with empty
-output. The census catches this. Nothing inside a session does.
+Moving the records directory drops the doctor's census to zero. Renaming fields or changing units
+leaves the count unchanged because the records still parse and match worktrees.
+
+A healthy count does not prove that the record format still matches.
+
+An empty registry leaves the collision gate with no liveness verdicts to veto edits. It allows every
+edit silently, just as when no peers exist.
+
+The doctor's census exposes that zero count. Nothing inside a session detects the moved directory.
 
 ## What the collision gate does not see
 
-This is the control the project exists for, so its edges matter more than any other. It refuses an
-edit when a **live peer worktree** holds **uncommitted** changes to **that file**. Every one of those
-words is load-bearing, and each excludes something.
+The collision gate refuses edits when a live peer worktree holds uncommitted changes to the same
+file. Its checks exclude the cases below.
 
-**A session in your own worktree is invisible.** `overlap.ps1` skips your own worktree before
-comparing any path, because a worktree cannot collide with itself. Two sessions on one checkout
-collide in silence. One worktree per session is the assumption this control is built on.
+`overlap.ps1` skips your own worktree before comparing paths. Two sessions in that checkout can
+collide silently; this control requires one worktree per session.
 
-**Its answer can be up to a minute stale.** The overlap map is cached for 60 seconds, and the gate
-never asks for a refresh. A peer who reached your file inside that window does not appear.
+The overlap map stays cached for 60 seconds, and the gate never requests a refresh. A peer who
+starts touching your file during that minute remains unseen.
 
-**Three ordinary file states cannot produce a refusal.** The peer's changes are read from
-`git status --porcelain`, and that command does not surface them as paths:
+The gate reads peer changes from `git status --porcelain`. Three file states do not appear as
+matching paths:
 
 - A new file inside a new directory. Git reports the directory, not the file.
 - A rename. Porcelain prints `R old -> new`, which matches neither path.
@@ -158,17 +155,16 @@ never asks for a refresh. A peer who reached your file inside that window does n
 
 Staged, unstaged and ordinary untracked files do count.
 
-**An absolute path into another worktree is never checked.** The query goes repo-relative only when
-the target sits under your own worktree root. Otherwise it stays absolute, compared against
-repo-relative entries, and can never match. Writing into a peer's checkout is what it cannot see.
+The gate converts targets to repo-relative paths only inside your own worktree. Absolute paths into
+another worktree cannot match its repo-relative entries, so those writes go unchecked.
 
-**Symlinks are not resolved.** A link reaching the same file compares as a different path.
+The gate does not resolve symlinks. Different paths to the same file therefore compare as different
+files.
 
-**A dormant peer is allowed without a word.** The gate's own header says such a worktree "is reported
-and allowed". In practice it exits 0 with empty output, so an abandoned worktree holding uncommitted
-changes to your file tells you nothing.
+A dormant peer produces exit 0 with no output, even when it holds uncommitted changes to your file.
+The header's claim that it "is reported and allowed" does not match that behavior.
 
-**Four paths end in an allow with no output at all**, outside the notice machinery entirely:
+Four cases allow the edit without entering the notice code:
 
 | Path | Why nothing is printed |
 |---|---|
@@ -177,55 +173,50 @@ changes to your file tells you nothing.
 | The shim resolving no script | Unlike announce, this shim prints no missing-script notice |
 | PowerShell below 7.3 | `#Requires` fires before the body runs, so its own error handling never gets a turn |
 
-**The "could not check" notice is rate-limited.** One function carries every fail-open path, and it
-suppresses a repeat of the same reason, in the same worktree, for 30 minutes. Against a broken
-overlap script, one edit in that window warns you and the rest look like an all-clear.
+One function handles fail-open notices and suppresses repeated reasons in the same worktree for 30
+minutes. If overlap stays broken, only the first edit warns; later edits look clear.
 
-That rate limit is deliberate, and it is why the doctor is the instrument rather than the in-session
-warning. Run it when you want to know.
+Run the doctor to check the control. In-session warnings deliberately stop repeating during that
+cooldown.
 
 ## Shared runtime state is out of scope
 
-A worktree isolates **files**. It does not isolate what a running program contends for. A listening
-port, a development database, a Redis keyspace, a local service, a package cache, generated build
-output and a git-ignored `.env` all sit outside what it separates.
+Worktrees separate files, but running programs can still share resources. These include listening
+ports, development databases, Redis keyspaces, local services, package caches, generated build
+output, and git-ignored `.env` files.
 
-Two sessions running the same test suite in two worktrees can collide on any of those, and **nothing
-here sees it**. No gate reads a port or a database name, and neither does the doctor. It surfaces as
-a flaky test or a corrupted fixture, blamed on anything but concurrency.
+Tests running in separate worktrees can collide on those shared resources. Neither the gates nor the
+doctor checks ports or database names.
 
-This is unsolved in this project rather than handled quietly. There is no control to install and
-nothing to switch on. Two habits are the whole of it, and both are yours to apply:
+The result can look like a flaky test or damaged fixture, hiding the cause in concurrent work.
 
-- **Give each worktree its own environment.** `scripts/worktree/new.ps1` runs the per-checkout
-  bootstrap named by `setupHook` in `ccx.config.json`, and warns when it cannot find that file.
+This project has no control for shared runtime resources. Apply these two practices yourself:
+
+- Give each worktree its own environment. `scripts/worktree/new.ps1` runs the per-checkout bootstrap
+  named by `setupHook` in `ccx.config.json`, and warns when it cannot find that file.
   [Worktrees](WORKTREES.md) gives the contract the hook receives.
-- **Choose ports and database names per worktree, by hand.** Nothing derives them for you. A setup
-  hook that writes one port into every checkout has moved the collision, not removed it.
+- Choose ports and database names per worktree, by hand. Nothing derives them for you. A setup hook
+  that writes one port into every checkout has moved the collision, not removed it.
 
 ## Guardrails against accidents, not security boundaries
 
-The `PreToolUse` gates inspect tool arguments. A file a shell command writes is invisible to them,
-and an agent-authored script defeats a command-string rule.
+`PreToolUse` gates inspect tool arguments. They cannot see files written by shell commands, and
+agent-written scripts can bypass command-string rules.
 
-**The reason they are not a boundary.** Every control here runs as the same operating-system
-identity as the agent it constrains. The hook scripts, the repository allowlist at
-`~/.claude/hooks/ccx-gate.repos.txt` and the user-scope settings file wiring them are all files that
-identity may write.
+Every control runs under the agent's operating-system identity. That identity can edit the hooks,
+`~/.claude/hooks/ccx-gate.repos.txt`, and the user settings that invoke them.
 
-An agent that edits one is not defeating a boundary. It is editing its own configuration, with the
-permissions it was already given. Two documented exits need no editing at all:
+The agent already has permission to change those controls. It can also use two documented bypasses
+without editing files:
 
 - `--no-verify` on a commit or a push skips both git hooks. No CI-side enforcement ships.
-- `CCX_ALLOW_DIRECT_PUSH=1` turns the push guard off. It is a deliberate escape hatch, kept distinct
-  from `--no-verify` so it stays greppable in shell history, and the guard announces
-  `direct push ALLOWED` on stderr when it fires.
+- `CCX_ALLOW_DIRECT_PUSH=1` turns the push guard off. This separate bypass stays searchable in shell
+  history. The guard prints `direct push ALLOWED` on stderr when used.
 
-The doctor lists that variable as a live disarm switch, but only when it is set in the doctor's own
-environment. Prefixing a single `git push` with it leaves nothing for a later run to find.
+The doctor reports `CCX_ALLOW_DIRECT_PUSH=1` only if its own environment contains it. Setting it for
+a single `git push` leaves no value for a later doctor run to find.
 
-**The remedy.** Enforcement the constrained identity cannot rewrite, which means a different plane
-altogether:
+Pair local controls with rules enforced outside the agent's writable environment:
 
 | Pair with | Why it holds |
 |---|---|
@@ -233,22 +224,19 @@ altogether:
 | Required status checks | A merge that waits on a check is not waved through by a flag on the pushing machine |
 | Agent credentials with no bypass permission | Bypass is a permission. Withhold it from the token the agent pushes with |
 
-**Nothing in this repository configures any of that for you.** Those are settings on your hosting
-provider, `bin/ccx-doctor.ps1` does not read them, and this repository's own `gates` check is
-advisory: nothing requires it before a merge.
+Configure these rules through your hosting provider; this repository does not set them or inspect
+them with `bin/ccx-doctor.ps1`. Its own `gates` check is advisory and is not required before merge.
 
 ## Everything here fails the same way it succeeds
 
-When a control here breaks, it produces output byte-identical to when it works. An uninstalled gate
-and a working one look the same from inside a session, because both let the edit through.
+A broken control can produce exactly the same output as a working one. An uninstalled gate and a
+working gate with no objection both allow an edit.
 
-That is why `bin/ccx-doctor.ps1` exists, and why you run it *before* installing anything as well as
-after. It never infers: it prints WHAT WAS SCANNED and BLIND SPOTS ON THIS RUN, and a skip is never
-a pass (exit 2).
+Run `bin/ccx-doctor.ps1` before and after installing. It prints WHAT WAS SCANNED and BLIND SPOTS ON
+THIS RUN; skipped checks produce exit 2, never a pass.
 
-At least one deny path is not self-testable. The collision gate's refusal needs a live peer worktree
-holding an uncommitted change to the same file. The doctor proves the gate speaks up when it cannot
-check, not that it denies, and prints that gap as a blind spot every run.
+The collision refusal needs a live peer with uncommitted changes to the same file, so the doctor
+cannot stage that test. It checks the failure notice and names the untested refusal on every run.
 
 ## Related
 

@@ -5,64 +5,68 @@ layout: default
 
 # KORUS
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** KORUS -- Keep One Repo, Unblock Sessions -- is one developer's account of what
-makes Claude Code productive on a real project. It covers the model and effort to run, what the
-accounts cost, what to write down, and running several sessions without collisions.
+KORUS helps you run several Claude Code sessions on one project without losing track of their work.
+It combines scripts that block common mistakes with a way to divide tasks, review changes, and merge them.
 
-`korus` is the tooling that enforces that last part.
+The name stands for Keep One Repo, Unblock Sessions. The method comes from one developer's experience
+using Claude Code to build a real project.
 
-**Why you should care.** Several sessions at once raise how fast work arrives, and the shared write
-surface caps what lands ([measured](FAQ.md#how-many-sessions-should-i-run)). The conflicts that cost
-you are the ones git cannot report: every branch merges clean, and the loss lands later.
+It covers model settings, account costs, project records, and work across sessions. The `korus`
+repository supplies the scripts for that last part.
 
-Not for you if Claude Code is an occasional convenience rather than how the project gets built.
-KORUS also assumes Claude Code for Desktop throughout.
+**Start with [Quickstart](QUICKSTART.md)** to install the controls and try an edit they should
+block. If you're deciding whether you need them, read the [FAQ](FAQ.md).
 
-**What it costs.** You copy this project's `scripts/`, `bin/` and `ccx.config.json` into your own
-repository and **commit** them, then edit two keys in the shipped config.
+KORUS assumes Claude Code for Desktop. It is aimed at people who use Claude Code throughout a build;
+an occasional session may not need this setup.
 
-One allowlist file lands under your user config root, per machine rather than per repository.
-Cloning alone installs nothing.
+<a id="what-goes-wrong-without-it"></a>
 
-**How to use it.** [Quickstart](QUICKSTART.md) installs the enforcement and ends with you watching a
-collision get refused. [Run a KORUS build](KORUS-BUILD.md) is the session shape.
-[The KORUS framework](KORUS.md) is the whole account, in its author's words.
+## Separate sessions can still undo each other's work
 
----
-
-## What goes wrong without it
-
-Two sessions are running. Session A is halfway through a refactor, with uncommitted work in the
-tree. Session B decides it needs a fresh branch:
+Suppose session A is editing a file. Before it commits, session B runs this command in their shared
+checkout:
 
 <!-- no-copy -->
 ```powershell
 git checkout -B feature/parser origin/main
 ```
 
-Git allows it. The branch is checked out nowhere, so that is a legal command. The shared tree
-force-switches, every file under session A becomes a different commit's file, and A's uncommitted
-work is now on the wrong branch.
+Git may allow the switch if the branch is not checked out elsewhere. Both sessions now see files
+from the new branch, and A's uncommitted work is on a different branch than A expects.
 
-**Nothing on either screen says so.** Each session believes it owns the directory.
+Neither session gets a warning that the other one changed its workspace.
 
-That is the loudest failure, not the only one. Six more: same file, same work in different files,
-same reserved number, same config lock, same shared list, same agent memory.
+Other conflicts are harder to spot. Sessions can edit the same file, reuse a record number, compete
+for a config lock, or change shared lists and agent memory.
 
-The one that costs most is the quietest. Two sessions build the *same thing* in *different files*:
-zero conflicts, two green pull requests, one of them thrown away.
+They can also build the same feature in different files. Both pull requests pass their checks,
+Git reports no conflict, and someone later has to discard one implementation.
 
-Upstream, this is [claude-code#76590](https://github.com/anthropics/claude-code/issues/76590), with
-a [field report](https://github.com/anthropics/claude-code/issues/76590#issuecomment-5004149125) of
-roughly fourteen sessions on one directory.
+The upstream report, [claude-code#76590](https://github.com/anthropics/claude-code/issues/76590),
+includes a [field report](https://github.com/anthropics/claude-code/issues/76590#issuecomment-5004149125)
+of roughly fourteen sessions sharing one directory.
 
-**Claude Code now blocks much of that itself**, for a session started with `--worktree` and for Bash.
-It does not stop two isolated sessions colliding with each other. For PowerShell it checks only
-where the command runs, not where git points -- [which half you need](FAQ.md).
+Claude Code's native worktrees now prevent many writes back into the main checkout. A worktree is a
+separate checkout with its own branch and files, but shared Git history.
 
-## What it looks like when it works
+Those checks do not coordinate edits between isolated sessions. PowerShell also has fewer command
+checks than Bash. The [FAQ](FAQ.md) explains where KORUS adds protection.
+
+<a id="what-it-looks-like-when-it-works"></a>
+
+## A blocked edit gives you time to coordinate
+
+Session A edits `service.py` and leaves the change uncommitted. Session B tries to edit the same file
+in its own worktree.
+
+The collision gate blocks B's edit before it runs. Its message names the live session holding the
+change and, when available, the task that session is doing.
+
+B can coordinate with A or work on `parser.py` instead. That gives both sessions a chance to finish
+without finding the overlap at merge time.
 
 <figure role="group">
 <svg viewBox="0 0 820 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two session lanes on a shared timeline. Session A edits service.py and leaves the change uncommitted. Session B then reaches for the same file and the collision gate refuses the edit before it runs, naming who holds the file. Session B edits parser.py instead, and both branches land.">
@@ -93,120 +97,95 @@ where the command runs, not where git points -- [which half you need](FAQ.md).
 it both writes succeed and the loss surfaces at merge, or later.</figcaption>
 </figure>
 
-## What the tooling enforces
+<a id="what-the-tooling-enforces"></a>
 
-This is the part a convention cannot hold on its own, so it ships as code.
+## The scripts check edits, commits, and pushes
 
-**Sessions that cannot overwrite each other.** Each one works in its own git worktree on its own
-branch, while the repository history stays shared. [Worktrees](WORKTREES.md)
-
-**A refusal at edit time, not a conflict at merge time.** When a session reaches for a file another
-live session has uncommitted changes in, the edit is refused before it runs, and the refusal names
-who is in that file and what they are building. [Coordination](COORDINATION.md)
-
-**Guardrails at commit and push time.** A commit whose subject claims work this worktree does not
-hold is refused. So is a direct push to a protected branch. Both are skipped by `--no-verify`, which
-leaves no local record, so pair them with protection on the remote. [Hooks](HOOKS.md)
-
-**Numbers that cannot be handed out twice, if both sessions ask.** `alloc.ps1` claims a number by an
-atomic create, so two sessions asking for the next free number get different ones.
-
-The commit-time gate catching a session that never asked ships **unwired**: no installer writes
-`pre-commit`, and the doctor reports it `OFF` until you do. [Sequence allocation](SEQUENCE-ALLOC.md)
-
-**Cleanup that declines rather than guesses.** Worktrees are pruned only when merged **and** clean
-**and** unoccupied, and the reaper stops wherever it *knows* it cannot tell.
-
-It prints, every run, the four cases where it cannot tell and does not know it. An occupant editing
-by absolute path from elsewhere is one. [Pruning](PRUNING.md)
-
-That list is what ships as code. **The session shape is not on it.** One session briefs and
-polls. A short-lived one builds each brief, another reads the diff, another attributes a failed
-check, and one decides what merges. Nothing enforces any of that.
-
-The roles are a convention you set in each opening prompt, and they are what stop two sessions
-deciding the same thing. [Run a KORUS build](KORUS-BUILD.md)
-
-Three mechanisms touch the failure at the top of this page, and only the worktree gate prevents it.
-[Worktrees](WORKTREES.md#what-actually-stops-the-failure) has the three, and what each cannot do.
-
-## The rest of the framework
-
-The tooling above is one part of KORUS. The rest is convention, and it is where most of the
-throughput comes from.
-
-| Part | What it decides | Where |
+| Control | What it does | Where it stops |
 |---|---|---|
-| Model and effort | Which model to run, and why the slower setting still wins | [The KORUS framework](KORUS.md) |
-| Surface | One desktop instance per Claude account, and the config root each adds | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
-| Account economics | What a plan buys, measured against published API rates | [Token accounting](TOKEN-ACCOUNTING.md) |
-| What you write down | A backlog, decision records, and a security register | [The KORUS framework](KORUS.md) |
-| The session shape | Who briefs, who builds, who reviews, who merges | [Run a KORUS build](KORUS-BUILD.md) |
-| Not losing work to a limit | Knowing when to stop. A design here, not a shipped hook | [Usage awareness](USAGE-AWARENESS.md) |
-| What "done" means | The check that runs when the author cannot vouch for the change | [CI for leaders](CI-FOR-LEADERS.md) |
+| [Worktree gate](WORKTREES.md) | Blocks edit-tool writes into an allowlisted primary checkout and selected Git commands that swap its tree | It does not see every way a shell command can write a file |
+| [Collision gate](COORDINATION.md) | Blocks an edit when a live peer has uncommitted changes to that file | It cannot block work it cannot see; two sessions can still build the same feature in different files |
+| [Git hooks](HOOKS.md) | Reject a commit claiming work the worktree does not hold, and a direct push to a protected branch | `--no-verify` skips them without a local record; use remote branch protection too |
+| [Sequence allocation](SEQUENCE-ALLOC.md) | Uses an atomic file create to give each caller a different record number | Both sessions must ask; no installer wires the commit-time sequence gate |
+| [Pruning](PRUNING.md) | Removes a worktree only when it is merged, clean, and unoccupied | Some occupants are invisible, including one editing by absolute path from elsewhere |
 
-## Start here
+The sequence gate ships unwired. The doctor reports it `OFF` until you wire it.
 
-| If you want to | Go to |
+The pruning tool stops when it knows it cannot determine occupancy. Each run also lists four cases
+it cannot detect. Check those limits before removing worktrees.
+
+The [worktree guide](WORKTREES.md#what-actually-stops-the-failure) compares the three controls related
+to the branch-switch example. Only the worktree gate prevents that failure.
+
+<a id="the-rest-of-the-framework"></a>
+
+## People still need to divide the work
+
+Scripts do not assign jobs. You give each session a role in its opening prompt: one briefs and
+checks progress, one builds a task, one reviews it, and one decides what merges.
+
+Another role investigates failed checks. [Run a KORUS build](KORUS-BUILD.md) explains the arrangement.
+
+More sessions can produce work faster than the project can review and merge it. The
+[reported run in the FAQ](FAQ.md#more-sessions-can-fill-the-merge-queue-faster) shows that limit;
+it does not establish a productivity gain.
+
+| Decision | Guide |
 |---|---|
-| Work out whether you need this at all | [FAQ](FAQ.md) |
-| See it working on your own repository | [Quickstart](QUICKSTART.md) |
-| Set up the session shape | [Run a KORUS build](KORUS-BUILD.md) |
-| Know what it needs, and where it stops working | [Limits and requirements](LIMITS.md) |
-| Understand the model everything else applies | [Concepts](CONCEPTS.md) |
-| Read the account this came from | [The KORUS framework](KORUS.md) |
-| Have Claude Code assess your own repository | [Feed this to Claude Code](FEED-THIS-TO-CLAUDE-CODE.md) |
+| Which model and effort setting to use | [The KORUS framework](KORUS.md), the original account rewritten with permission |
+| How to run one desktop instance per Claude account | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
+| How account cost compares with published API rates | [Token accounting](TOKEN-ACCOUNTING.md) |
+| What to keep in the backlog, decision records, and security register | [The KORUS framework](KORUS.md) |
+| When to stop before a usage limit | [Usage awareness](USAGE-AWARENESS.md), a design with no shipped hook |
+| Which checks establish that work is done | [CI for leaders](CI-FOR-LEADERS.md) |
 
-## What it costs you
+<a id="what-it-costs-you"></a>
 
-**These are guardrails against accidents, not security boundaries.** The edit-time gates read tool
-arguments, so a file a shell command writes is invisible to them.
+## Install the controls, then check that they work
 
-**Everything here fails the same way it succeeds.** An uninstalled gate and a working one look
-identical from inside a session, because both let the edit through. That is why the doctor exists,
-and why you run it before installing as well as after:
+Setup copies `scripts/`, `bin/`, and `ccx.config.json` into your repository. You commit those files
+and edit two config keys. Cloning this repository alone installs nothing.
+
+An allowlist under your user config root applies per machine. Other controls have different scopes;
+[Install](INSTALL.md) lists them and explains how to check each one.
+
+**These controls prevent accidents; they are not a security boundary.** A shell command can write a
+file without the edit-time gates seeing its target.
+
+Run the doctor before and after installation. An edit succeeding cannot tell you whether a gate is
+working or simply absent.
 
 ```powershell
 pwsh -NoProfile -File <tooling>/bin/ccx-doctor.ps1 -Repo <the-repo-you-govern>
 ```
 
-There is no `ccx` on `PATH`. When a red or undetermined row comes back,
-[Troubleshooting](TROUBLESHOOTING.md) is the symptom table.
+There is no `ccx` command on `PATH`. Use [Troubleshooting](TROUBLESHOOTING.md) for red or undetermined
+rows, and [Limits and requirements](LIMITS.md) for platform support and blind spots.
 
-**KORUS assumes the desktop client throughout.** A CLI-only or editor-extension setup is not
-supported. [Limits and requirements](LIMITS.md) carries the requirements table, the platform matrix,
-and what each control cannot see.
+<a id="start-here"></a>
 
-## Where to go next
+<a id="where-to-go-next"></a>
 
-**Running sessions.** [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) owns the channels
-sessions reach each other on, and the lander role.
+## Choose your next step
 
-[Desktop accounts](DESKTOP-ACCOUNTS.md) is the setup step before any of it, if you run more than one
-Claude account.
+| You want to | Read |
+|---|---|
+| Try the tooling | [Quickstart](QUICKSTART.md) |
+| Understand the shared-repository model | [Concepts](CONCEPTS.md) |
+| Have Claude Code assess your project | [Feed this to Claude Code](FEED-THIS-TO-CLAUDE-CODE.md) |
+| Set up session communication and merging | [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) |
+| Find a command | [Every script](SCRIPTS.md) |
+| Set up a working agreement | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 
-Then, in the order the work happens: [Worktrees](WORKTREES.md) - [Coordination](COORDINATION.md) -
-[Steering](STEERING.md) - [Sequence allocation](SEQUENCE-ALLOC.md) -
-[PRs and merges](PR-AND-MERGE.md) - [Pruning](PRUNING.md).
+For day-to-day work, the guides follow this order: [Worktrees](WORKTREES.md),
+[Coordination](COORDINATION.md), [Steering](STEERING.md), [Sequence allocation](SEQUENCE-ALLOC.md),
+[PRs and merges](PR-AND-MERGE.md), then [Pruning](PRUNING.md).
 
-**Every script, and what it does.** [The inventory](SCRIPTS.md) -- what each one is for, and the
-page that owns it.
+[Leak gate](LEAK-GATE.md) describes a scanner you can run and its blind spot.
+[Session mail](SESSION-MAIL.md) explains how to build communication for peers that announce cannot reach.
 
-**Safety,** in descending order of how much actually ships:
+[Tips and tricks](TIPS-AND-TRICKS.md) collects lessons from use. The case studies cover a
+[drift audit](CASE-STUDY-drift-audit.md), a [correction chain](CASE-STUDY-correction-chain.md),
+and [a claim three verifiers refuted](CASE-STUDY-refuted-but-true.md).
 
-- [Leak gate](LEAK-GATE.md) -- a scanner you can run today, plus the blind spot no scanner closes.
-- [Usage awareness](USAGE-AWARENESS.md) -- a design; ships no hook.
-- [Session mail](SESSION-MAIL.md) -- how to build the lane that reaches the peers announce cannot.
-
-**In practice:** [Tips and tricks](TIPS-AND-TRICKS.md), ordered by when each item bites. Three case
-studies: [Drift audit](CASE-STUDY-drift-audit.md),
-[Correction chain](CASE-STUDY-correction-chain.md), and
-[a claim three verifiers refuted](CASE-STUDY-refuted-but-true.md).
-
-**Elsewhere:** [Install](INSTALL.md) is the installer reference -- every scope, and how to prove
-each control is live.
-[CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) is a working
-agreement for your own repository.
-
-The standards moved to
-[secure-development-standards](https://secure-development-standards.pages.dev/).
+The standards live at [secure-development-standards](https://secure-development-standards.pages.dev/).

@@ -1,43 +1,40 @@
 # Landing work: PRs and merges
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** How to land several parallel branches in one trunk without losing commits. The
-one check to run first. The four states that all read as "can't merge". How to resolve a conflict
-without dropping half a file.
+Check the merge base before landing parallel branches in one trunk. Then read the merge state and
+resolve conflicts while preserving both sides' work.
 
-**Why you should care.** Every failure in the last mile looks like something else. Being ahead of
-the trunk is not evidence of unmerged work, and reading it that way has destroyed commits.
+A branch ahead of the trunk may already be merged. Treating that reading as proof of unmerged work
+has destroyed commits.
 
-Not for you if only one branch is ever in flight. The `git` commands here are portable; the `pwsh`
-scripts are PowerShell 7.3+ with Windows as the exercised path, and every `gh` command assumes
-GitHub. [Limits and requirements](LIMITS.md) has the platform matrix.
+These procedures address parallel branches. `git` commands are portable; `pwsh`
+scripts require PowerShell 7.3+ and were exercised on Windows; `gh` requires GitHub
+([Limits and requirements](LIMITS.md)).
 
-**How to use it.** Run the merge-base check below before you trust any "is it merged?" answer.
-[WORKTREES.md](WORKTREES.md) covers creating and living in worktrees.
-[PRUNING.md](PRUNING.md) covers cleaning them up afterwards.
+Run the merge-base check below before trusting merge status. [WORKTREES.md](WORKTREES.md) covers creating
+worktrees; [PRUNING.md](PRUNING.md) covers cleanup.
 
 ---
 
-Several sessions working in parallel produce several branches, and all of them have to land in one
-trunk.
+Parallel sessions produce branches that must all merge into one trunk.
 
-Everything here was learned by getting it wrong. Every number quoted was measured on the repo this
-tooling was developed in. It is evidence for the rule, not a universal constant.
+The incidents and numbers come from the repository where this tooling was built. They support the
+rules but do not establish universal rates.
 
-Two assumptions run through the whole document, because they are what make the traps traps:
+These procedures assume squash-merging and concurrent changes to the trunk:
 
 - **The trunk squash-merges.** A branch's own commits never become ancestors of the trunk. So every
   reachability-based test -- `rev-list`, `merge-base --is-ancestor`, `git cherry` -- answers "not
   merged" forever, for work that landed weeks ago.
-- **Somebody else lands something while you are working.** Not hypothetically. Measured on the repo
-  this tooling was developed in, the trunk moved seven times during the life of one pair of pull
+- Somebody else lands something while you are working. Not hypothetically. Measured on the repo this
+  tooling was developed in, the trunk moved seven times during the life of one pair of pull
   requests.
 
 ## What "trunk" means to these scripts
 
-Every script resolves the trunk through one function, `Get-CcxTrunk` in
-[`scripts/coord/_common.ps1`](https://claude-multisession.pages.dev/scripts/coord/_common.ps1), in this order:
+Every script resolves the trunk through one function, `Get-CcxTrunk` in [`scripts/coord/_common.ps1`](https://claude-multisession.pages.dev/scripts/coord/_common.ps1), in this
+order:
 
 | Order | Source | Notes |
 |---|---|---|
@@ -46,91 +43,79 @@ Every script resolves the trunk through one function, `Get-CcxTrunk` in
 | 3 | `git symbolic-ref --short refs/remotes/origin/HEAD` | What the remote says its default branch is -- the only source that survives a rename. |
 | 4 | First of `origin/main`, `origin/master`, `main`, `master` that resolves | Last resort. |
 
-It returns a **remote-tracking** ref where it can. A local `main` lags its upstream silently, and
-branching off a stale one is how sessions build on old code. Step 3 fails on a clone made before
-the remote head was recorded. Fix that once with `git remote set-head origin -a`.
+The function prefers a remote-tracking ref because local `main` can silently lag. If step
+3 fails on an older clone, record the remote head with `git remote set-head origin -a`.
 
 The examples below spell the trunk `origin/main`. Substitute yours.
 
 ## Check the merge base before anything else
 
-**The goal.** Find out whether your branch already contains the trunk tip. Do this before you read
-a diff, before you open the PR, before you decide a branch is fine.
-
-**What to do.**
+Before reading a diff or opening a pull request, check whether your branch contains the trunk tip.
 
 ```bash
 git fetch origin
 git merge-base --is-ancestor origin/main HEAD   # exit 0 = your branch contains the trunk tip
 ```
 
-**What happens next.** Exit 0 means the branch already contains the trunk tip and you can carry on.
-A non-zero exit means it does not. Merge the trunk in before going further, and read the trap below
-before you assume the branch is only behind.
+Exit 0 confirms the branch contains the trunk tip. Otherwise, merge the trunk before continuing; the
+pre-squash case below may explain more than a branch simply falling behind.
 
-In PowerShell read the exit code from `$LASTEXITCODE`, not `$?`. `$?` is a boolean about the last
-statement, and it will happily report success on a check that answered "no".
+In PowerShell, read `$LASTEXITCODE`. `$?` describes the last statement and can report
+success after a check answered "no".
 
 ### The trap: A branch cut from a pre-squash commit
 
-A branch was cut from a commit pushed to an already-squash-merged PR. Three-dot diff and
-"Files changed" both showed roughly 13 files, 2,967 insertions, 19 deletions -- accurate, silent on
-the five files that would conflict. Its merge base was eleven squash-merged PRs behind the trunk.
+One branch began from a commit pushed to an already-squash-merged pull request. Its three-dot diff
+and "Files changed" showed roughly 13 files, 2,967 insertions, and 19 deletions.
 
-The squash is the mechanism: the branch's content reached the trunk as one *new* commit, so its own
-commits never became ancestors. Branch from one and you inherit a pre-squash merge base.
-`git diff origin/main...HEAD` diffs against that base, so it cannot report the problem.
+Those views omitted five conflicting files; the merge base was eleven squash-merged pull requests
+behind. Squashing creates a new trunk commit instead of making the branch commits ancestors.
 
-Once `--is-ancestor` has failed, confirm with the two-dot form:
+A branch from an original commit inherits that pre-squash base. `git diff origin/main...HEAD` uses that base;
+compare two-dot after `--is-ancestor` fails:
 
 ```bash
 git diff --stat origin/main HEAD      # two-dot: what still DIFFERS from the trunk
 git diff --stat origin/main...HEAD    # three-dot: what the BRANCH AUTHORED
 ```
 
-A non-zero **deletion** count from the two-dot form is the signal that the branch does not contain
-the trunk's tree. **It does not mean your branch would remove that content.**
+Two-dot deletions show content the trunk has and the branch lacks. They do not establish what the
+merge would remove.
 
 Two-dot compares two trees, so everything the trunk gained since the merge base reads as a deletion.
 
-Measured on a three-commit fixture: a branch one commit behind, adding one file and removing nothing,
-reported 4 deletions across 2 files. Merging the trunk in removed none of them.
+Measured on a three-commit fixture: a branch one commit behind, adding one file and removing
+nothing, reported 4 deletions across 2 files. Merging the trunk in removed none of them.
 
-The page's own numbers below say the same thing -- 22 two-dot deletions before the merge, identical
-forms after. [Coordination](COORDINATION.md) records a branch 63 commits behind whose 3,247 two-dot
-deletions were briefly read as what landing it would do.
+The example below showed 22 two-dot deletions before merge and identical diffs after.
+[Coordination](COORDINATION.md) records a 63-commit-behind branch whose 3,247 deletions were briefly misread as
+proposed removals.
 
-**Fix by merging, not rebasing.** Run `git merge origin/main` into the branch. The trunk's side of
-the squashed files is authoritative. A rebase re-raises the squash seam once per commit --
-see [merge over rebase](#prefer-merge-over-rebase-when-every-commit-touches-one-block).
+Run `git merge origin/main`; the trunk's squashed content is authoritative. Rebase repeats that conflict
+per commit ([merge over rebase](#prefer-merge-over-rebase-when-every-commit-touches-one-block)).
 
 ### The staleness check that agrees with itself
 
-The tempting test is "compare the two-dot and three-dot diffs; if they match, the branch is fine."
-It is worthless, and worse than worthless because it feels like a measurement.
+Matching two-dot and three-dot diffs adds no independent proof that a branch is current.
 
-Once `--is-ancestor` passes, the merge base **is** `origin/main` and the forms *cannot* disagree.
-Measured minutes apart: while `--is-ancestor` failed, two-dot gave 2 files / 52 insertions /
-22 deletions, three-dot 1 file / 50 insertions, deletions invisible. After the merge, identical.
+Once `--is-ancestor` passes, both diffs use `origin/main` and cannot disagree. Before merge,
+two-dot showed 2 files / 52 insertions / 22 deletions; three-dot showed 1 file / 50 insertions.
 
-**Rule:** `--is-ancestor` is the load-bearing check. The diff comparison only confirms it. A test
-that agrees with itself in the healthy case is how a trap survives being checked for.
+The forms became identical after merge. Use `--is-ancestor` as the actual check; diff agreement
+merely confirms it.
 
 ## Reading "can't merge": Four states, three different fixes
 
-A PR that was green ten minutes ago stops being mergeable, and the reflex is to rebase and
-force-push. That reflex is right for exactly one of the four states and destructive in another.
+A pull request can stop being mergeable within ten minutes. Rebasing and force-pushing without
+reading its state can cancel checks or damage conflict resolution.
 
-**The goal.** Know which of the four states you are in before you touch the branch.
-
-**What to do.**
+Read which of the four merge states applies before changing the branch.
 
 ```bash
 gh pr view <N> --json state,mergeable,mergeStateStatus,statusCheckRollup
 ```
 
-**What happens next.** `mergeStateStatus` names the state. When it is one of the four below, take
-the fix from that row's **Do** column.
+Read `mergeStateStatus`, then follow the matching row's **Do** column:
 
 | State | What it actually is | Do | Do not |
 |---|---|---|---|
@@ -139,8 +124,8 @@ the fix from that row's **Do** column.
 | `BLOCKED` | Required checks or reviews are not satisfied. Usually still running. | Count *actual failures* in `statusCheckRollup`. Zero failures plus pending legs means **wait**. | Rebase and force-push -- it cancels the running checks and restarts the clock. |
 | `UNKNOWN` | The code host is still recomputing mergeability. | Re-read in a few seconds. | Anything else. |
 
-`BEHIND` and `DIRTY` are the pair that get confused, and the wrong fix is the destructive one.
-`BLOCKED` is the one that looks most actionable and usually is not.
+Do not confuse `BEHIND` with `DIRTY`; a textual conflict needs deliberate
+resolution. `BLOCKED` usually requires waiting for checks.
 
 > **Limit.** `mergeStateStatus` is GitHub's field and `gh` is a GitHub client. On another code host the
 > four states still exist conceptually -- behind, conflicting, gated, not-yet-computed -- but you will
@@ -151,14 +136,14 @@ the fix from that row's **Do** column.
 
 ### Armed auto-merge does not win the race against the trunk moving
 
-Two PRs were queued with auto-merge armed. The first landed. The second sat armed and stalled
-indefinitely -- no failure, no merge, nothing to react to.
+Two pull requests had auto-merge armed. After the first merged, the second stalled indefinitely
+without either failing or merging.
 
-Auto-merge waits for **checks** to finish. It does **not** update a branch that has gone `BEHIND`.
-Landing the first PR is precisely what puts the second one `BEHIND`, and nothing un-sticks it.
+Auto-merge waits for checks but does not update a `BEHIND` branch. The first merge puts the
+second branch behind and leaves it there.
 
-**Rule:** if you queue two PRs, plan to re-sync the second after the first lands, and keep a *capped*
-update loop rather than an unbounded one.
+When queuing two pull requests, plan to update the second after the first merges. Cap the update
+loop.
 
 > Measured with the repository's "allow update branch" setting off. Whether turning that setting on
 > changes the behavior is **unverified**. No back-fill was ever observed, and the code host's own
@@ -166,14 +151,12 @@ update loop rather than an unbounded one.
 
 ### A merge-watcher needs three arms, not two
 
-A poller that checks only "merged?" and "failing?" reports "still running" to its timeout while
-nothing progresses. The commonest outcome is the third: the trunk moved and the branch went
-`BEHIND` again. That is neither a merge nor a failure, so a two-armed watcher is *structurally*
-blind.
+A watcher checking only merge and failure can time out while a branch stays `BEHIND`. It
+must also detect when the trunk moves.
 
-**The goal.** Watch a PR to a decision instead of to a timeout.
+Watch for a decision and handle a stale branch.
 
-**What to do.** Poll for **merged / failing / went stale**, and act on the third:
+Poll for merged, failing, and stale states; update on the third:
 
 ```powershell
 $pr = <N>
@@ -194,88 +177,81 @@ for ($i = 0; $i -lt 40; $i++) {
 }
 ```
 
-**What happens next.** The loop prints `merged` or the name of the first failing leg, then stops.
-If it just keeps going, the third arm is re-syncing a branch the trunk keeps moving out from under.
+The loop stops after printing `merged` or the first failing leg. Continued updates mean the
+trunk keeps moving ahead of the branch.
 
 ### "Nothing pending" right after a push means "nothing has started"
 
-Polling the checks immediately after a push showed no pending legs, which read as "everything
-settled". The new run's legs did not exist yet. **Absence of pending is indistinguishable from
-absence of checks.**
+Immediately after a push, checks showed no pending legs because the new run had not started. No
+pending checks does not mean checks finished.
 
-**Rule:** assert on the **count of legs you expect**, not on the absence of pending ones. Take the
-expected set from wherever your required checks are declared, and read it at the time. Never from
-memory, because that list changes.
+Assert the expected check-leg count. Read that set from current required-check configuration, not
+memory.
 
-This is the same failure shape as taking `--ours` on a conflict, below. The instrument was accurate
-about what it looked at, and silent about what it did not look at.
+The same mistake appears in the `--ours` example below: an accurate reading omitted the
+content needed to answer the real question.
 
 ### A green check attests to a base, so record the base beside it
 
-A worker runs the gates on its branch and gets green. Green against what? Against the trunk as it
-stood at that moment, and the check result does not say which commit that was.
+A green run applies to the trunk commit tested at that moment. Without recording that commit, the
+result cannot show which base it verified.
 
-`gastown` records both, in `internal/refinery/engineer.go`: the CI result and the trunk SHA at the
-moment it ran. The merge path then asks one cheap question.
+`gastown` stores the CI result and trunk SHA together in `internal/refinery/engineer.go`. Its merge path
+then compares the recorded base:
 
 ```powershell
 $recorded = '<the trunk sha stored beside the green result>'
 if ((git rev-parse origin/main) -eq $recorded) { 'pre-verified' } else { 'stale -- re-run the gates' }
 ```
 
-Still at that SHA: the pre-verification holds and the gates need not run again. Moved: the record
-says the pre-verification is stale, and they run.
+If the trunk still matches, pre-verification holds and gates need not rerun. If it moved, the gates
+must run again.
 
-**The paired refusal is the half worth copying.** Any auto-rebase must refuse while the pre-verified
-flag is set. A rebase moves the branch onto a new base, which is the one thing the flag attests to.
+Auto-rebase must refuse while the pre-verified flag is set. Rebase changes the base that the flag
+certifies.
 
-Without the refusal the flag survives the rebase and claims green against a base the branch no
-longer sits on. That is the calm wrong answer this whole page is about.
+Without that refusal, the flag can survive rebase and falsely certify the new base.
 
-**The limit, stated plainly.** It fires only while the trunk is quiet, and the trunk is not quiet
-when the queue is deep.
+This helps only while the trunk is quiet. A deep queue keeps changing it.
 
-Both halves of that are measured on this repository, and they are recorded in different places.
-The trunk moved seven times during the life of one pair of pull requests -- stated above under
-*What this is for*, not in the FAQ. Eighteen queued entries produced zero merges in an hour
-([FAQ](FAQ.md)).
+Here, the trunk moved seven times during one pair of pull requests. Separately, eighteen queued
+entries produced zero merges in an hour ([FAQ](FAQ.md)).
 
-So this mechanism prevents a queue reaching eighteen. It cannot clear one that has.
+The mechanism can prevent a queue from reaching eighteen entries. It cannot clear one already that
+deep.
 
-**Nothing in KORUS records this pair today.** Adopting it means storing the trunk SHA with the
-result, and teaching whatever rebases a branch to refuse while the flag stands.
+KORUS does not store the result/base pair today. Adoption requires recording the trunk SHA and
+making rebase refuse while pre-verification stands.
 
 ## Resolving conflicts without losing work
 
 ### A stamped bookkeeping field makes two disjoint writes collide
 
-Two sessions edit different rows of the same ledger. Nothing about the work overlaps, and the merge
-still conflicts.
+Two sessions can change different ledger rows and still conflict.
 
-The cause is often a field neither writer chose. Every mutation stamps `updated_at`, so both sides
-changed that one line. The conflict is over the stamp, not over the content.
+Every mutation may stamp `updated_at`, causing both sessions to change the same bookkeeping
+line.
 
-This finding is imported, not ours. The `beads` issue store measured it in its own ledger: stamping
-`updated_at` on every mutation inflates the observed conflict rate.
+The `beads` issue store measured timestamp stamping increasing conflicts in its own ledger.
+This is an external finding.
 
-**Rule:** write the fields the change is about, and nothing else. A write that did not touch a
-timestamp or a counter must not stamp one.
+Write only fields relevant to the change. A change that did not touch a timestamp or counter must
+not stamp one.
 
-**Where the timestamp goes instead.** Git already records when each line changed, and who changed
-it. `git log -L` and `git blame` read that, and neither can conflict.
+Git already records when lines changed and who changed them. Read that history with `git log -L`
+or `git blame` without adding conflicting fields.
 
-**Unmeasured here.** KORUS measured that 33 of 34 merged commits touched one file, the item ledger,
-and treats that contention as a property of the design
-([roles/MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md)).
+KORUS measured 33 of 34 merged commits touching the item ledger ([roles/MANAGER.md](https://claude-multisession.pages.dev/roles/MANAGER.md)). It treats that
+contention as a design property.
 
-What share of those conflicts is bookkeeping-only has never been measured on this repository. beads
-measured its own system. That is evidence for the mechanism and not for a number here.
+Nobody has measured the bookkeeping-only share here. The beads result supports the mechanism, not a
+local conflict rate.
 
-**What would measure it.** Merge two branches that both touch the ledger, read the conflicted
-ledger out of the merged tree, and count the hunks whose differing lines are only bookkeeping.
+To measure it, merge two ledger-changing branches and count conflict hunks containing only
+bookkeeping differences.
 
-**Sample OPEN pairs, not landed branches.** A branch that already landed merges cleanly against the
-trunk, because the trunk contains it. It produces no conflict and therefore nothing to count.
+Sample open branch pairs. Already-landed branches merge cleanly into a trunk containing their work,
+leaving no conflicts to count.
 
 ```powershell
 $ledger = '<the ledger path in your repository>'
@@ -298,22 +274,19 @@ $hunks = $conflicted | Select-String -Pattern '^<<<<<<<'
 "conflicted hunks: $($hunks.Count)"   # print the denominator beside any share you report
 ```
 
-**Fix the predicate before you count, not after.** A hunk is bookkeeping-only when every differing
-line matches a field in a bookkeeping set you wrote down first. Two people who pick the set
-afterwards will report two different shares.
+Define the bookkeeping fields before counting. A hunk qualifies only when every differing line
+belongs to that set; choosing fields afterwards changes the reported share.
 
 ### Never take a side wholesale on an append-only file
 
-A changelog, a backlog, a decision index -- one large file that every session appends to. Those files
-conflict more than anything else in the repo, and they are the ones where `--ours` and `--theirs` are
-most tempting.
+Changelogs, backlogs, and decision indexes receive appends from many sessions. Their frequent
+conflicts make wholesale `--ours` or `--theirs` tempting.
 
 ```bash
 git checkout --ours docs/CHANGELOG.md    # <-- this is the one that loses work silently
 ```
 
-Both sides of an append-only conflict produce a **well-formed file**. Nothing anywhere reports that
-half the content is gone:
+Either side can produce a well-formed file while silently discarding the other's entries:
 
 - no conflict markers
 - `git status` clean
@@ -321,12 +294,12 @@ half the content is gone:
 - the linter passes
 - CI green
 
-A real instance: two PRs each added a `### Changed` block. The union was the correct answer.
-`--ours` would have dropped two already-published breaking-change notices. `--theirs` would have
-dropped the incoming one. Either resolution would have merged green.
+Two pull requests each added `### Changed`. Both blocks were needed: `--ours` would
+discard two published breaking-change notices, while `--theirs` would discard the incoming
+notice.
 
-**Rule:** re-apply *intent*. Keep every entry from both sides, then verify by name that the specific
-things you expect to survive are present:
+Either one-sided resolution could pass CI. Keep all entries from both sides, then search for
+distinctive text from each:
 
 ```bash
 git grep -n "one distinctive phrase from THEIR entry"
@@ -335,52 +308,42 @@ git grep -n "one distinctive phrase from YOUR entry"
 
 ### Anchor a find-and-replace, and re-verify it after the conflict is resolved
 
-Renumbering an item from `1252` to `1316` across a changelog turned `cp1252` into `cp1316`, in a
-file nobody re-reads.
+Renumbering an item from `1252` to `1316` across a changelog turned
+`cp1252` into `cp1316`, in a file nobody re-reads.
 
-Two things went wrong and both generalize. The replacement was a **bare number**, so it matched
-inside unrelated tokens. And it was re-run during **conflict fixup**, which is exactly when a sweep
-gets repeated carelessly, on a file whose content just changed underneath it.
+The bare number matched inside unrelated tokens. Repeating the sweep during conflict resolution then
+applied it to newly changed content.
 
-**Rule:** scope replacements to anchored forms (`item #1252`, `## 1252.`, `^1252\|`), never the
-bare number. Re-verify the sweep **after** resolving the conflict, not only after the original edit.
+Match anchored forms such as `item #1252`, `## 1252.`, or `^1252\|`, never a bare
+number. Recheck replacements after conflict resolution as well as after the first edit.
 
 ### Prefer merge over rebase when every commit touches one block
 
-Rebasing a stack whose commits all append to the same point in the same file re-raises the identical
-conflict once per commit. Resolving it mid-stack -- against an intermediate revision of the text --
-kept an **earlier draft** of the block.
+When every commit appends at one location, rebase repeats the same conflict per commit. Resolving
+against an intermediate revision once preserved an earlier draft.
 
-That result has no conflict markers, leaves `git status` clean, and passes a structural check. An
-entry that lost half its prose still has exactly one heading and still counts as one entry. Nothing
-anywhere reports it.
+The result had clean status and no conflict markers. Its shortened entry still had one heading, so
+the structure check passed.
 
-**Rule:** use one `git merge origin/main` so the seam is raised **once**, against the final text.
-Then verify by grepping for a string that only your *latest* revision contains. A structural check
-tells you the block is well-formed, not that it is the version you meant.
+Use one `git merge origin/main` to resolve against the final text. Then search for a string found only in
+your latest revision; structure alone cannot prove the version.
 
 ### A content comparison does not predict a clean merge
 
-Five files were byte-compared before a merge and reported identical. That was true when measured and
-false twenty minutes later, because an in-flight PR touching exactly those five files merged in
-between.
+Five files matched in a byte comparison. Twenty minutes later, a queued pull request changed those
+files on the trunk, making the comparison stale.
 
-A content spot-check answers "are these equal right now". It does not answer "will this merge
-cleanly", and with an armed PR queued against the same files the first question stops predicting the
-second at all.
+A content comparison establishes equality now, not whether a later merge will succeed. Another
+queued change to those files can invalidate it.
 
-**Rule:** use `git merge-tree --write-tree`, or an actual trial merge in a throwaway worktree. Those
-are the two commands that answer the question you asked.
+Use `git merge-tree --write-tree` or a trial merge in a throwaway worktree to test for conflicts.
 
-**Pass `--write-tree`, not the bare form.** The old three-argument
-`git merge-tree <base> <ours> <theirs>` exits 0 whether or not the merge conflicts.
+Pass `--write-tree`. The old `git merge-tree <base> <ours> <theirs>` form exits 0 even on conflicts.
 
-So it reports a confident clean about a branch that does not merge. `--write-tree` exits 1 and names
-each conflicting path. [Coordination](COORDINATION.md) records a run where the bare form did that.
+The bare form can therefore falsely suggest a clean merge. `--write-tree` exits 1 and names
+conflicting paths ([Coordination](COORDINATION.md)).
 
-**The goal.** Find out whether the merge conflicts, without risking the branch you care about.
-
-**What to do.**
+Test the merge in a disposable worktree to protect the working branch.
 
 ```powershell
 # A real trial merge, isolated, disposable.
@@ -390,19 +353,17 @@ pwsh -NoProfile -File scripts/worktree/new.ps1 -Name mergetrial -Base my-branch
 pwsh -NoProfile -File scripts/worktree/remove.ps1 -Name mergetrial -DeleteBranch -Force
 ```
 
-**The teardown refuses in exactly the case the trial exists to find.** A conflicted merge leaves
-modified tracked files, and `remove.ps1` refuses on those without `-Force`.
+A conflicted trial leaves modified tracked files, so `remove.ps1` refuses without
+`-Force`.
 
-It also refuses while you are standing inside the worktree it is removing. So `git merge --abort`
-first, or pass `-Force`, and run it from elsewhere.
+Removal also refuses from inside the target worktree. Run `git merge --abort` first or use
+`-Force`, then remove it from another checkout.
 
-`-DeleteBranch` deletes the branch that worktree had checked out, and `git branch -d` will refuse it
-while the merge is unlanded -- leaving the trial branch behind. That is the safe direction; delete it
-by hand once you are sure.
+`-DeleteBranch` uses `git branch -d`, which may refuse the unmerged trial branch. If it remains,
+verify it is disposable before deleting it by hand.
 
-**What happens next.** The trial merge either succeeds or raises the real conflicts, in a worktree
-you throw away either way. Do not expect `gh pr update-branch` to rescue a conflicting merge: it
-updates by merging the base into the PR branch **server-side** and accepts no conflict resolution.
+The trial either merges or exposes real conflicts in the disposable worktree. `gh pr update-branch`
+merges the base server-side and cannot resolve those conflicts.
 
 Before you start resolving, ask who else is in those files right now:
 
@@ -410,55 +371,47 @@ Before you start resolving, ask who else is in those files right now:
 pwsh -NoProfile -File scripts/coord/overlap.ps1 -File path/to/file.md
 ```
 
-That reports peer worktrees whose **committed-and-unlanded** or **uncommitted** work touches the
-same path. It intersects the two-dot and three-dot file sets, so a branch that has already landed
-usually stops claiming its files.
+Overlap reports both uncommitted and committed-but-unlanded peer changes to the path. It intersects
+two-dot and three-dot file sets, usually clearing landed branches.
 
-**Two caveats before you trust the answer.** The map is served from a cache up to 60 seconds old
-unless you pass `-Refresh`.
+The map may be cached for up to 60 seconds. Pass `-Refresh` to request current state.
 
-And **the self-clearing holds only while nobody else edits that file.** Once a later branch touches
-it, two-dot reports it as differing from the trunk again, the intersection stops being empty, and the
-landed branch is blamed for somebody else's edit. [Coordination](COORDINATION.md) measured both.
+Self-clearing lasts only until someone edits that file again. Two-dot can then blame a landed branch
+for the later edit ([Coordination](COORDINATION.md)).
 
 ## Writing up the result: Two true numbers can make a false sentence
 
-An earlier revision of this document paired a **post-merge** three-dot reading with a **pre-merge**
-two-dot reading as one comparison. A diff that never proposed a revert was described as proposing
-one. Every number was real. Only the **join** was false, and it carried the whole argument.
+An earlier version paired post-merge three-dot results with pre-merge two-dot results. Both readings
+were real, but their comparison falsely described a diff as proposing a revert.
 
-It survived its author's review, a second reviewer, an independent verification pass and a green CI
-run. Nothing checks joins. No linter, no test, no reviewer habit.
+The error survived the author, a second reviewer, independent verification, and green CI. None
+checked whether the readings belonged together.
 
-**Rule:** before two numbers share a sentence, confirm they describe **the same commit at the same
-moment**. Record the ref and the time you measured each one. This one is on you.
+Before comparing numbers, confirm they describe the same commit at the same moment. Record each ref
+and measurement time.
 
 ## After it lands
 
-Squash-merge is why cleanup needs its own tooling. After the work is in the trunk:
+After squash-merge, common reachability checks can still report unmerged work:
 
 - `git rev-list --count origin/main..<branch>` still counts every original commit -> says *not merged*
 - `git merge-base --is-ancestor <branch> origin/main` is false -> says *not merged*
-- `git cherry origin/main <branch>` marks the commits `+` unless the patch-ids match exactly, which
-  they stop doing the moment anything was rebased, amended or conflict-resolved
+- `git cherry origin/main <branch>` marks the commits `+` unless the patch-ids match exactly, which they
+  stop doing the moment anything was rebased, amended or conflict-resolved
 
-All three ask the same question -- "is this commit reachable from the trunk" -- and squash-merge is
-defined by making the answer no. So **being ahead of the trunk is not evidence of unmerged work**.
+Squash-merge creates a new trunk commit without retaining the original commits as ancestors. A
+branch ahead of the trunk therefore need not hold unmerged work.
 
-[`scripts/worktree/prune-merged.ps1`](https://claude-multisession.pages.dev/scripts/worktree/prune-merged.ps1)
-carries three merge signals instead of one:
+[`scripts/worktree/prune-merged.ps1`](https://claude-multisession.pages.dev/scripts/worktree/prune-merged.ps1) carries three merge signals instead of one:
 
 - nothing beyond the trunk
 - *or* a merged PR whose head is this exact tip
 - *or* the branch's own upstream ref is gone
 
-The converse is worse, and it destroyed an occupied worktree: **zero commits beyond the trunk does
-not mean merged either** -- a branch created seconds ago looks exactly like that. Merge state is
-never sufficient on its own. See [PRUNING.md](PRUNING.md).
+Zero commits beyond the trunk also does not prove a merge: a seconds-old branch has that state.
+Cleanup once destroyed an occupied worktree this way ([PRUNING.md](PRUNING.md)).
 
-**The goal.** Remove the worktrees whose work has landed, and only those.
-
-**What to do.**
+Remove only worktrees whose work has landed.
 
 ```powershell
 # from the PRIMARY checkout -- it refuses from a linked worktree, exit 2
@@ -466,58 +419,53 @@ pwsh -NoProfile -File scripts/worktree/prune-merged.ps1 -Fetch          # dry ru
 pwsh -NoProfile -File scripts/worktree/prune-merged.ps1 -Fetch -Apply   # act on a table re-derived now
 ```
 
-**What happens next.** The dry run prints the decision table and changes nothing. `-Apply`
-re-derives that table at the moment it acts, rather than trusting the one you just read.
+The dry run prints decisions without changing anything. `-Apply` recalculates those
+decisions when it acts.
 
-**`-Fetch` on both, or the preview is not the run.** Why, and what the exit-2 refusal from a linked
-worktree is protecting you from, are
-[Pruning](PRUNING.md#a-wrong-cwd-run-must-refuse-loudly-never-green-no-op)'s to state. It owns the
-decision rule and every flag that narrows it.
+Use `-Fetch` for preview and apply so both use refreshed state. [Pruning](PRUNING.md#a-wrong-cwd-run-must-refuse-loudly-never-green-no-op) explains
+the flags and linked-worktree refusal.
 
-For a single finished worktree, [`remove.ps1`](https://claude-multisession.pages.dev/scripts/worktree/remove.ps1) is the manual path. Two
-of its behaviors matter at merge time:
+Use [`remove.ps1`](https://claude-multisession.pages.dev/scripts/worktree/remove.ps1) for one finished worktree. At merge time, these two behaviors matter:
 
-- It **references the tip before removing anything**, and with `-DeleteBranch` writes it to
-  `refs/<prefix>/removed/<name>` first. A commit in no ref is in no reflog either, and nothing in the
-  interface admits it ever existed.
-- It uses `git branch -d`, **never** `-D`. Git refusing to delete an unmerged branch is a *signal*
-  that the branch holds commits no other ref has. If the local trunk merely lags the remote, fetch
-  and retry. Do not force past the refusal as a tidying step.
+- It references the tip before removing anything, and with `-DeleteBranch` writes it to
+  `refs/<prefix>/removed/<name>` first. A commit in no ref is in no reflog either, and nothing in the interface
+  admits it ever existed.
+- It uses `git branch -d`, **never** `-D`. Git refusing to delete an unmerged branch is
+  a *signal* that the branch holds commits no other ref has. If the local trunk merely lags the
+  remote, fetch and retry. Do not force past the refusal as a tidying step.
 
-Work claims taken with [`claim.ps1`](https://claude-multisession.pages.dev/scripts/coord/claim.ps1) do not expire, and they do not
-release themselves when a PR merges.
+Work claims taken with [`claim.ps1`](https://claude-multisession.pages.dev/scripts/coord/claim.ps1) do not expire, and they do not release themselves when a PR
+merges.
 
-**The goal.** Hand your claimed files back to the other sessions once the work has landed.
-
-**What to do.**
+Release your claims after the work lands so other sessions can use them.
 
 ```powershell
 pwsh -NoProfile -File scripts/coord/claim.ps1 -Release <key>
 pwsh -NoProfile -File scripts/coord/claim.ps1 -List
 ```
 
-**What happens next.** `-List` shows what is still held, so you can confirm yours is gone. The
-pruning tool releases claims held by a worktree only once that worktree is proven **gone and
-deregistered** -- evidence, never a timer.
+`-List` confirms which claims remain. The pruner releases a worktree's claims only after
+proving the directory is gone and deregistered, never on a timer.
 
 ## What this tooling does and does not do for you
 
-Stated plainly, because at merge time an assumption that is wrong is expensive:
+Check these limits before relying on the tools:
 
-- **PowerShell 7, Windows-first.** The scripts are PowerShell 7 (`#Requires -Version 7.3`). The git
-  commands in this document are portable. The scripts are not yet.
-- **GitHub is assumed where `gh` appears.** The PR-state table, the watcher loop, and the merged-PR
-  signal in the pruning tool all call `gh`. The pruning tool degrades explicitly -- `-SkipGh`, and a
-  failed probe is reported as a failed probe rather than as "not merged".
-- **The push guard is a guardrail, not a security boundary.**
-  [`scripts/hooks/push_guard.py`](https://claude-multisession.pages.dev/scripts/hooks/push_guard.py) refuses a direct push to anything in
-  `protectedRefs` (default `main` and `master`), locally and before the round trip.
+- **PowerShell 7, Windows-first.** The scripts are PowerShell 7 (`#Requires -Version 7.3`). The git commands
+  in this document are portable. The scripts are not yet.
+- GitHub is assumed where `gh` appears. The PR-state table, the watcher loop, and the
+  merged-PR signal in the pruning tool all call `gh`. The pruning tool degrades
+  explicitly -- `-SkipGh`, and a failed probe is reported as a failed probe rather than as
+  "not merged".
+- The push guard is a guardrail, not a security boundary. [`scripts/hooks/push_guard.py`](https://claude-multisession.pages.dev/scripts/hooks/push_guard.py) refuses a direct push to
+  anything in `protectedRefs` (default `main` and `master`), locally and before
+  the round trip.
 
-  Limit: `git push --no-verify` skips it, and it is installed per clone, so configure server-side
-  protection too. The escape hatch is `CCX_ALLOW_DIRECT_PUSH=1`, distinct from `--no-verify` so it
-  is greppable in shell history.
-- **An installed guard and a working guard are different claims.** These hooks are copied into
-  place. One whose helpers were not copied can refuse *every* push, for reasons unrelated to what it
+Limit: `git push --no-verify` skips it, and it is installed per clone, so configure server-side protection
+too. The escape hatch is `CCX_ALLOW_DIRECT_PUSH=1`, distinct from `--no-verify` so it is greppable in
+shell history.
+- An installed guard and a working guard are different claims. These hooks are copied into place.
+  One whose helpers were not copied can refuse *every* push, for reasons unrelated to what it
   checks. One never installed is just a source file. Prove it by receipt before you rely on it:
 
   ```powershell
