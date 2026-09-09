@@ -2,13 +2,15 @@
 
 <a id="tldrbluf"></a>
 
-Run a KORUS build by giving sessions distinct jobs and clear opening prompts. This procedure follows
+Run a KORUS build with a manager that runs one or more builders as subagents. This procedure follows
 [The KORUS framework](KORUS.md), one operator's account of months using Claude Code.
 
 Distinct jobs reduce the chance that two sessions decide the same thing. Complete [Quickstart](QUICKSTART.md)
 first; this procedure assumes installed and proven gates.
 
-Start the sessions in the order below, using the prompts for each role.
+The console was meant to oversee many parts of the build. That approach did not work, so the manager replaced it.
+
+The manager assigns work to its builders and reads their results. Each manager runs within one account; several managers may share a repository.
 
 ---
 
@@ -22,9 +24,9 @@ opening prompts and `CLAUDE.md`.
 <figure class="explain-figure">
 <picture>
 <source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
-<img src="/assets/diagrams/g04-build-handoffs.svg" alt="Console, Builder, Reviewer, and authorized Lander hand work to the merge queue; failed checks reach Regulator." loading="lazy" width="797" height="1027">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builder subagents. Reviewed pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="1027">
 </picture>
-<figcaption>The Console briefs a Builder. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
+<figcaption>The Manager runs one or more Builders as subagents, with one brief per task. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
 
 The Builder uses its own worktree and branch, with the collision gate checking covered edits.
@@ -35,7 +37,7 @@ A role name grants no merge permission. The operator must give the Lander author
 
 | Session | Owns | Must not |
 |---|---|---|
-| **Console** | The plan, the backlog, and which task gets briefed next | Write application code |
+| **Manager** | Its builders, their briefs, and their results | Write application code |
 | **Builder** | The change, the commit, the push, and the pull request for one brief | Guess at what the brief left open, or wait for an answer |
 | **Reviewer** | Reading the diff on one pull request, and the findings it posts there | Merge, or pass on a pull request it did not read |
 | **Regulator** | Deciding whose failure a red is: the pull request's, the trunk's, a flake's, or the queue's | Assume it remembers an earlier red |
@@ -62,7 +64,7 @@ hundred requirements; separate sessions need common rules to keep their verdicts
 | Install and prove the gates | Roles are advisory; the gates are not | [Quickstart](QUICKSTART.md) |
 | Run one task end to end, by hand | You cannot size the queue until you know how long one task takes to land | [Coordination](COORDINATION.md#a-clean-merge-is-not-evidence-that-nobody-duplicated-your-work) |
 | Give each session its own worktree | Two sessions in one tree overwrite each other | [Worktrees](WORKTREES.md) |
-| Check the config root your console runs on can spawn a session | Spawning is granted per config root, not per machine, and a root without the grant refuses | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
+| Use builder subagents within the manager's account | Subagents do not need the old console's grant for spawning separate sessions | [Manager card](roles/manager.card.md) |
 | Wire the steering hook | It only takes effect in sessions started afterwards | [Steering](STEERING.md) |
 | Write the working agreement | It only reaches sessions that start later | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Turn on Ultracode and pick Opus 5 in every session | The build shape assumes workflows and adversarial review | [The KORUS framework](KORUS.md) |
@@ -74,40 +76,45 @@ until predictable; automating sooner produced duplicate issues and PRs for finis
 Repeat the manual trial until you can predict the flow. Set up extra accounts before starting, with
 one desktop instance each ([Desktop accounts](DESKTOP-ACCOUNTS.md)); installers must reach every config root.
 
-## 1. Open the console
+## 1. Open the manager
 
-The console holds the plan and chooses the next task for each builder.
+The manager holds its work plan and runs one or more builders as subagents.
+Each builder gets a bounded task and its own worktree.
 
 Paste this prompt:
 
 ```text
-You are the console for this build. You plan and track; you do not write application code.
+You are the manager for this build. You plan and track; you do not write application code.
 
 Read the backlog. Produce a build plan that breaks it into tasks sized for one session each,
 and write an ADR for any decision that outlives the task that made it.
 
-Write one disposable brief per task and open a build session on it. When a builder reports a
-task blocked, its session ends: take the task back, update the backlog, and brief the next one.
+Write one complete brief per task. Run one or more builders as subagents in your own account.
+Give each builder its own worktree and branch. Check for overlapping paths before dispatch.
+When a builder reports a blocker, read it, update the backlog, and revise the brief.
 
-Do not wait on a message from a builder. Poll for state instead.
+Read each subagent's result before assigning its next task. Confirm that finished work is pushed
+before closing the manager. Coordinate pull requests with the lander.
 
 Do not build. Do not merge.
 ```
 
-The console returns a plan and task breakdown. Have it save the backlog in a tracked file before
+The manager returns a plan and task breakdown. Have it save the backlog in a tracked file before
 briefing workers, so the plan survives a lost context.
 
-## 2. Open a build session per brief
+## 2. Give each builder subagent one brief
 
-Give each brief its own session and worktree to prevent silent overwrites.
+The manager starts each builder as a subagent. Give each builder its own worktree and branch.
+
+Subagents share the manager's process and account. They stop when the manager exits, so confirm that work is pushed before closing it.
 
 Paste this prompt:
 
 ```text
-You are a build session. Build the task in your brief as a workflow, then stop.
+You are a builder subagent. Build the task in your brief as a workflow, then report to your manager.
 
 If the brief leaves something open, do not guess and do not wait for an answer. Write the
-question to the console, comment it on the pull request, and stop.
+question to the manager, comment it on the pull request, and stop.
 
 Before starting a task, take a claim on it with a one-line note saying what you are building:
   pwsh -NoProfile -File scripts/coord/claim.ps1 -Take "<task>" -Note "<what you are building>"
@@ -130,7 +137,7 @@ the lander decides what enters the merge queue.
 Use [Brief a worker session](WORKER-BRIEF.md) to fill out each prompt. Its rule requires a worker to ask when the brief
 leaves a needed answer open.
 
-Each session announces itself to reachable peers, claims work, and starts building. The collision
+Each builder claims its work and checks for file overlap before editing. The collision
 gate normally refuses a second session's edit to a held file ([Coordination](COORDINATION.md)).
 
 The refusal requires a live peer worktree with uncommitted changes to that exact path. A peer that
@@ -183,7 +190,7 @@ unable to reach the lander remains blocked from merging.
 
 ## The daily loop
 
-1. Ask the console what is in flight. It answers from the backlog, not from memory.
+1. Ask the manager what is in flight. It answers from the backlog, not from memory.
 2. Check the builders have not collided. A bare `overlap.ps1` gives the roster; `-File <path>`
    answers who is in one file.
 3. Steer rather than wait. A session deep in the wrong approach does not see your typing until its

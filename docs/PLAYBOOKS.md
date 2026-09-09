@@ -2,7 +2,7 @@
 
 <a id="tldrbluf"></a>
 
-KORUS has seven live seats, each with a short card and a full playbook. Name the playbook in the
+KORUS keeps short cards and full playbooks for its roles. Name the current playbook in the
 session's opening prompt.
 
 The roster changed on 2026-09-01, when six seats retired. Older instructions may still route work to
@@ -13,14 +13,14 @@ session automatically.
 
 ---
 
-## The seven live seats
+## Use the Manager for new builds
 
 Read `roles/COMMON.md` before your seat's playbook. It holds the rules shared by all seats.
 
 | Seat | What it owns | Card | Playbook |
 |---|---|---|---|
-| Console | Reads the record, picks the work, writes the brief. The only seat the Owner talks to. | [Console](roles/console.card.md) | `roles/CONSOLE.md` |
-| Manager | An alternative to the Console rather than a layer above it. Runs workers as in-process subagents. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
+| Console (former design) | Broad oversight did not work. The Manager replaced it; this card remains for reference. | [Console](roles/console.card.md) | `roles/CONSOLE.md` |
+| Manager | Runs one or more Builders as subagents. Writes their briefs and reads their results. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
 | Builder | One brief, one turn. Commits, opens the pull request, exits. | [Builder](roles/builder.card.md) | `roles/BUILDER.md` |
 | Reviewer | Reads the diff and posts findings on the pull request. | [Reviewer](roles/reviewer.card.md) | `roles/REVIEWER.md` |
 | Regulator | Decides whose failure a red check is. | [Regulator](roles/regulator.card.md) | `roles/REGULATOR.md` |
@@ -54,8 +54,8 @@ seats are stale.
 
 | Retired seat | What replaced it |
 |---|---|
-| Dispatcher | The Console. It reads the record, picks the work and spawns a Builder. |
-| Liaison | The Console, which is the only seat the Owner talks to. |
+| Dispatcher | The Console first replaced this seat. Use the Manager now. |
+| Liaison | The Console first replaced this seat. The Owner now talks to the Manager. |
 | PM | Nothing, by Owner decision. |
 | Cleaner | Nothing, by Owner decision. |
 | Role manager | Nothing, by Owner decision. |

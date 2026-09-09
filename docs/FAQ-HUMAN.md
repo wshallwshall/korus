@@ -150,7 +150,9 @@ that empty roster from a real absence of peers.
 
 ## More sessions can fill the merge queue faster
 
-The usual setup has a long-lived console that assigns work to short-lived sessions. Builders take
+The manager runs one or more builders as subagents. It replaced the console, whose broad oversight approach did not work.
+
+Builders take
 tasks, reviewers read pull requests, a regulator investigates failed checks, and a lander merges.
 
 [Run a KORUS build](KORUS-BUILD.md) describes that setup. The roughly fourteen sessions sharing one

@@ -3,7 +3,7 @@
 A worker brief tells a new session what to do and when to ask for help. The coordinating session
 writes it as the worker's opening prompt.
 
-[Run a KORUS build](KORUS-BUILD.md) describes the four-session setup and each role's prompt. Use the template below to
+[Run a KORUS build](KORUS-BUILD.md) describes the manager, its builder subagents, and each role's prompt. Use the template below to
 write one worker's brief.
 
 ---
@@ -25,12 +25,11 @@ Workers already had a channel for questions. They needed a rule telling them to 
 
 ```text
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the console,
+do not guess and do not wait. Write the question to the manager,
 comment it on the pull request, and stop.
 ```
 
-The console is the session that wrote the brief. In a KORUS build, the Console seat replaced the
-Dispatcher on 2026-09-01.
+The manager writes the brief and runs the builder as a subagent. It reads the result and resolves questions before assigning more work.
 
 Paste the template with its closing rule block unchanged.
 
@@ -147,10 +146,11 @@ DONE. <the end state somebody else can check>
 
 Commit at logical stops, one coherent layer each. <YOUR PUSH AND PULL REQUEST RULE>
 
-ASK AT. mail.ps1 -Send -To <coordinator worktree>, and <pull request number, or the issue>.
+ASK AT. Return questions to your manager in your subagent result. Record them on
+<pull request number, or the issue>. For a separate session, name its mail route explicitly.
 
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the console,
+do not guess and do not wait. Write the question to the manager,
 comment it on the pull request, and stop.
 ```
 
@@ -169,4 +169,4 @@ the measurements above do not support.
 | The working agreement every session reads | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Judging a prohibition against the paths it closes | [Drift audit](CASE-STUDY-drift-audit.md) |
 
-The [handoff diagram](KORUS-BUILD.md#g04) places the brief between the Console and Builder.
+The [handoff diagram](KORUS-BUILD.md#g04) places the brief between the Manager and Builder.

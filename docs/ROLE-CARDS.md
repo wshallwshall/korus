@@ -83,7 +83,8 @@ The hook runs in every worktree. A missing seat should not stop the session's wo
 
 ## The roster comes from CLAUDE.md, not from `roles/README.md`
 
-The seven live seats are Console, Manager, Builder, Reviewer, Regulator, Steward, and Lander.
+The seven registered labels are Console, Manager, Builder, Reviewer, Regulator, Steward, and Lander.
+The Console label remains for compatibility, but its oversight approach failed. Use the Manager to run builder subagents.
 
 The original design record described `roles/README.md` as a partial list copied from a private
 vault. It said Dispatcher, PM, Liaison, Cleaner, Role manager, and Process improvement remained live

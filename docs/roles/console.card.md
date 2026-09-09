@@ -1,4 +1,8 @@
-# Console -- role card
+# Console -- former role card
+
+The Console's broad oversight approach did not work. The [Manager](manager.card.md) replaced it and runs one or more Builders as subagents.
+
+The instructions below record the former design. Use the Manager card for new builds.
 
 This card loads at session start because `.claude/seat.local.txt` names `console`. It summarizes the
 role; CLAUDE.md's seat table governs.

@@ -30,7 +30,7 @@ My setup combined these choices:
 - Claude Code with Ultracode mode.
 - Claude Code for Desktop for work across sessions, with VS Code available for reading and editing code.
 - One or more Claude Max 20x accounts, chosen for their compute cost rather than enterprise management features.
-- A console to write briefs, a builder per brief, and a lander to manage the merge queue.
+- A manager running one or more builder subagents, with a lander handling the merge queue.
 - Worktrees and hooks to enforce the rules that prompts alone did not hold.
 - The Kynet method for communication between sessions, described in section 8.
 
@@ -97,7 +97,7 @@ after its turn ends. Tasks that launch many agents, especially `/deep-research`,
 
 ## 4. Backlog
 
-Ask Claude Code to create a project backlog and add new work as it comes up. Have the console use
+Ask Claude Code to create a project backlog and add new work as it comes up. Have the manager use
 that backlog when it plans the next build tasks.
 
 ## 5. Documentation
@@ -105,7 +105,7 @@ that backlog when it plans the next build tasks.
 ### 5.1 ADRs: Architecture decision records
 
 Create architecture decision records (ADRs) for significant build decisions. Include that
-requirement when you ask the console to make a plan.
+requirement when you ask the manager to make a plan.
 
 The records give the AI ongoing context. They also give your security lead and auditors a history
 of the decisions behind the build.
@@ -136,18 +136,19 @@ symbol-and-context reference changes when the code structure it identifies chang
 In the setup described here, each session used Ultracode and Opus 5.
 [Run a KORUS build](KORUS-BUILD.md) supplies the opening prompts, daily procedure, and recovery steps.
 
-### 6.1 Console session
+### 6.1 Manager session
 
-The console is the session you talk to. It reads the project record, picks an item, writes a short
-brief, and starts a builder.
+The console was meant to oversee many parts of the build. It did not work, and the manager replaced it.
 
-It polls for progress. If the brief leaves a question open, the builder writes that question back
-and stops. The console then starts a fresh builder with a clearer brief.
+The manager is the session you talk to. It reads the project record and runs one or more builders as subagents.
+
+Each builder gets a brief and its own worktree. The manager reads the results and resolves missing requirements before assigning more work.
+
+A manager and its builders use one account. Several managers may share the repository, so their assigned paths must not conflict.
 
 ### 6.2 Builder sessions
 
-A builder takes one brief through the change, commit, push, and pull request. Its process then
-exits. It does not guess at missing requirements or wait for an answer.
+A builder subagent takes one brief through the change, commit, push, and pull request. It then reports to its manager. It does not guess at missing requirements or wait for an answer.
 
 At the time of this account, [Agentic Teams](https://code.claude.com/docs/en/agent-teams) was in beta.
 The builders used [dynamic workflows](https://code.claude.com/docs/en/workflows).
@@ -196,7 +197,7 @@ checkout. Read [Worktrees](WORKTREES.md) and
 Sessions can exchange messages, but the available channels differ between the desktop app and
 the VS Code extension. [Coordination](COORDINATION.md) describes the checks around their shared work.
 
-Conflicts still happen. A builder reports an unresolved problem to the console, which decides
+Conflicts still happen. A builder reports an unresolved problem to the manager, which decides
 what to do next. See [Claude Code's cross-session messaging guide](https://code.claude.com/docs/en/cross-session-messaging).
 
 ## 9. Don't Hit Usage Limits: It Causes Lost Work

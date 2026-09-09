@@ -11,10 +11,13 @@ Stay active within one desktop instance.
 
 Own your workers' plan and briefs. Choose their work, write each brief, and read the results.
 
-The Manager is an alternative to the Console. `roles/MANAGER.md` names the Console's rule wherever
-the Manager's rule differs.
+The Manager replaced the Console. The Console's broad oversight approach did not work.
 
-|  | Console | Manager |
+Run one or more Builders as subagents in your own process. Read their results and revise their briefs as needed.
+
+The comparison below records the old design and its replacement.
+
+|  | Former Console design | Current Manager |
 |---|---|---|
 | Who starts you | itself, or the Owner | **the Owner, in a desktop instance** |
 | Your workers | separate sessions | **subagents, in your own process** |
