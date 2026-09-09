@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
-    {%- assign revision = site.data.page-revisions.pages | where: 'url', page.url | first -%}
     {%- assign archived_revision = site.data.page-revisions.pages | where: 'old_url', page.url | first -%}
     {%- if archived_revision %}
     <meta name="robots" content="noindex, follow">
@@ -86,13 +85,7 @@
         {%- if archived_revision %}
         <aside class="revision-note" aria-label="Page version">
           <p>This is the archived version from September 9, 2026.
-          <a href="{{ archived_revision.url | relative_url }}">Read the current page</a>.
-          <a href="{{ '/REVISIONS.html' | relative_url }}">All page versions</a>.</p>
-        </aside>
-        {%- elsif revision %}
-        <aside class="revision-note" aria-label="Page version">
-          <p><a href="{{ revision.old_url | relative_url }}">Read the previous version</a>.
-          <a href="{{ '/REVISIONS.html' | relative_url }}">All page versions</a>.</p>
+          <a href="{{ archived_revision.url | relative_url }}">Read the current page</a>.</p>
         </aside>
         {%- endif %}
         <div class="page-content">
