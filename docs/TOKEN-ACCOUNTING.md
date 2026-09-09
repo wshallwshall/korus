@@ -1,29 +1,25 @@
 # Token accounting: What a usage meter measures, and what a plan buys
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** Four accounts on one subscription tier, measured on 2026-08-12, to answer two
-questions. What unit does the weekly usage meter count, and what is a month of it worth at published
-per-token API prices?
+Four accounts measured on 2026-08-12 suggest the weekly meter mostly counts tokens other than cache
+reads. Each used the same subscription tier.
 
-**Why you should care.** The meter ignores cache reads, so the percentage counts fresh tokens, not
-work done and not dollars -- equal meter points bought 21 to 41 USD of list value here. Not for you
-if you want a rate card: this is four samples of an undocumented meter, not vendor documentation.
+Equal meter points represented 21 to 41 USD at published application programming interface (API)
+prices. These four samples estimate an undocumented meter; they are not a vendor rate card.
 
-**How to use it.** Take the ratio, not the dollar figures. Roughly 1.35 million non-cache-read
-tokens buy 1 percent of a weekly window. That unit transfers between workloads. The dollar value
-does not: it depends on how much cached context your sessions re-read.
+The working estimate is 1.35 million non-cache-read tokens per 1 percent of a weekly window. The
+dollar value varies with how often sessions reread cached context.
 
 ---
 
 ## What was measured
 
-Four Claude Max 20x accounts, each billed at 200 USD per month. All four ran the same kind of work:
-long agentic coding sessions against one repository, with large cached contexts.
+Each Claude Max 20x account cost 200 USD per month. All four ran long coding sessions against one
+repository, with large cached contexts.
 
-Each account's tokens were summed from its local session transcripts, which carry a usage block on
-every assistant message. Each sum was paired with that account's live weekly percentage, read at the
-same moment from the client's own usage endpoint.
+We summed each account's local session transcripts, using the usage block on every assistant
+message. We paired each total with its live weekly percentage at the same moment.
 
 | Account | Weekly meter | Tokens in window | Non-cache-read | Raw per 1 percent | Non-cache-read per 1 percent |
 |---|---:|---:|---:|---:|---:|
@@ -32,35 +28,43 @@ same moment from the client's own usage endpoint.
 | C | 37 percent | 1,348,106,117 | 50,279,736 | 36,435,300 | 1,358,912 |
 | D | 97 percent | 2,779,391,470 | 102,320,610 | 28,653,520 | 1,054,852 |
 
-Each window is that account's current weekly period, which began between two and six days before the
-reading. Three of the four were near their end, so the extrapolation to a full window is short.
+<a id="g13"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="assets/charts/g13-token-meter-mobile.svg">
+    <img src="assets/charts/g13-token-meter.svg" width="800" height="490" alt="Two zero-baseline bar charts compare raw and non-cache-read tokens per meter point for accounts A through D. Exact values appear in the preceding table." loading="lazy">
+  </picture>
+  <figcaption>Four accounts measured on 2026-08-12. Non-cache-read tokens vary less per meter point; each panel uses its own labeled scale. Account D lacks local transcripts for two days of meter activity. Token use does not measure progress or promise current prices. <a href="/SCRIPTS.html">Chart builder</a> reads the table above.</figcaption>
+</figure>
+
+The weekly windows began two to six days before the reading. Three of the four were near their end,
+leaving a short span to extrapolate.
 
 ## The meter counts non-cache-read tokens
 
-Raw tokens per 1 percent vary by a factor of 2.1 across the four rows, from 28,653,520 to
-60,475,507. Non-cache-read tokens per 1 percent vary by only 1.4, and two of the rows agree to
-within 0.6 percent: B at 1,351,906 and C at 1,358,912.
+Raw tokens per 1 percent ranged from 28,653,520 to 60,475,507, a factor of 2.1. Non-cache-read
+tokens varied by a factor of 1.4.
 
-**Working estimate: roughly 1.35 million non-cache-read tokens per 1 percent of a weekly window**,
-so a full weekly allowance is near 135 million and a month near 590 million.
+B and C agreed within 0.6 percent: 1,351,906 and 1,358,912 non-cache-read tokens per meter point.
 
-Cache reads are close to free against the meter. That is a steeper discount than the API's, where a
-cache read still costs a tenth of fresh input. At the 27-to-40 cache ratios measured here, a tenth
-would have dominated the bill.
+The estimate implies a full weekly allowance near 135 million non-cache-read tokens. A month comes
+to about 590 million.
 
-Two consequences for anyone reading a percentage:
+Cache reads appear close to free against this meter. The API charges a tenth of fresh input for
+them.
 
-- **A slow-moving percentage does not mean little happened.** A session re-reading a large cached
-  context burns raw tokens at about thirty times the rate it burns metered ones -- forty times in
-  the most cache-heavy of the four. The meter barely moves while the context churns.
-- **A percentage is a cost signal, not a progress signal.** For progress, count output tokens or
-  completed steps.
+At the measured cache ratios of 27 to 40, even that tenth would dominate the bill.
+
+Use the percentage to track allowance use. For progress, count output tokens or completed steps.
+
+- A slow meter can accompany substantial work. A session rereading cached context uses raw tokens about thirty times faster than metered tokens, or forty times in the most cache-heavy account.
 
 ## What 200 USD per month buys
 
-Each account's window was priced at the published per-token rates for the model it ran: 5 USD per
-million input tokens, 25 output, 6.25 cache write, and 0.50 cache read. Each row is then scaled to a
-full window, and from there to a month of 4.348 weeks.
+We priced each window at the model's published rates per million tokens: 5 USD input, 25 output,
+6.25 cache write, and 0.50 cache read.
+
+We scaled each row to a full window, then to a month of 4.348 weeks.
 
 | Account | Raw tokens per month | API list value per month | Multiple on 200 USD |
 |---|---:|---:|---:|
@@ -69,19 +73,18 @@ full window, and from there to a month of 4.348 weeks.
 | C | 15.8 billion | 11,908 USD | 60x |
 | D | 12.5 billion | 9,323 USD | 47x |
 
-**The defensible number is B and C at 60x to 63x.** Both outliers have known causes, and neither is
-a workload difference the reader can expect to reproduce.
+B and C give the more defensible comparison: 60x to 63x list value. A and D have known distortions
+that readers should not expect to reproduce.
 
-- **A's 88x is cache amplification.** Its raw-to-metered ratio is 40 to 1, against 27 to 29 for the
-  other three. It re-read more cached context per unit of new work, and the meter did not charge for
-  it.
-- **D's 47x is an undercount, not a worse deal.** Its short-window meter showed active use on two
-  days when the local transcripts held nothing for it. Some of its spend happened on a surface these
-  files do not cover, so its true value is higher by an unmeasured amount.
+- A's 88x reflects more cache reads. Its raw-to-metered ratio was 40 to 1, against 27 to 29 for the other three accounts. It reread more cached context for each unit of new work.
 
-Per million tokens, the subscription works out near 0.013 USD counting raw tokens, or 0.35 USD
-counting only non-cache-read tokens. The same traffic mix at list price is roughly 0.75 USD raw and
-21 USD non-cache-read. Both pairs divide to the 60x above, which is the check on it.
+- D's 47x undercounts use. Its short-window meter showed activity on two days with no local transcripts. Its true value is higher by an unknown amount.
+
+The subscription cost about 0.013 USD per million raw tokens, or 0.35 USD per million non-cache-read
+tokens.
+
+The same mix at list price cost roughly 0.75 USD raw and 21 USD non-cache-read. Both comparisons
+give about 60x, which cross-checks the result.
 
 ## What these numbers are not
 
@@ -93,38 +96,36 @@ counting only non-cache-read tokens. The same traffic mix at list price is rough
 | The dollar figures | A comparison against list price, not a bill. Batch pricing, longer cache lifetimes or a cheaper model all move it |
 | The coverage | Local transcripts on one machine only. Row D is the proof that this misses real spend |
 
-**A window's start is not its first use.** Two of the four opened between one and two days before
-any token was spent against them. A window boundary cannot be inferred from observed activity.
+Two of the four windows began one to two days before their first token use. Use the window boundary,
+not observed activity, to choose the counting period.
 
 ## Reproducing it
 
-The mechanism is the same one [USAGE-AWARENESS.md](USAGE-AWARENESS.md) describes and declines to
-ship: undocumented client internals that can change without notice. Nothing here is packaged.
+[USAGE-AWARENESS.md](USAGE-AWARENESS.md) describes the same undocumented client internals. They can change without notice, and this
+repository ships no tool for this measurement.
 
-**The goal.** Pair one account's own token total with that account's own weekly percentage, read at
-the same moment.
+Pair one account's token total with its weekly percentage. Read both for the same account at the
+same time.
 
-**What to do.** Read three surfaces -- two local files and one live reading:
+Read two local sources and take one live reading:
 
-1. **Session transcripts.** One JSON line per message, carrying a usage block with four counters:
+1. Session transcripts. One JSON line per message, carrying a usage block with four counters:
    input, output, cache write and cache read. Subagent transcripts nest under the parent session, so
    a scan that reads only top-level files misses most of the volume.
-2. **The config root the session ran under.** The account is that root's own name, never a field
+2. The config root the session ran under. The account is that root's own name, never a field
    inside the per-session record, which carries none
    ([USAGE-AWARENESS.md](USAGE-AWARENESS.md)). Without it every number is a total over an unknown
    mixture of accounts.
-3. **The live usage endpoint.** Supplies the percentage *and the window's reset time*, and must be
+3. The live usage endpoint. Supplies the percentage *and the window's reset time*, and must be
    gated on an identity lookup so a reading is provably about the account you think it is.
 
-**Bound the window before summing.** A window's start cannot be inferred from activity, so work it
-back from the reset time and sum only messages at or after it. A total over the wrong span still
-divides into a percentage, and still looks plausible.
+Work backward from the reset time to find the window's start. Sum only messages at or after that
+boundary; a total from the wrong period can still look plausible.
 
-**Deduplicate messages by their request identifier before summing.** Retries and streamed messages
-otherwise get counted twice.
+Deduplicate messages by request identifier before summing. Otherwise, retries and streamed messages
+can count twice.
 
-**What happens next.** You get one row of the table above: a token total, a percentage, and the
-ratio between them.
+Record the token total, weekly percentage, and ratio as one row, using the table above as a model.
 
 ## Related
 

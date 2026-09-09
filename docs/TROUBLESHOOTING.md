@@ -2,22 +2,19 @@
 
 ## TLDR/BLUF
 
-**What this is.** A symptom-to-cause-to-fix table for the controls in this repository, and how to
-read what `bin/ccx-doctor.ps1` tells you.
+Run `bin/ccx-doctor.ps1` to check the installed controls, then match its result or your symptom
+below.
 
-**Why you should care.** Almost everything here fails by producing the bytes it produces when it
-works. An uninstalled gate and a working one both let the edit through. Not for you if you have
-installed nothing yet, in which case start at [Quickstart](QUICKSTART.md).
+Broken and working controls often produce identical output: both can allow an edit silently. If you
+have not installed anything, start with [Quickstart](QUICKSTART.md).
 
-**How to use it.** Run the doctor first, from a plain terminal, naming the repository you are asking
-about. Then find your symptom below.
+From a plain terminal, run the doctor with the repository you want to check:
 
 ```powershell
 pwsh -NoProfile -File <tooling>/bin/ccx-doctor.ps1 -Repo <the-repo-you-govern>
 ```
 
-It writes nothing to your repository. Every attack it fires runs against a throwaway fixture in the
-temp directory.
+The doctor leaves your repository untouched. Its attack tests use temporary, disposable fixtures.
 
 ---
 
@@ -45,38 +42,37 @@ temp directory.
 
 ### Why the collision gate stays quiet
 
-Before treating a missing refusal as a break, rule these out. Each is by design, and
-[Limits](LIMITS.md#what-the-collision-gate-does-not-see) states them in full:
+A missing refusal can follow from the gate's design. Check these cases, detailed in
+[Limits](LIMITS.md#what-the-collision-gate-does-not-see):
 
-- **A second session in your own worktree.** `overlap.ps1` skips your own worktree before comparing
-  any path, so two sessions on one checkout collide in silence.
-- **A peer who started within the last minute.** The overlap map is cached for 60 seconds, and the
-  gate never asks for a refresh.
-- **A peer whose change git cannot report as a path.** A new file in a new directory, a rename, or
+- A second session in your own worktree. `overlap.ps1` skips your own worktree before comparing any
+  path, so two sessions on one checkout collide in silence.
+- A peer who started within the last minute. The overlap map is cached for 60 seconds, and the gate
+  never asks for a refresh.
+- A peer whose change git cannot report as a path. A new file in a new directory, a rename, or
   anything git-ignored.
-- **A write by absolute path into another worktree**, or through a symlink.
-- **A peer that committed and went clean.** Reported, not refused, on purpose.
+- A write by absolute path into another worktree, or through a symlink.
+- A peer that committed and went clean. Reported, not refused, on purpose.
 
 ### The green run and the real hole
 
-Four rows carry a clean verdict over a control nothing invokes: the sequence gate, the ASCII gate,
-the blanket-stage guard and the steering injector. The sequence gate is the sharpest.
+Four optional controls can remain off in a green run: the sequence gate, ASCII gate, blanket-stage
+guard, and steering injector. An unwired sequence gate leaves number collisions unchecked.
 
-No shipped installer writes `pre-commit`, because two tools cannot both own that file. Failing the
-run on it would redden every clean install, so the row is recorded as not required. It appears as
-`OFF (opt-in)` in the verdict and does not raise the exit code.
+No shipped installer writes `pre-commit`, since another tool may own it. Requiring that hook would
+fail every fresh install.
 
-**The hole is real.** With sequences configured and nothing checking at commit time, two sessions can
-take the same number, and the collision merges clean. Read that `OFF` row: the exit code will not
-carry it.
+The doctor therefore reports the sequence gate as `OFF (opt-in)`, without raising the exit code.
 
-**The ASCII gate is the milder one.** `scripts/quality/check-ascii.ps1` ships in every checkout and
-nothing runs it, so a non-ASCII character reaches a file until you invoke it yourself. Wire it into
-your own `pre-commit` and into CI.
+With sequences configured but unchecked at commit time, two sessions can use the same number and
+merge without conflict. Check the `OFF` row; the exit code does not report this gap.
+
+`scripts/quality/check-ascii.ps1` ships in every checkout, but nothing invokes it by default. Add it
+to your `pre-commit` and continuous integration (CI) checks to reject non-ASCII characters.
 
 ## Reading the doctor
 
-Every check gets one row and one tag. What each tag licenses you to believe:
+Each check has a row and a tag:
 
 | Tag | What it licenses |
 |---|---|
@@ -86,7 +82,7 @@ Every check gets one row and one tag. What each tag licenses you to believe:
 | `??` | Could not be determined. Never read one of these as a pass. |
 | `--` | Not applicable here, such as no sequences configured, or an opt-in rule left off on purpose. |
 
-The exit code is a summary of those rows, and the highest severity wins:
+The exit code follows the most severe result:
 
 | Exit | Meaning |
 |---|---|
@@ -94,65 +90,64 @@ The exit code is a summary of those rows, and the highest severity wins:
 | 1 | At least one `RED`, or at least one required control `OFF`. |
 | 2 | At least one check could not be determined, and nothing above it fired. |
 
-**Exit 0 is not "every deny path was proven".** Three controls are never fired, and the doctor names
-them on every run: the collision gate's refusal needs a live peer worktree it cannot stage, announce
-delivery cannot be proven from PowerShell, and the steering injector has no attack.
+Exit 0 leaves three controls untested, and the doctor names them each run. It cannot stage the live
+peer needed for a collision refusal.
 
-Read the blind spots with the verdict, not instead of it.
+PowerShell cannot prove announce delivery, and the steering injector has no attack test.
+
+Read both the verdict and its blind spots.
 
 ### Why a skip is exit 2 rather than a pass
 
-A control that was not tested is not a control that passed. The whole failure class here is that a
-broken control and a working one emit the same bytes. A check that did not run therefore cannot be
-scored against one that ran and found nothing.
+A skipped check cannot distinguish broken controls from working ones. Both can emit identical
+output, so the doctor gives an untested control exit 2.
 
-Exit 2 is also reachable before any check runs. The doctor prints `CANNOT DETERMINE ANYTHING` and
-stops in four cases. Its own `scripts/coord/_common.ps1` will not load; there is no
-`ccx.config.json` at or above the path; that file will not load; the path is not inside a git
-repository.
+The doctor can also exit 2 before testing, with `CANNOT DETERMINE ANYTHING`. It stops if its
+`scripts/coord/_common.ps1` fails to load or the path is outside git.
+
+It also stops if `ccx.config.json` is absent at or above that path, or cannot load. These are the
+four early-stop cases.
 
 ### `-SkipAttacks` cannot prove enforcement
 
-`-SkipAttacks` fires nothing. One `??` row stands for the whole attack set, so the run cannot exit
-0. It exits 2, or 1 if a receipt check also found something broken or absent.
+`-SkipAttacks` replaces the attack set with one `??` row and prevents exit 0. The result is 2, or 1
+if receipt checks find something broken or missing.
 
-Receipts establish what is on disk and what the live settings wire. Only firing a control at the
-case it exists to refuse establishes that it refuses. Those are different claims.
+Receipts show which files exist and which controls the settings invoke. An attack test checks
+whether the control refuses a prohibited action.
 
-The same distinction appears without the flag. Where a control is not installed, the doctor fires
-the source copy instead and downgrades the verdict: the rule can refuse, but nothing is refusing.
-Capability is not enforcement.
+For an uninstalled control, the doctor tests its source copy and lowers the verdict. That test can
+prove the code refuses an action, but no installed hook enforces it.
 
 ## When the answer is "cannot tell"
 
-Three states report that the tooling could not look, and each one is easy to read as an all-clear.
+These three results mean the tools could not finish checking:
 
-**Presence exited 2.** The roster could not be completed. That fires even when rows were listed,
-because a roster naming two peers is not evidence about a third.
+Presence exit 2 means the roster is incomplete, even when it lists rows. Finding two peers says
+nothing about a third the scan could not place.
 
-**The overlap check could not resolve.** The collision gate allows the edit and injects a
-`could NOT check` notice saying it consulted no peer worktree. The notice is throttled, so a second
-edit inside the cooldown gets the allow with no notice at all.
+When overlap cannot resolve, the collision gate allows the edit and reports `could NOT check`: it
+consulted no peer worktree. During the cooldown, later edits proceed without another notice.
 
-**The session record schema changed.** Every liveness answer rests on a per-session JSON record the
-client writes, which is a vendor contract rather than this project's.
+Liveness checks depend on the client's per-session JSON record format. The client can change that
+format independently of this project.
 
-The two ways it can break do **not** look alike, and this is the one to get right:
+Record changes produce two different symptoms:
 
 | What changed | What you see |
 |---|---|
 | The directory moved, or records were removed | The census counts go to zero |
 | A field was renamed, or `startedAt`'s unit changed | **The counts do not move.** Those records still parse and still place; every verdict simply becomes `UNVERIFIED` |
 
-`UNVERIFIED` is a veto, so the gates keep refusing rather than waving work through. A healthy census
-is therefore not evidence the schema still matches.
+`UNVERIFIED` vetoes work, so gates keep refusing. An unchanged census alone does not prove that the
+record format still matches.
 
-**A blind roster reaches no row and no exit code.** The census and the roster-unavailable notice are
-printed under `WHAT WAS SCANNED` only. Read that block; the verdict will not carry it.
+The census and roster-unavailable notice appear only under `WHAT WAS SCANNED`. An unreadable roster
+adds no verdict row and changes no exit code; read that block too.
 
-> **The rule.** Absence of a refusal is not evidence of absence of a peer.
+> The rule. Absence of a refusal is not evidence of absence of a peer.
 
-Acting on the silence is what converts a "cannot tell" into a wrong answer.
+Do not treat silence as proof that no peer exists.
 
 ## Related
 
@@ -166,3 +161,5 @@ Acting on the silence is what converts a "cannot tell" into a wrong answer.
 | Who is live, what they are touching, and the collision gate's full rule | [Coordination](COORDINATION.md) |
 | Installing the controls, and watching one refuse | [Quickstart](QUICKSTART.md) |
 | Every installer flag, and how to prove each control is live | [Install](INSTALL.md) |
+
+Use the [merge-state guide](PR-AND-MERGE.md#g08) to match a blocked merge to its fix.

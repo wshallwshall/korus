@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
+    {%- assign archived_revision = site.data.page-revisions.pages | where: 'old_url', page.url | first -%}
+    {%- if archived_revision %}
+    <meta name="robots" content="noindex, follow">
+    {%- endif %}
     {%- comment -%}
       page.title comes from jekyll-titles-from-headings, which reads the leading H1 and leaves it in
       the body. So the title is used here and in nothing else: printing it as a heading below would
@@ -78,6 +82,12 @@
       </nav>
 
       <main class="page" id="content">
+        {%- if archived_revision %}
+        <aside class="revision-note" aria-label="Page version">
+          <p>This is the archived version from September 9, 2026.
+          <a href="{{ archived_revision.url | relative_url }}">Read the current page</a>.</p>
+        </aside>
+        {%- endif %}
         <div class="page-content">
           {%- comment %}
             ON-THIS-PAGE CONTENTS, BUILT HERE AND NOT BY A SCRIPT.

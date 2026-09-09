@@ -1,66 +1,62 @@
 # Case study: Auditing a multi-session estate as one system
 
-## TLDR/BLUF
+<a id="tldrbluf"></a>
 
-**What this is.** The method used to audit the controls that ship with KORUS, on **2026-08-04**: how
-they were checked as one system, what that proved, and what it could not.
+On 2026-08-04, we audited KORUS controls on one host from source through installed behavior. A
+merged, passing control could still enforce nothing.
 
-**Why you should care.** A control here can be merged, green, and enforcing nothing, and it looks
-exactly like one that works. Six design rules below each came from such a control. Not for you if
-you want a status list: publishing what is unenforced is publishing a bypass map.
+The audit produced the six design rules below. To check your current installation, run the audit;
+the recorded host's status cannot establish yours.
 
-**How to use it.** Read it as a checklist for auditing your own controls. For the state of *your*
-estate today, run the audit below rather than trusting any document.
+Use these checks when auditing your own controls. The command reports the scope it examined and the
+questions it could not answer.
 
 ---
 
-**The goal.** Know whether the controls on *your* machine are enforcing right now. The audit ran on
-one host on **2026-08-04**, so this page carries no status table and no inventory of what is
-enforced anywhere. Such a list goes stale at once, and published it is a bypass map.
+Check whether the controls on your machine enforce their rules now. The 2026-08-04 audit covers one
+host only; publishing its bypass inventory would expose specific gaps.
 
-**What to do.** Run the audit from the repository root:
+Run from the repository root:
 
 ```powershell
 pwsh -NoProfile -File bin/ccx-doctor.ps1
 ```
 
-**What happens next.** It prints what it scanned, what it could not determine, and its own blind
-spots. A check it could not determine is reported `??`, never `OK`. Everything below is the
-reasoning that command encodes.
+The audit prints what it scanned, unknown results, and blind spots. It marks an undetermined result
+`??`, never `OK`.
 
 ---
 
 ## Why the estate is the unit of audit, not the script
 
-Each control in this repository is small and readable. Read `scripts/hooks/worktree_gate.ps1` and you
-can state what it denies. Read `scripts/hooks/collision_gate.ps1` and you can state its posture. That
-reading is worth almost nothing, because none of these files is what runs.
+Reading `scripts/hooks/worktree_gate.ps1` shows its deny rules. Reading
+`scripts/hooks/collision_gate.ps1` shows how it handles errors. Neither proves which copy actually
+runs.
 
-What runs is a *copy*, and four things have to line up before it decides anything:
+The client runs an installed copy. Four links must hold:
 
 - an installer places that copy outside every working tree;
 - a matcher in a client config root invokes it;
 - it resolves its helpers from beside itself;
 - the host has an interpreter to run it.
 
-Any one of those joins can be wrong while every file is individually correct. That is what makes
-this class of system dangerous:
+A failure between those steps can leave each file looking correct. In this system, silent failure
+can produce the same bytes as success:
 
 > **Every failure mode in this system is byte-identical to success.**
 
-A hook can be missing, installed but not wired, wired to a dead script, or loaded but failing open.
-All produce what a healthy quiet hook produces: exit 0, no output, work proceeds. No error, no
-warning, no degraded mode. A fresh clone with one installer run, or none, sits there and reads as
-green.
+A hook can be missing, unwired, pointed at a dead script, or failing open. Each can produce exit 0
+and no output while work proceeds.
 
-So the audit's unit is the whole path from checkout to decision, and its currency is receipts.
+A fresh clone can therefore look healthy after one installer run, or none.
+
+Audit the whole path from checkout to decision. Use recorded evidence for each step.
 
 ---
 
 ## The four-layer model
 
-Any single control exists at four layers at once. Each layer answers a different question, and a green
-answer at one layer is not evidence about the next.
+Check each control at four layers. A pass at one layer proves nothing about the next.
 
 | Layer | The question it answers | Instrument | The failure that looks like success |
 |---|---|---|---|
@@ -69,30 +65,27 @@ answer at one layer is not evidence about the next.
 | **Wired** | Does anything actually invoke that copy? | Read live matchers out of every config root; diff them against the rules the *installed* script implements | A matcher exists but names a similarly-titled script from a different project; or a rule is implemented and no matcher ever reaches it |
 | **Effective** | What does it decide when fed a real input? | Pipe crafted input at the installed artifact and read the emitted decision | Rules exit on first match, so a later rule may be structurally unreachable. A helper the script dot-sources is absent, so it exits 0 and enforces nothing |
 
-Three consequences follow, and they are the three most expensive mistakes available here.
+These checks exposed three costly mistakes:
 
-**Merging a hook does not install one.** Track *inert-by-design* separately from
-*inert-by-accident*, and re-run the installer as its own announced step. A coordination hook on the
-repo this tooling was developed in sat unwired for hours; another project's similarly-named entry
-held the slot.
+Run the installer as a separate, announced step after merging a hook. Distinguish deliberate
+disabling from accidental lack of wiring.
 
-**Establish behavior by driving input into the installed artifact, not by reading source.** The
-installed copy, the settings matcher and the source can all disagree with one another, and only one of
-them decides anything.
+One coordination hook remained unwired for hours because another project's similarly named entry
+occupied its slot.
 
-**A control that cannot distinguish "ran and resolved" from "ran and found nothing" is not
-installed, however it looks.** The hook that proved this printed a status message for weeks. It
-outlasted every other silent defect found the same day, because it printed something.
+Drive input into the installed script to test its decisions. The source, installed copy, and
+settings matcher may all disagree.
 
-Full account:
-[put a signal outside the component](TIPS-AND-TRICKS.md#put-at-least-one-signal-outside-the-component-being-audited).
+A status message must distinguish resolved state from failed discovery. One hook printed status for
+weeks without resolving anything, outlasting the other silent defects found that day.
+
+See [put a signal outside the component](TIPS-AND-TRICKS.md#put-at-least-one-signal-outside-the-component-being-audited).
 
 ---
 
 ## The drift taxonomy: D1-D4
 
-"Drift" here is not one thing. Four classes make an audit tractable, because each has its own
-instrument and its own fix. Three of them are also the reason the first one goes unnoticed.
+Each drift class needs a different check and fix. The last three can hide the first:
 
 | Class | What drifts | Symptom | Instrument |
 |---|---|---|---|
@@ -101,47 +94,42 @@ instrument and its own fix. Three of them are also the reason the first one goes
 | **D3 -- Coverage drift** | What the rules can see: work moves to routes the rule set does not cover | A control is live, correct, and simply never invoked | Fire it on purpose; enumerate the routes; report every non-match you deliberately allow |
 | **D4 -- Belief drift** | What everyone thinks is true: docs, memory, status and premises diverge from behavior | Confident, wrong statements -- including your own from last month | Re-measure the premise; date and attribute every figure; state status exactly |
 
-D1 is the problem you set out to solve. D2, D3 and D4 are the reasons you believe you already solved
-it. An audit that only looks for D1 will pass.
+D1 describes the worktree problem the controls aim to prevent. D2, D3, and D4 explain why an audit
+can wrongly conclude it is solved.
 
 ### On D3 specifically
 
-**Enumerated coverage means every hole is silent.** A rule keyed on a list of tool names or verbs
-is unmatched at *both* the matcher and the rule body for anything off it. Prefer deny-by-default.
-Where you cannot, ship a rule inventory and a `-Status` asserting an *expectation*, not a bare
-count.
+A list of covered tools or verbs silently excludes everything absent from it. Prefer
+deny-by-default; otherwise, publish the rule inventory and make `-Status` check expected coverage.
 
-The same class covers routes rather than names. `scripts/hooks/worktree_gate.ps1` inspects tool
-arguments, so a file written by a shell command is not seen at all. **Any agent-authored script
-defeats a command-string gate**: a script invocation carries no `git` token.
+`scripts/hooks/worktree_gate.ps1` inspects tool arguments and cannot see files written inside a
+shell script. A script invocation need not contain the `git` token a command-string gate seeks.
 
-That is not an adversarial scenario: a sanctioned repair script is exactly that shape. Treat
-string-scanning gates as guardrails against accidents, never as boundaries, and say so in the file.
+An approved repair script can take this route too. Document string-scanning gates as accident
+prevention, never as security boundaries.
 
-The hooks that parse commands share one command-splitting helper (`scripts/hooks/_command.ps1`) and
-one git-target resolver (`scripts/hooks/_gittarget.ps1`).
+Command-parsing hooks share `scripts/hooks/_command.ps1` for splitting and
+`scripts/hooks/_gittarget.ps1` for resolving git targets.
 
-The reason is itself an audit finding. Two hooks that each split commands their own way will
-disagree about what a command *is*, and the one that drifts is the one nobody is testing. **Keep
-exactly one copy of a safety check.**
+Separate parsers can disagree about the same command. Keep exactly one copy of each safety check so
+a second, untested copy cannot drift.
 
 ### On D3's opposite failure
 
-**False positives train sessions to route around the only control you have.** On the repo this
-tooling was developed in, a verb-scanning rule denied a read-only status command over a blocklisted
-word in a prose line of a multi-line command. It also denied a commit whose *message* contained one.
+On the development repository, a verb scanner denied a read-only status command because a prose line
+contained a blocked word. It also denied a commit containing one in its message.
 
-Every such denial erodes compliance with the deny text, which on the shell path is the only control
-there is.
+Unnecessary denials encourage sessions to disregard the refusal text. On the shell path, that text
+is the only control available.
 
-The fix is mechanical:
+Use these parsing checks:
 
 - scan per line, and fold continuations;
 - blank out quoted spans;
 - recurse into interpreter arguments;
 - ship ALLOW-asserting tests for the multi-line, echoed and message-containing cases.
 
-A gate that cries wolf gets routed around, and then you have nothing.
+Repeated false alarms can cause sessions to bypass or remove the gate.
 
 ---
 
@@ -149,99 +137,99 @@ A gate that cries wolf gets routed around, and then you have nothing.
 
 ### 1. Gate on the write's target path, never the session's cwd
 
-The obvious design -- deny writes from sessions whose cwd is the shared checkout -- is wrong.
-Measured over 30 days, **29% of the write calls made by sessions sitting in the shared checkout
-landed inside a separate worktree by absolute path**. Correct behavior, and a cwd-keyed gate
-denies it.
+Over 30 days, 29% of writes from sessions in the shared checkout landed in separate worktrees
+through absolute paths. A gate based on working directory would wrongly deny them.
 
-Key write-gating on the destination. A session may then stay where it is and simply write into its
-worktree: no `cd`, no relocation, no restart. The price is that writes into *another* session's
-worktree are allowed. Accept that explicitly, and know the deny text actively teaches it.
+Check the destination path. Sessions can write to their worktrees without changing directory or
+restarting.
 
-There is a second payoff. A target-path rule already contains a fan-out from a bad working
-directory. A subagent inherits its parent's cwd, but its writes are judged by where they land, so
-they are denied at the destination regardless of where the parent was standing.
+This also permits writes into another session's worktree. Accept that limit explicitly; the denial
+text teaches this route.
+
+Subagents inherit the parent's working directory. A target-path gate still denies writes to
+forbidden destinations, regardless of where the parent started.
 
 ### 2. The gate's own enforcement surface must be governed
 
-The installed script and its allowlist live *outside* every governed checkout, so no checkout or
-branch switch can make the gate vanish. A path-keyed rule returns "not governed" for the gate's own
-files and lets any session edit them: every session the gate governs could rewrite the gate.
+The installed gate and allowlist live outside governed checkouts, so branch changes cannot remove
+them. That also leaves them outside an ordinary checkout-path rule.
 
-`scripts/hooks/worktree_gate.ps1` closes this with a dedicated rule (1a) covering its own script
-and allowlist. It stops a *session* disarming the control. A human at a terminal is still free to
-uninstall it, and the kill switch is documented in the script's own `.NOTES`: obscurity is not a
-control.
+Without a separate rule, any governed session could edit the gate itself.
 
-Generalize it: **any control with a mutable enforcement surface must govern that surface, and the
-governing rule must be evaluated separately from the rule it protects.**
+Rule 1a in `scripts/hooks/worktree_gate.ps1` protects its own script and allowlist. It prevents a
+session from disarming the control.
+
+A human can still uninstall it from a terminal. The script's `.NOTES` documents the kill switch.
+
+Any control with editable enforcement files must protect those files. Evaluate that protection
+separately from the rule it protects.
 
 ### 3. An unbacked backstop is worse than an admitted gap
 
-A gate blind to the shell route needs a commit-time backstop, and one of these files claimed one in
-its header. The backstop was a real dispatcher of checks, none implementing the predicate relied on.
-The only control there was the deny text: persuasion, in a system premised on its failure.
+One gate header claimed a commit-time check covered its shell blind spot. The dispatcher existed,
+but none of its checks enforced that predicate.
 
-Verify that a claimed backstop implements the predicate you are relying on. If it does not, delete or
-caveat the sentence. **An admitted gap is safer than a false one, because the next reader stops
-looking.**
+Only the refusal text asked sessions to obey.
+
+Verify that a claimed backup check enforces the needed predicate. Otherwise, remove or qualify the
+claim so the next reader knows the gap remains.
 
 ### 4. Evaluate prohibitions as a set, never one at a time
 
-Two rules here each look reasonable alone: deny fan-out dispatch *from* the shared checkout, and
-deny relocating a live session *into* a worktree. With both live, a session opened in the shared
-checkout has no in-session path to isolation -- only a human restarting it elsewhere.
+One rule denied dispatch from the shared checkout; another denied relocating a live session into a
+worktree. Together, they left no in-session route to isolation.
 
-Two rules, individually defensible, jointly a dead end. `scripts/worktree/install-gate.ps1` ships
-the relocation rule as opt-in `-EnterWorktreeGate`, **off by default**. The parameter's own comment
-says why: this is a decision to make on purpose, not one riding along with an unrelated install.
+A human had to restart the session elsewhere.
 
-The corollary is **ship the cure before the prohibition.** If a prohibition removes the only path to
-the sanctioned behavior, the prohibition is the defect.
+`scripts/worktree/install-gate.ps1` makes the relocation rule opt-in through `-EnterWorktreeGate`.
+It is off by default, and the parameter comment explains the combined dead end.
 
-Two smaller rules in the same family:
+Provide a supported route before banning the existing one. A prohibition that removes every route to
+required behavior is defective.
 
-- **Re-measure a deny's premise before defending it, and record its scope precisely.** One rule here
+Two related checks follow:
+
+- Re-measure a deny's premise before defending it, and record its scope precisely. One rule here
   was remembered as broader than it was. Part of its rationale had expired too: the tooling gained a
   capability the rationale assumed absent. An expired premise is D4 drift in a control's uniform.
-- **An install option that removes a control must leave a queryable trace.** A flag that drops a
+- An install option that removes a control must leave a queryable trace. A flag that drops a
   rule silently recreates the observability gap the system exists to close. Here the flag leaves
   the rule *implemented but unmatched*, the audit reports it as dead, and the installer prints a
   warning.
 
 ### 5. A control with no receipts cannot be ranked, fixed, or defended
 
-One gate wrote its decision to stdout and exited 0 -- no log, no counter, no audit file -- for its
-entire life. Nothing could answer "how many drift events were prevented last month" or "did the fix
-change anything". **With no receipts, every severity ranking is unfalsifiable.**
+One gate wrote decisions to stdout and exited 0 without keeping a log, counter, or audit file.
+Nobody could measure prevented drift or the effect of a fix.
 
-Log every deny: timestamp, rule, tool, cwd, target, decision -- never the raw command. It is smaller
-than any other fix on the list and it is the prerequisite for ranking the rest. A receipt stamped with
-a subagent's process id is also what lets a parent session see what its fan-out was denied.
+Log each denial's timestamp, rule, tool, working directory, target, and decision. Never log the raw
+command.
+
+A subagent process id lets its parent find denied work. These records make severity rankings
+testable.
 
 ### 6. Prefer a control that acts and receipts itself; where you cannot, say so
 
-One control here is an *instruction to the model*, not an action: it resolves peers and asks the
-model to send a message. Delivery is recorded by the model, not the hook: the one control whose
-audit trail is written by what it is evidence about. Named a permanent blind spot on every audit
-run.
+One hook resolves peers and asks the model to send a message. The model also records delivery, so
+the audited action writes its own evidence.
+
+Every audit run names this as a permanent blind spot.
 
 ---
 
 ## Evidence discipline
 
-This is the half of the method that is easiest to skip and most expensive to skip.
+The audit must also prove that its own checks can detect failure.
 
 ### Green tests that bind the repo copy prove nothing about the installed one
 
-On the repo this tooling was developed in, one gate had **85 passing tests**. Every one bound the
-repository's copy of the script; nothing read the installed copy or a live settings file.
-Enforcement was running from an installed copy days behind source, and the whole suite was green
-about it.
+One gate in the development repository had 85 passing tests, all against source. The installed copy
+was days behind, and no test read it or live settings.
 
-The fix skips unless the installed artifact exists. `Get-HandledTools` in `bin/ccx-doctor.ps1`
-asserts SHA-256 equality with the source, then diffs the *installed* rule set against every config
-root's matchers. **It prints what it scanned, so a skip never reads as a pass.** Three states:
+`Get-HandledTools` in `bin/ccx-doctor.ps1` skips when no installed artifact exists. Otherwise, it
+checks SHA-256 equality and compares installed rules with every config root's matchers.
+
+It prints the scanned scope so a skip cannot look like a pass:
 
 | State | Meaning |
 |---|---|
@@ -251,63 +239,64 @@ root's matchers. **It prints what it scanned, so a skip never reads as a pass.**
 
 ### Fire every control on purpose, and pair every attack with a negative control
 
-`bin/ccx-doctor.ps1` pipes crafted `PreToolUse` payloads at the *installed* gate and requires a
-refusal each time. It attempts three things:
+`bin/ccx-doctor.ps1` sends crafted `PreToolUse` payloads to the installed gate and requires refusal
+for each attack:
 
 - a blanket stage;
 - a commit claiming an unheld work item;
 - a push to a protected ref.
 
-Fixtures are throwaway: own repositories, allowlist, state root, deleted on the way out.
+The probes use disposable repositories, an allowlist, and a state root. They delete these fixtures
+when finished.
 
-Each attack is paired with a **negative control**: an ordinary action the same control must *allow*.
-Without one, a probe cannot tell "refused correctly" from "refused because it could not load". An
-entry point copied without its helpers refuses *everything*, which reads as perfect enforcement.
+Pair each attack with an ordinary action the same gate must allow. Otherwise, a broken script that
+refuses everything can look correctly enforced.
 
-Attack results are downgraded to `??`, never `OK`, when the artifact under test is the source rather
-than an installed copy. Proving the rules work says nothing about whether anything is enforcing.
+Copying an entry point without its helpers produced that failure.
+
+When probes test source instead of an installed copy, the audit reports `??`, never `OK`. Working
+source does not prove a live control exists.
 
 ### The probe is part of the system under test
 
-This repository's first attack harness passed its payload under a parameter name that **bound to
-nothing, silently, with no error**. Four attacks fired payloads with a tool name, a cwd and no tool
-input. Every path-keyed rule allowed them, and the audit blamed the gate. The probe was broken.
+The first probe passed input under a parameter name that bound to nothing, without an error. Four
+attacks sent a tool name and working directory but no tool input.
 
-`New-PreToolUsePayload` now throws on an empty tool input, and the attack block catches the abort
-and records `??` for the attacks that never fired. **A probe that cannot build its own input must
-refuse to report a verdict rather than report the target's answer to an empty question.**
+Path-based rules allowed the empty payloads, and the audit wrongly blamed the gate.
 
-The general form: if your must-fail case and your under-test case produce the same output, the result is
-**untested**, not negative. Say so, and re-run against a known-good instance before trusting either
-answer.
+`New-PreToolUsePayload` now throws on empty tool input. The attack block catches it and records `??`
+for probes that never fired.
+
+If a known failure and the case under test produce the same output, report untested. Check the probe
+against a known-good instance before trusting either result.
 
 ### Prove each fix by mutation
 
-Passing tests do not show that the tests *could* fail on the defect. For each shipped gate fix here,
-five mutations were applied to the shipped artifact one at a time and each required to go red. That
-exercise surfaced three regressions from an adversarial review, pinned in their own test file.
+A passing test does not prove it can detect the defect. For each shipped fix, five mutations were
+applied one at a time and required to fail.
 
-Mutate the shipped artifact deliberately, confirm each mutation goes red, and pin every regression
-adversarial review finds. Build the control, then attack it.
+The exercise found three regressions from adversarial review, now pinned in a separate test file.
+
+Deliberately alter the shipped artifact and confirm each mutation fails its test. Add a regression
+check for each defect review finds.
 
 ### Test the real pair, not stubs
 
-One fix here made an ordinary edit to an untouched file fail a gate -- most edits -- with a green
-suite. The stubs emitted a JSON shape the real helper never produced, so the tests validated an
-interface that did not exist. Run the real components together once before shipping a contract
-change.
+One fix made ordinary edits to untouched files fail despite a green suite. Test stubs emitted JSON
+the real helper never produced.
+
+Run the real components together before shipping an interface change.
 
 ### Label figures you cited but did not re-measure
 
-The 29% figure quoted above is the sole quantitative justification for the target-path design of the
-whole gate. Nothing in this repository can recompute it, and nobody has asked whether it still holds.
+The 29% figure is the gate's only quantitative support for target-path checks. This repository
+cannot recompute it, and nobody has checked whether it still holds.
 
-Keep a *cited, not re-measured -- treat with care* section, strike superseded claims rather than
-deleting them, and build the ability to recompute a load-bearing number.
+Label figures "cited, not re-measured -- treat with care." Strike superseded claims rather than
+deleting them, and build a way to recompute numbers that guide design.
 
-Here: the 29% target-vs-cwd measurement, the 85-test count, the per-prompt cost of the always-on
-coordination hooks. All were measured on the repo this tooling was developed in, none re-measured
-since; re-derive before reusing one.
+The 29% measurement, 85-test count, and per-prompt coordination cost came from the development
+repository. None has been remeasured since; check again before reusing them.
 
 ---
 
@@ -315,8 +304,7 @@ since; re-derive before reusing one.
 
 ### Record rejected options with the specific blocking fact
 
-The structurally strongest answers to "sessions keep building in the shared checkout" get re-proposed
-every single time the gate leaks:
+These alternatives get proposed again whenever shared-checkout protection fails:
 
 - an OS-level sandbox;
 - filesystem ACLs;
@@ -324,46 +312,46 @@ every single time the gate leaks:
 - a repository-level worktree lock;
 - a native path-deny rule in the client's own permission system.
 
-A concrete fact blocks each: platform availability, what the lock primitive actually prevents, or a
-nested worktree layout living *inside* the checkout a path-deny would have to cover. Another is the
-loss of the deny *text*, which carries most of the rule's value as the remediation channel.
+Each option had a specific blocker: platform support, the lock's actual scope, or nested worktrees
+inside the checkout a path rule would cover.
 
-Write the blocking fact next to each rejected option, not just the rejection. Otherwise the next
-session spends the cycle again and reaches the same place. And when a mechanism is genuinely unproven,
-**timebox a spike that fails on purpose first** rather than building on it.
+Some options also lost the refusal text that tells a session how to recover.
 
-Deny text is a control surface. A deny message listed the shared checkout *first* among the
-worktrees to reuse instead, displacing a real one off a display cap. The filter compared a string
-against an object and was always true. Assert that the forbidden path never appears in the suggested
-list.
+Record the blocking fact beside each rejected option. That lets later sessions revisit changed facts
+without repeating the entire investigation.
+
+For an unproven mechanism, set a time limit and first test whether it can fail as expected.
+
+One denial listed the forbidden primary first among suggested worktrees, pushing a valid option
+beyond the display cap. A string-to-object comparison caused the filter to always pass.
+
+Test that the forbidden path never appears among the suggestions.
 
 ### State status exactly
 
-The single most damaging line in an audit report is a bare **Done**.
+A bare Done can cause the next session to assume unfinished work is complete.
 
-The next session acts on the status. If a change is mostly done, the status must spell out what is
-*not* done, per item, in the same sentence. Write it as **Mostly done -- X, Y; NOT done: Z.** An
-overstated status is worse than no status: no status prompts a check, and a false status ends one.
+State what remains for each item: Mostly done -- X, Y; NOT done: Z. An overstated status can stop
+the next session from checking a known gap.
 
-`bin/ccx-doctor.ps1` carries that rule in its exit code:
+`bin/ccx-doctor.ps1` makes its exit code reflect that distinction:
 
 - `0` only when every required control is installed *and* wired *and* refused every attack;
 - `1` on any red;
-- **`2` when a check could not be determined.** `-SkipAttacks` forces exit 2.
+- `2` when a check could not be determined. `-SkipAttacks` forces exit 2.
 
-Tags: `OK`, `RED`, `OFF`, `??`, `--`. `??` is not a rounding error toward `OK`.
+The tags are `OK`, `RED`, `OFF`, `??`, and `--`. Never treat `??` as `OK`.
 
 ### Print what you scanned, and name your blind spots, on every run
 
-Every run prints a `WHAT WAS SCANNED` block: config roots found, session records read, records that
-could not be placed, worktrees enumerated, which interpreter. It also prints a blind-spot block,
-**whether or not anything failed**. Believing you are fenced when you are not is worse than knowing.
+Every run prints `WHAT WAS SCANNED`: config roots, session records read, unplaced records,
+worktrees, and interpreter. It also prints blind spots, whether or not a check failed.
 
 ---
 
 ## What this method cannot tell you
 
-Stated plainly, because a limits section that reads like marketing is itself a D4 defect.
+The audit has these limits:
 
 | Limit | Consequence |
 |---|---|
@@ -375,42 +363,39 @@ Stated plainly, because a limits section that reads like marketing is itself a D
 | **Documented bypasses exist and are not closed here** | A commit made with verification skipped bypasses both git hooks, and nothing local records that it happened. This is a guardrail against the accidental mistake, not a security boundary. Anything that claims otherwise is the unbacked-backstop defect in design rule 3 above |
 | **Scope** | The audit examines one clone and the config roots it lists. It is not a machine-wide statement |
 
-Two controls in this repository are, by their nature, only partly provable:
+Two controls remain only partly provable:
 
-- **The collision gate's deny path** needs a live peer worktree with an uncommitted change to the
+- The collision gate's deny path needs a live peer worktree with an uncommitted change to the
   same file. The audit proves only that it does not go silent when it cannot resolve: the fail-open
   path emits a notice rather than output byte-identical to all-clear. The deny is a blind spot every
   run.
-- **The session banner** makes no decision, so there is nothing to attack. It is reported by receipt
+- The session banner makes no decision, so there is nothing to attack. It is reported by receipt
   and by live re-resolution only.
 
 ---
 
 ## The audit loop, condensed
 
-1. **Enumerate every control by receipt.** Hash each installed copy against source. Read live matchers
+1. Enumerate every control by receipt. Hash each installed copy against source. Read live matchers
    from every config root. Diff wired matchers against the rules the *installed* script implements.
-2. **Fire each control on purpose and require it to deny.** Against the installed copy, against
+2. Fire each control on purpose and require it to deny. Against the installed copy, against
    throwaway fixtures, each attack paired with a negative control the same control must allow.
-3. **Print what you scanned, always.** A skip must never read as a pass; report it `??` and let the
+3. Print what you scanned, always. A skip must never read as a pass; report it `??` and let the
    exit code carry it.
-4. **Name your blind spots on every run**, whether or not anything failed.
-5. **Prove each fix by mutation** before calling it a fix.
-6. **Write the outcome exactly** -- including what is not done, which options were rejected and why, and
+4. Name your blind spots on every run, whether or not anything failed.
+5. Prove each fix by mutation before calling it a fix.
+6. Write the outcome exactly -- including what is not done, which options were rejected and why, and
    which figures were cited rather than re-measured.
 
-The one external reference is public:
-[`anthropics/claude-code#76590`](https://github.com/anthropics/claude-code/issues/76590), the
-half-failed worktree behavior the `SessionStart` hook `scripts/worktree/worktree-selfheal.ps1`
-repairs -- and announces, since a silent repair reads as nothing wrong.
+[`anthropics/claude-code#76590`](https://github.com/anthropics/claude-code/issues/76590) records the worktree failure repaired by `scripts/worktree/worktree-selfheal.ps1`. The
+`SessionStart` hook announces repairs so they do not look like an uneventful start.
 
 ---
 
 ## A note on what is not in this document
 
-The source material was a probe-verified bypass register: ranked, dated, specific down to verified
-command strings and the surfaces that failed to cover them. **Withheld permanently.** Publishing an
-attacker index alongside the tooling it attacks turns a guardrail repository into a bypass manual.
+The source was a dated, ranked register of probe-verified bypasses and exact commands. That register
+remains permanently withheld because publishing it would expose working bypasses.
 
-What generalizes is the method, and the method is above in full. If you want the specifics for your own
-estate, they are one command away -- and unlike a published register, yours will be current.
+Run the audit for current findings about your own installation. A published register cannot
+establish its present state.

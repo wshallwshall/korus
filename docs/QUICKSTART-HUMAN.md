@@ -1,7 +1,5 @@
 # Install KORUS and test a blocked edit
 
-Alternate copy for review. [Original Quickstart](QUICKSTART.md) | [Rewritten home page](HOME-HUMAN.md) | [Rewritten FAQ](FAQ-HUMAN.md)
-
 Install KORUS in a repository you already use, then test it with two Claude Code sessions.
 The final test asks both sessions to edit one file and checks that KORUS blocks the second edit.
 
@@ -295,5 +293,5 @@ They do not establish whether today's copies agree.
 Copy [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) into your target as
 `CLAUDE.md`. Keep only instructions that apply to your project, including rules the gates cannot enforce.
 
-Use [Run a KORUS build](KORUS-BUILD.md) to add a console, a builder per task, a reviewer per pull
+Use [Run a KORUS build](KORUS-BUILD.md) to run a manager with builders, a reviewer per pull
 request, and a lander. [Install](INSTALL.md) gives the full installer reference and verification steps.

@@ -139,6 +139,9 @@ jobs:
       - name: Publish the repository's own files into the site
         run: python3 scripts/site/publish_sources.py _site
 
+      - name: Publish and verify archived page versions
+        run: python3 scripts/site/publish_revisions.py _site
+
       - name: What was actually produced
         if: always()
         run: |
