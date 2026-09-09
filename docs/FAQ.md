@@ -168,7 +168,7 @@ that empty roster from a real absence of peers.
 
 ## More sessions can fill the merge queue faster
 
-The manager runs one or more builders as subagents. It replaced the console, whose broad oversight approach did not work.
+The manager runs one or more builders, either as subagents or as separate sessions. It replaced the console, whose broad oversight approach did not work.
 
 Builders take
 tasks, reviewers read pull requests, a regulator investigates failed checks, and a lander merges.

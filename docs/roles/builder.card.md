@@ -14,7 +14,7 @@ ledger row, then exit.
 
 The authority section below controls which actions need approval.
 
-Your Manager supplies your brief and runs you as a subagent. You may send that seat a question, but its answer goes
+Your Manager supplies your brief. You may run as a subagent or in your own session. You may send that seat a question, but its answer goes
 into the next Builder's brief. Do not expect a reply in this session.
 
 ## What it must not do

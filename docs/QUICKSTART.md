@@ -345,5 +345,5 @@ They do not establish whether today's copies agree.
 Copy [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) into your target as
 `CLAUDE.md`. Keep only instructions that apply to your project, including rules the gates cannot enforce.
 
-Use [Run a KORUS build](KORUS-BUILD.md) to run a manager with builder subagents, a reviewer per pull
+Use [Run a KORUS build](KORUS-BUILD.md) to run a manager with builders, a reviewer per pull
 request, and a lander. [Install](INSTALL.md) gives the full installer reference and verification steps.

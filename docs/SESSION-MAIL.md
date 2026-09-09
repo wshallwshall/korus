@@ -444,7 +444,9 @@ These observations concern one editor extension and may change with its version:
 
 ## Fitting it into a KORUS build
 
-The [KORUS build](KORUS-BUILD.md) now uses a manager with builder subagents. The manager reads their results within its own process; this path does not need session mail.
+The [KORUS build](KORUS-BUILD.md) uses a manager with builders that may run as subagents or separate sessions.
+
+A subagent returns its result directly to the manager. A builder in its own session needs an explicit message route; session mail is one option.
 
 Mail remains useful between separate sessions, such as a lander and a review session. Its client and delivery limits still apply.
 

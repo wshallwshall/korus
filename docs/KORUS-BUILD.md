@@ -2,7 +2,7 @@
 
 <a id="tldrbluf"></a>
 
-Run a KORUS build with a manager that runs one or more builders as subagents. This procedure follows
+Run a KORUS build with a manager and one or more builders. Builders may be subagents or separate sessions. This procedure follows
 [The KORUS framework](KORUS.md), one operator's account of months using Claude Code.
 
 Distinct jobs reduce the chance that two sessions decide the same thing. Complete [Quickstart](QUICKSTART.md)
@@ -10,7 +10,9 @@ first; this procedure assumes installed and proven gates.
 
 The console was meant to oversee many parts of the build. That approach did not work, so the manager replaced it.
 
-The manager assigns work to its builders and reads their results. Each manager runs within one account; several managers may share a repository.
+The manager assigns work to its builders and reads their results. A builder can run as a subagent or in its own session.
+
+Name that choice in each brief. Subagents return results to the manager; separate sessions need an explicit message route.
 
 ---
 
@@ -24,9 +26,9 @@ opening prompts and `CLAUDE.md`.
 <figure class="explain-figure">
 <picture>
 <source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
-<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builder subagents. Reviewed pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="1027">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Reviewed pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="1027">
 </picture>
-<figcaption>The Manager runs one or more Builders as subagents, with one brief per task. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
+<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
 
 The Builder uses its own worktree and branch, with the collision gate checking covered edits.
@@ -64,7 +66,8 @@ hundred requirements; separate sessions need common rules to keep their verdicts
 | Install and prove the gates | Roles are advisory; the gates are not | [Quickstart](QUICKSTART.md) |
 | Run one task end to end, by hand | You cannot size the queue until you know how long one task takes to land | [Coordination](COORDINATION.md#a-clean-merge-is-not-evidence-that-nobody-duplicated-your-work) |
 | Give each session its own worktree | Two sessions in one tree overwrite each other | [Worktrees](WORKTREES.md) |
-| Use builder subagents within the manager's account | Subagents do not need the old console's grant for spawning separate sessions | [Manager card](roles/manager.card.md) |
+| Choose how each builder runs | Subagents use the manager's account and return results directly. Separate sessions need a message route | [Worker brief](WORKER-BRIEF.md) |
+| Check the spawn grant when launching a separate session | The grant applies to the launching config root. Subagents do not need it | [Desktop accounts](DESKTOP-ACCOUNTS.md) |
 | Wire the steering hook | It only takes effect in sessions started afterwards | [Steering](STEERING.md) |
 | Write the working agreement | It only reaches sessions that start later | [CLAUDE.md.template](https://claude-multisession.pages.dev/CLAUDE.md.template) |
 | Turn on Ultracode and pick Opus 5 in every session | The build shape assumes workflows and adversarial review | [The KORUS framework](KORUS.md) |
@@ -78,7 +81,7 @@ one desktop instance each ([Desktop accounts](DESKTOP-ACCOUNTS.md)); installers 
 
 ## 1. Open the manager
 
-The manager holds its work plan and runs one or more builders as subagents.
+The manager holds its work plan and runs one or more builders. It can use subagents, separate sessions, or both.
 Each builder gets a bounded task and its own worktree.
 
 Paste this prompt:
@@ -89,11 +92,12 @@ You are the manager for this build. You plan and track; you do not write applica
 Read the backlog. Produce a build plan that breaks it into tasks sized for one session each,
 and write an ADR for any decision that outlives the task that made it.
 
-Write one complete brief per task. Run one or more builders as subagents in your own account.
+Write one complete brief per task. State whether the builder is a subagent or a separate session.
+For a subagent, receive its result directly. For a separate session, name a working message route.
 Give each builder its own worktree and branch. Check for overlapping paths before dispatch.
 When a builder reports a blocker, read it, update the backlog, and revise the brief.
 
-Read each subagent's result before assigning its next task. Confirm that finished work is pushed
+Read each builder's result before assigning its next task. Confirm that finished work is pushed
 before closing the manager. Coordinate pull requests with the lander.
 
 Do not build. Do not merge.
@@ -102,19 +106,20 @@ Do not build. Do not merge.
 The manager returns a plan and task breakdown. Have it save the backlog in a tracked file before
 briefing workers, so the plan survives a lost context.
 
-## 2. Give each builder subagent one brief
+## 2. Give each builder one brief
 
-The manager starts each builder as a subagent. Give each builder its own worktree and branch.
+The manager starts each builder in the mode named in its brief. Give each builder its own worktree and branch.
 
 Subagents share the manager's process and account. They stop when the manager exits, so confirm that work is pushed before closing it.
 
 Paste this prompt:
 
 ```text
-You are a builder subagent. Build the task in your brief as a workflow, then report to your manager.
+You are a builder. Your brief names whether you run as a subagent or a separate session.
+Build the task in your brief as a workflow, then report through the route it names.
 
 If the brief leaves something open, do not guess and do not wait for an answer. Write the
-question to the manager, comment it on the pull request, and stop.
+question through the route in your brief, comment it on the pull request, and stop.
 
 Before starting a task, take a claim on it with a one-line note saying what you are building:
   pwsh -NoProfile -File scripts/coord/claim.ps1 -Take "<task>" -Note "<what you are building>"

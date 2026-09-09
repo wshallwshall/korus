@@ -3,7 +3,7 @@
 A worker brief tells a new session what to do and when to ask for help. The coordinating session
 writes it as the worker's opening prompt.
 
-[Run a KORUS build](KORUS-BUILD.md) describes the manager, its builder subagents, and each role's prompt. Use the template below to
+[Run a KORUS build](KORUS-BUILD.md) describes the manager, its builders, and each role's prompt. Use the template below to
 write one worker's brief.
 
 ---
@@ -25,11 +25,18 @@ Workers already had a channel for questions. They needed a rule telling them to 
 
 ```text
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the manager,
+do not guess and do not wait. Send the question through the route named in this brief,
 comment it on the pull request, and stop.
 ```
 
-The manager writes the brief and runs the builder as a subagent. It reads the result and resolves questions before assigning more work.
+The manager writes the brief and chooses how the builder runs. It reads the result and resolves questions before assigning more work.
+
+| Builder mode | Route for questions and results |
+|---|---|
+| Subagent | Return them to the manager through the subagent result |
+| Separate session | Use the explicit route in the brief, such as session mail or another tested session channel |
+
+A separate session cannot return a subagent result. Name a reachable recipient and check the channel before assigning work.
 
 Paste the template with its closing rule block unchanged.
 
@@ -146,11 +153,14 @@ DONE. <the end state somebody else can check>
 
 Commit at logical stops, one coherent layer each. <YOUR PUSH AND PULL REQUEST RULE>
 
-ASK AT. Return questions to your manager in your subagent result. Record them on
-<pull request number, or the issue>. For a separate session, name its mail route explicitly.
+RUN AS. <subagent OR separate session>.
+
+ASK AT. <For a subagent: return questions in your result. For a separate session:
+name the recipient and a tested message route, such as mail.ps1 -Send -To <worktree>.>
+Record questions on <pull request number, or the issue>.
 
 If the brief does not answer something you must know to proceed:
-do not guess and do not wait. Write the question to the manager,
+do not guess and do not wait. Send the question through the route named in this brief,
 comment it on the pull request, and stop.
 ```
 

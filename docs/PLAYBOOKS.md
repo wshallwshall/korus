@@ -20,7 +20,7 @@ Read `roles/COMMON.md` before your seat's playbook. It holds the rules shared by
 | Seat | What it owns | Card | Playbook |
 |---|---|---|---|
 | Console (former design) | Broad oversight did not work. The Manager replaced it; this card remains for reference. | [Console](roles/console.card.md) | `roles/CONSOLE.md` |
-| Manager | Runs one or more Builders as subagents. Writes their briefs and reads their results. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
+| Manager | Runs one or more Builders as subagents or separate sessions. Writes their briefs and reads their results. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
 | Builder | One brief, one turn. Commits, opens the pull request, exits. | [Builder](roles/builder.card.md) | `roles/BUILDER.md` |
 | Reviewer | Reads the diff and posts findings on the pull request. | [Reviewer](roles/reviewer.card.md) | `roles/REVIEWER.md` |
 | Regulator | Decides whose failure a red check is. | [Regulator](roles/regulator.card.md) | `roles/REGULATOR.md` |
