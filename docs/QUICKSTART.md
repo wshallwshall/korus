@@ -29,6 +29,16 @@ You need Claude Code for Desktop, PowerShell (`pwsh`) 7.3 or newer, Git, and `py
 **Run the setup commands in a plain terminal outside Claude Code.** All four installers refuse
 when `$env:CLAUDECODE` is `1`. Installation stays outside the session the controls govern.
 
+<a id="g03"></a>
+
+<figure class="explain-figure">
+<picture>
+<source media="(max-width: 1100px)" srcset="/assets/diagrams/g03-setup-proof-mobile.svg">
+<img src="/assets/diagrams/g03-setup-proof.svg" alt="Inspect, install, verify, then prove that a second edit is blocked." loading="lazy" width="777" height="317">
+</picture>
+<figcaption>Follow <a href="#4-check-the-state-before-installation">inspection</a>, <a href="#5-install-the-controls">installation</a>, <a href="#6-check-which-repository-the-doctor-examined">verification</a>, and the <a href="#8-ask-both-sessions-to-edit-the-same-file">collision test</a>. A successful install alone does not prove the controls work. <a href="/assets/diagrams/g03-setup-proof.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 ## 1. Get the tooling
 
 ```powershell

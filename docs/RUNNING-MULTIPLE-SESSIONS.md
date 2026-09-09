@@ -328,3 +328,5 @@ reaches a named busy peer; `steer.txt` remains forbidden for peer traffic.
 | Every control mapped to its event and its failure posture | [Hooks](HOOKS.md) |
 | The things that bite, in the order they bite | [Tips and tricks](TIPS-AND-TRICKS.md) |
 | Proving the controls are actually running | [Drift audit case study](CASE-STUDY-drift-audit.md) |
+
+The [handoff diagram](KORUS-BUILD.md#g04) connects roles, while the [mail timeline](SESSION-MAIL.md#g09) explains delivery events.

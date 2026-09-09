@@ -17,72 +17,21 @@ Start the sessions in the order below, using the prompts for each role.
 Give each job a seat. No script, role flag, or routing implements these roles; you establish them in
 opening prompts and `CLAUDE.md`.
 
-<figure role="group">
-<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The KORUS build shape. The record feeds a console that writes one brief and spawns a builder, which edits in its own worktree on its own branch behind a dashed collision gate, then pushes its branch and opens a pull request; a reviewer reads the diff and either posts findings back on that pull request or hands it to the lander, the lander enqueues it and the merge queue merges it into the trunk, and a red check on the pull request goes to a regulator that returns only the pull request's own red to the console.">
-  <defs>
-    <marker id="korus-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
-    </marker>
-  </defs>
-  <rect x="15" y="44" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="105" y="66" font-size="12" text-anchor="middle" fill="currentColor">The record</text>
-  <text x="105" y="84" font-size="11" text-anchor="middle" fill="currentColor">backlog and plan</text>
-  <line x1="105" y1="100" x2="105" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="113" y="136" font-size="10" font-style="italic" fill="currentColor">picks an item</text>
-  <rect x="15" y="164" width="180" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="105" y="194" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Console</text>
-  <text x="105" y="212" font-size="11" text-anchor="middle" fill="currentColor">the only seat you talk to</text>
-  <line x1="195" y1="200" x2="238" y2="200" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="216" y="156" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">one brief, spawns one</text>
-  <rect x="240" y="164" width="190" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="335" y="186" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Builder</text>
-  <text x="335" y="204" font-size="11" text-anchor="middle" fill="currentColor">one brief, then it exits</text>
-  <text x="335" y="222" font-size="11" text-anchor="middle" fill="currentColor">own worktree and branch</text>
-  <line x1="335" y1="164" x2="335" y2="102" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#korus-arrow)" />
-  <text x="343" y="136" font-size="10" font-style="italic" fill="currentColor">each edit</text>
-  <rect x="240" y="44" width="190" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" />
-  <text x="335" y="66" font-size="12" text-anchor="middle" fill="currentColor">collision gate</text>
-  <text x="335" y="84" font-size="11" text-anchor="middle" fill="currentColor">refuses a file a peer holds</text>
-  <line x1="430" y1="200" x2="473" y2="200" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="451" y="156" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">pushes and opens</text>
-  <rect x="475" y="164" width="180" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="194" font-size="12" text-anchor="middle" fill="currentColor">Pull request</text>
-  <text x="565" y="212" font-size="11" text-anchor="middle" fill="currentColor">checks run here</text>
-  <line x1="525" y1="164" x2="525" y2="102" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="517" y="136" font-size="10" font-style="italic" text-anchor="end" fill="currentColor">the diff</text>
-  <rect x="475" y="44" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Reviewer</text>
-  <text x="565" y="84" font-size="11" text-anchor="middle" fill="currentColor">passes it on, or posts findings</text>
-  <line x1="605" y1="100" x2="605" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="613" y="136" font-size="10" font-style="italic" fill="currentColor">findings on a fail</text>
-  <line x1="655" y1="72" x2="698" y2="72" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="676" y="36" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">once it is read</text>
-  <rect x="700" y="44" width="160" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="66" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Lander</text>
-  <text x="780" y="84" font-size="11" text-anchor="middle" fill="currentColor">sets the merge order</text>
-  <line x1="780" y1="100" x2="780" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="788" y="136" font-size="10" font-style="italic" fill="currentColor">enqueues it</text>
-  <rect x="700" y="164" width="160" height="72" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="205" font-size="12" text-anchor="middle" fill="currentColor">Merge queue</text>
-  <line x1="780" y1="236" x2="780" y2="298" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="788" y="272" font-size="10" font-style="italic" fill="currentColor">merges</text>
-  <rect x="700" y="300" width="160" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="780" y="332" font-size="12" text-anchor="middle" fill="currentColor">Trunk</text>
-  <line x1="565" y1="236" x2="565" y2="298" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="573" y="272" font-size="10" font-style="italic" fill="currentColor">a red check</text>
-  <rect x="475" y="300" width="180" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-  <text x="565" y="322" font-size="12" font-weight="bold" text-anchor="middle" fill="currentColor">Regulator</text>
-  <text x="565" y="340" font-size="11" text-anchor="middle" fill="currentColor">whose red is it</text>
-  <polyline points="475,328 105,328 105,238" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#korus-arrow)" />
-  <text x="290" y="320" font-size="10" font-style="italic" text-anchor="middle" fill="currentColor">only the pull request's own red</text>
-</svg>
-<figcaption>The console writes one brief and spawns a builder for it, and that builder exits when the
-brief is done. Each builder gets its own worktree and its own branch. The collision gate still
-refuses an edit to a file a peer already holds. A pull request reaches the lander only through the
-reviewer, and the merge queue is what merges. A red check goes to the regulator, which sends back
-only the pull request's own failure. The dashed box and arrow mark machinery rather than a
-seat.</figcaption>
+<a id="g04"></a>
+
+<figure class="explain-figure">
+<picture>
+<source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="Console, Builder, Reviewer, and authorized Lander hand work to the merge queue; failed checks reach Regulator." loading="lazy" width="797" height="1027">
+</picture>
+<figcaption>The Console briefs a Builder. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
+
+The Builder uses its own worktree and branch, with the collision gate checking covered edits.
+Findings stay on the pull request for correction; the Reviewer does not merge.
+
+A role name grants no merge permission. The operator must give the Lander authority through the
+[documented route](RUNNING-MULTIPLE-SESSIONS.md); the retired review label enforces nothing.
 
 | Session | Owns | Must not |
 |---|---|---|

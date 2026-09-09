@@ -115,6 +115,7 @@ examined; it does not mean nothing was wrong.
 | `scripts/hooks/_gittarget.ps1` | Which repository a git command actually acts on. Dot-sourced by the worktree gate, and pulls in `_common.ps1` itself | [Hooks](HOOKS.md) |
 | `scripts/site/publish_sources.py` | Copies everything `git ls-files` tracks into the built site, which is why the paths on this page resolve without a clone | [House style](HOUSE-STYLE.md) |
 | `scripts/site/publish_revisions.py` | Validates archive hashes, publishes exact `.old.md` sources, and checks revision links and search exclusion after the Jekyll build | [House style](HOUSE-STYLE.md) |
+| `scripts/site/plot_token_meter.py` | Rebuilds the token-meter chart from the published measurement table | [Token accounting](TOKEN-ACCOUNTING.md) |
 | `scripts/site/build_redirect.py` | Builds the forwarding site for the old GitHub Pages address, a stub per old URL. It cannot help the reader the move was made for | [House style](HOUSE-STYLE.md) |
 | `scripts/coord/session-registry.ps1` | The liveness fence: reads the client's session registry and decides whether a session is alive. Liveness may only VETO, never PERMIT -- DEAD/STALE/absent is the absence of a veto, not a permission | [Concepts](CONCEPTS.md) |
 | `scripts/coord/occupancy.ps1` | The one cwd-to-worktree matcher, returning a receipt alongside its rows (roots examined, records examined, records that could not be placed) and setting `Available` only when there was something to examine | [Concepts](CONCEPTS.md) |

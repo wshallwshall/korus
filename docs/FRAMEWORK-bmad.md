@@ -84,6 +84,7 @@ bmad-ux                        bmad-validate-prd
 ## BMAD vs Ultracode
 
 <figure role="group">
+<div class="legacy-diagram-desktop" tabindex="0" role="region" aria-label="Wide diagram; scroll horizontally to read">
 <svg viewBox="0 0 840 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BMAD run alone writes persistent files from a set of personas with no fixed order. Ultracode run alone fans out to anonymous subagents that return data and leave nothing on disk. Combined, BMAD's planning files become the input Ultracode's fan-out executes against, except for BMAD's stateful skills, which must stay out of the fan-out.">
   <defs>
     <marker id="bmad-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -176,9 +177,13 @@ bmad-ux                        bmad-validate-prd
     <tspan x="46" dy="16">no lock between the read and the write. Route only planning output and checked review skills in.</tspan>
   </text>
 </svg>
+</div>
+<div class="legacy-diagram-mobile">
+  <img src="/assets/diagrams/bmad-workflow-mobile.svg" alt="BMAD writes planning files; Ultracode runs parallel tasks; stateful skills stay outside the fan-out." loading="lazy" width="339" height="1798">
+</div>
 <figcaption>BMAD alone writes persistent files from personas with no fixed order. Ultracode alone
 fans out to anonymous subagents that return data and leave nothing on disk. Combined, BMAD's
-planning files become the input Ultracode's fan-out executes against.</figcaption>
+planning files become the input Ultracode's fan-out executes against. <a href="/assets/diagrams/bmad-workflow-mobile.drawio">Editable mobile diagram</a>.</figcaption>
 </figure>
 
 ---

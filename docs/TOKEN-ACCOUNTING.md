@@ -28,6 +28,15 @@ message. We paired each total with its live weekly percentage at the same moment
 | C | 37 percent | 1,348,106,117 | 50,279,736 | 36,435,300 | 1,358,912 |
 | D | 97 percent | 2,779,391,470 | 102,320,610 | 28,653,520 | 1,054,852 |
 
+<a id="g13"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="assets/charts/g13-token-meter-mobile.svg">
+    <img src="assets/charts/g13-token-meter.svg" width="800" height="490" alt="Two zero-baseline bar charts compare raw and non-cache-read tokens per meter point for accounts A through D. Exact values appear in the preceding table." loading="lazy">
+  </picture>
+  <figcaption>Four accounts measured on 2026-08-12. Non-cache-read tokens vary less per meter point; each panel uses its own labeled scale. Account D lacks local transcripts for two days of meter activity. Token use does not measure progress or promise current prices. <a href="/SCRIPTS.html">Chart builder</a> reads the table above.</figcaption>
+</figure>
+
 The weekly windows began two to six days before the reading. Three of the four were near their end,
 leaving a short span to extrapolate.
 

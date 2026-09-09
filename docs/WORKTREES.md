@@ -523,3 +523,5 @@ commands:
 
 Run `pwsh -NoProfile -File bin/ccx-doctor.ps1` to check which guards are installed and enforcing on
 this machine.
+
+The [shared-state map](CONCEPTS.md#g01) separates each worktree from the records the clone shares.

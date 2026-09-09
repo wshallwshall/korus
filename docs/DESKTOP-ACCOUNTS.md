@@ -79,6 +79,15 @@ That observed behavior is the basis for using the variable here.
 
 Create one shortcut per account to reopen its signed-in window.
 
+<a id="g12"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="assets/diagrams/g12-account-boundaries-mobile.svg">
+    <img src="assets/diagrams/g12-account-boundaries.svg" width="799" height="815" alt="Two account instances have separate desktop profiles and Code config roots. Discovery scans both session registries; repository coordination stays shared." loading="lazy">
+  </picture>
+  <figcaption>The launcher sets two paths per account. The desktop profile keeps its sign-in; the Code root holds credentials, hooks, and session records. Discovery scans roots across accounts. These paths do not isolate repository state or create a security boundary. <a href="assets/diagrams/g12-account-boundaries.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 Each account needs a launcher script and a shortcut:
 
 1. A launcher script, at `%USERPROFILE%\claude-launchers\Launch-ClaudeDesktop-N.ps1`. Replace `N`

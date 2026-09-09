@@ -36,6 +36,15 @@ Follow [Quickstart](QUICKSTART.md) to install; [Install](INSTALL.md) explains fl
 
 ## The pieces
 
+<a id="g07"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g07-coordination-mobile.svg">
+    <img src="/assets/diagrams/g07-coordination.svg" alt="Presence, overlap, claims, and locks answer different questions." loading="lazy" width="799" height="788">
+  </picture>
+  <figcaption>The example uses two worktrees in one clone. A claim declares work; only a lock serializes its wrapped operation. <a href="/assets/diagrams/g07-coordination.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 | Question | Answer |
 |---|---|
 | Who is live in this repo, on any surface? | `scripts/coord/presence.ps1` |

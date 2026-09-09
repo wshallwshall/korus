@@ -144,3 +144,5 @@ tracked and could enter a commit through blanket staging.
 - [Role cards](ROLE-CARDS.md) -- the card format and the design record.
 - [The playbooks](PLAYBOOKS.md) -- the seven live seats.
 - [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) -- surfaces and channels.
+
+The [shared-state map](CONCEPTS.md#g01) shows which files belong to one worktree and which belong to the clone.

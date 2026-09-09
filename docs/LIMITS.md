@@ -137,6 +137,15 @@ The doctor's census exposes that zero count. Nothing inside a session detects th
 
 ## What the collision gate does not see
 
+<a id="g11"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g11-observation-scope-mobile.svg">
+    <img src="/assets/diagrams/g11-observation-scope.svg" alt="Collision observation covers peer worktrees and specific edit triggers." loading="lazy" width="799" height="1054">
+  </picture>
+  <figcaption>These controls prevent accidents within one clone. Unknown state is not an empty scan, and allowed edits do not prove safety. <a href="/assets/diagrams/g11-observation-scope.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 The collision gate refuses edits when a live peer worktree holds uncommitted changes to the same
 file. Its checks exclude the cases below.
 

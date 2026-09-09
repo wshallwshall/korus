@@ -39,6 +39,15 @@ table use portable, standard-library Python behind `/bin/sh` shims.
 
 ## The event map
 
+<a id="g06"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g06-events-mobile.svg">
+    <img src="/assets/diagrams/g06-events.svg" alt="Controls placed at their client and Git event triggers." loading="lazy" width="799" height="890">
+  </picture>
+  <figcaption>Controls run only when wired. The doctor verifies installation separately; event spacing does not measure time. <a href="/assets/diagrams/g06-events.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 Four harness events support these controls: `SessionStart` opens a chat, `PreToolUse` precedes a
 tool call, `UserPromptSubmit` receives a prompt, and `PreCompact` precedes a summary.
 

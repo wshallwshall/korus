@@ -211,6 +211,18 @@ delivers it twice.
 
 ## Step 5: split show from consume across two hook events
 
+<a id="g09"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g09-mail-timeline-mobile.svg">
+    <img src="/assets/diagrams/g09-mail-timeline.svg" alt="Mail stays queued after display until its session reaches Stop." loading="lazy" width="799" height="917">
+  </picture>
+  <figcaption>The shipped drain emits mail before writing its display marker. A failed marker can cause repeat display; a closed parent cannot run hooks. <a href="/assets/diagrams/g09-mail-timeline.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
+The diagram follows `mail-drain.ps1`: at `Stop`, it moves mail to `seen/` before writing the receipt.
+The design discussion below lists the intended consume steps; that list is not the shipped write order.
+
 Keep mail available if a newly started session vanishes before working.
 
 One launch produced six `SessionStart` events with six ids. Only one session submitted a prompt,

@@ -38,6 +38,15 @@ commit-time checks cannot defend those reservations.
 
 ## The defect
 
+<a id="g10"></a>
+<figure class="explain-figure">
+  <picture>
+    <source media="(max-width: 1100px)" srcset="/assets/diagrams/g10-allocation-race-mobile.svg">
+    <img src="/assets/diagrams/g10-allocation-race.svg" alt="Two callers race to reserve one sequence number." loading="lazy" width="799" height="1143">
+  </picture>
+  <figcaption>Exclusive creation grants one caller the number and makes the other try the next. The separate pre-commit gate remains unwired until installed manually. <a href="/assets/diagrams/g10-allocation-race.drawio">Editable diagram</a>.</figcaption>
+</figure>
+
 Two sessions can each see `0004` as free and create `0004-alpha.md` and `0004-beta.md`.
 They can also add two `## 58.` headings sixteen hundred lines apart.
 
