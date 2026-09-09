@@ -15,7 +15,7 @@ two that survived a full review.
 | The drain | `scripts/hooks/mail-drain.ps1` |
 | The tests, one class per failure below | `tests/test_session_mail.py` |
 
-The urgent mid-turn tier remains deliberately unbuilt. [Its limits](#a-mid-turn-wake-up-is-one-shot-and-cannot-fix-itself) explain why.
+The urgent mid-turn tier is not built. [Its limits](#a-mid-turn-wake-up-is-one-shot-and-cannot-fix-itself) explain why.
 
 [Announce](COORDINATION.md#announcing-yourself) delivers only to sessions started by the desktop app on its account. It cannot
 reach either peer described above.
