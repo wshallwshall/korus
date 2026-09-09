@@ -163,7 +163,7 @@ When you do land work, four states all read as "can't merge" and three need diff
 |---|---|---|
 | `BEHIND` | trunk moved | update the branch -- mechanical |
 | `DIRTY` | a real conflict | resolve by hand. Never treat it as `BEHIND` and force-push over it |
-| `BLOCKED` | usually just waiting | count actual failures in `statusCheckRollup` first; zero failures plus pending checks means wait |
+| `BLOCKED` | usually just waiting | take every `statusCheckRollup` entry whose `conclusion` is **not** `SUCCESS`, `SKIPPED` or `NEUTRAL`. Nothing in that set plus pending checks means wait. Do not count failures: a cancelled check is neither a failure nor pending, so it vanishes from both counts |
 | `UNKNOWN` | still being computed | re-read in a moment |
 
 Merge traps worth knowing before they cost you:

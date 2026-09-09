@@ -104,6 +104,7 @@ Nothing carries over from the last Regulator except the log.
 |---|---|---|
 | The log | `docs/CI-FAILURE-LOG.md` in the **vault** repo | Measured 2026-09-01: the engine's `origin/main` does not carry this file, while `docs/BACKLOG.md` on the same ref does. A seat that looks in the engine finds nothing and reads the absence as "no log exists". |
 | The red | `gh run view <id> --log-failed`, plus the failing test's pytest node id | The node id is the identity of the failure. The assertion text is not. |
+| **If the run has been re-run, that fetch is wrong** | `gh api repos/<owner>/<repo>/actions/jobs/<job-id>/logs`, with the job id from `.../runs/<id>/jobs?filter=all` | A run-scoped fetch serves the LATEST attempt's bytes for every attempt, so an earlier failure reads as clean. Check the log's first timestamp against that job's `started_at`. See `lander-reach-for-an-instrument` 6a-septies. |
 | The branch's own history | `gh run list --branch <b> --limit 5` | On a branch with one run there is no prior head, so the "did it fail this way before" test does not exist. **Say the discriminator is unavailable rather than assuming its answer.** |
 | The queue | See *The queue ejects silently* | Do this even when the red looks like a plain test failure. |
 

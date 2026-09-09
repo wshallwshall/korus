@@ -329,7 +329,14 @@ The capability is enabled and it did not fire. **So an armed PR still needs a ma
 | The common free case | A branch that has to be rebased anyway carries an extra fix for nothing, so holding it costs zero and needs no argument. |
 | ARMED plus DIRTY is a second deadlock | A conflict does not clear itself the way `update-branch` clears BEHIND, and it counts as progress on any board tallying armed PRs. |
 | Measured 2026-08-22 | A drain found every armed PR also DIRTY, so the armed count bought zero merges. |
-| Report "able to merge", never "armed" | Compute armed AND `mergeStateStatus` CLEAN AND every required check COMPLETED. The third clause named the `reviewed` label until that gate was retired; the general form outlives it. |
+| Report "able to merge", never "armed" | Compute armed AND `mergeStateStatus` CLEAN AND no required check BLOCKING, by the allow-list below. The third clause named the `reviewed` label until that gate was retired; the general form outlives it. |
+| **CORRECTED 2026-09-09: the third clause read "every required check COMPLETED".** | That passes a cancelled check. `CANCELLED` carries `status == COMPLETED`, so a completed-count and a failure-count both skip it and the pull request reads ready. |
+| Gate on an ALLOW-LIST, never a deny-list | `blocking = [c for c in rollup if (c.conclusion or "") not in ("SUCCESS", "SKIPPED", "NEUTRAL")]`. |
+| What a deny-list misses | It has to enumerate every bad value. `CANCELLED`, `TIMED_OUT`, `ACTION_REQUIRED` and `STALE` are each one omission away, and the omission is silent. |
+| Measured off-tree 2026-09-09 | A probe counting `FAILURE` and `IN_PROGRESS`/`QUEUED` reported `fail=0 pend=0` on a rollup holding 1 CANCELLED, 11 SKIPPED and 37 SUCCESS. The cancelled one was a required context. |
+| The local probe decides what to TRY, never what is TRUE | It reads a rollup. Branch protection reads its own set. Two different questions, and the probe answers the adjacent one. |
+| What reads the live required set HERE | `gh api repos/<owner>/<repo>/branches/main` exposes `.protection.required_status_checks.contexts` and needs no elevated scope. `gh pr merge` is the only actor that reads it AND acts. |
+| The condition, because this differs by repository | Where a merge queue exists the ENQUEUE holds that position. korus has none: `mergeQueue(branch:"main")` returns null with the repository node id present. Ask what the local equivalent is before carrying this rule anywhere. |
 | CLEAN is necessary and not sufficient | An engine PR measured 2026-09-02 carried the label while its required context sat at conclusion FAILURE. Gate retired 2026-09-04; a label is not a run verdict, and the next gate of that shape will lie the same way. |
 | One call gets two of the three fields | `gh pr list --json number,autoMergeRequest,mergeStateStatus`. |
 | Gate available | Assert on every drain pass that at least one open PR is armed and CLEAN. Route it to whoever builds gates. |

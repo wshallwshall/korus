@@ -74,6 +74,12 @@ anything left half-done stays half-done until a different session notices. Leave
 | The gate that taught it is gone | The owner removed the review gate on 2026-09-04, so `reviewed` no longer gates anything. The race above is a property of gates, not of that one, so it recurs. |
 | Read the newest run | A label cycle fired both an `unlabeled` run that failed and a `labeled` run that succeeded. The rollup shows the stale red; the newest run per name is the truth. |
 | Do not trust exit 0 | `gh pr edit`, `gh run cancel` and `gh pr merge --disable-auto` can each report success and change nothing. Read the state back. |
+| **A REFUSED COMMIT, THEN A SUCCESSFUL PUSH, SHIPS THE COMMIT BEFORE IT** | When a hook refuses, HEAD does not move. The next push then succeeds, and what it sends is the PREVIOUS commit. Nothing in either exit line says so. |
+| Why the refusal is easy to miss | A `pre-commit` runner prints its PASSING hooks after the refusal, so the tail of the output is green. Reading the last lines hides the one that mattered. |
+| Measured off-tree | It fired twice in one day, with two different gates. |
+| After committing | Assert HEAD MOVED and the tree is clean. `git rev-parse HEAD` before and after, and `git status --porcelain` empty. |
+| After pushing | Verify by CONTENT, not by the push's exit line. `git ls-remote origin <branch>` must equal your local HEAD. |
+| It generalises | Any two-step where the first step can refuse silently and the second reports on its own success has this shape. |
 | Re-derive, never reuse | Run ids and check ids go stale the moment a head moves. Re-derive with `gh run list -c "$sha"` at the current head. |
 | Leave the question on it | If your brief left something open, write it in the pull request body. There is no session to ask later, and a comment is the only channel that outlives you. |
 
