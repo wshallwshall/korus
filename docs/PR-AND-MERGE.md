@@ -136,7 +136,7 @@ the fix from that row's **Do** column.
 |---|---|---|---|
 | `BEHIND` | The branch does not contain the trunk tip. Mechanical; no conflict. | Merge the trunk in, or `gh pr update-branch <N>`. | -- |
 | `DIRTY` | A real textual conflict. | Resolve by hand, deliberately, in a worktree. | Treat it as `BEHIND`. That means resolving conflicts in a hurry to make a force-push succeed. |
-| `BLOCKED` | Required checks or reviews are not satisfied. Usually still running. | Count *actual failures* in `statusCheckRollup`. Zero failures plus pending legs means **wait**. | Rebase and force-push -- it cancels the running checks and restarts the clock. |
+| `BLOCKED` | Required checks or reviews are not satisfied. Usually still running. | Take every rollup entry whose `conclusion` is **not** `SUCCESS`, `SKIPPED` or `NEUTRAL`. Nothing in that set plus pending legs means **wait**. | Count *actual failures*. A cancelled check is not a failure and not pending, so it vanishes from both counts and a blocked branch reads ready. |
 | `UNKNOWN` | The code host is still recomputing mergeability. | Re-read in a few seconds. | Anything else. |
 
 `BEHIND` and `DIRTY` are the pair that get confused, and the wrong fix is the destructive one.
@@ -183,9 +183,14 @@ for ($i = 0; $i -lt 40; $i++) {
 
     # Check-run entries carry `conclusion`; legacy commit statuses carry `state`. Handle both or
     # you will poll past a failure without seeing it.
+    #
+    # ALLOW-LIST, not deny-list. This read `-in @('FAILURE','TIMED_OUT','CANCELLED')` until
+    # 2026-09-09. A deny-list has to name every bad value, and ACTION_REQUIRED and STALE were
+    # both missing. Naming the three GOOD values cannot be incomplete in that direction.
     $bad = @($j.statusCheckRollup | Where-Object {
-            $_.conclusion -in @('FAILURE','TIMED_OUT','CANCELLED') -or $_.state -eq 'FAILURE' })
-    if ($bad.Count -gt 0) { "failing: $($bad[0].name)"; break }
+            ($_.conclusion -and $_.conclusion -notin @('SUCCESS','SKIPPED','NEUTRAL')) -or
+            ($_.state -eq 'FAILURE') })
+    if ($bad.Count -gt 0) { "failing: $($bad[0].name) [$($bad[0].conclusion)]"; break }
 
     # THE THIRD ARM.
     if ($j.mergeStateStatus -eq 'BEHIND') { gh pr update-branch $pr | Out-Null }

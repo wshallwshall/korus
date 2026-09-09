@@ -117,6 +117,18 @@ every previous time only because those merges were genuinely clean.
 through `Select-Object` printed `exit=0` on a merge that had conflicted, because `$LASTEXITCODE`
 reflects the last element of the pipeline. Same family as `$?` after a pipe (SDS-3.8, *confirm your instrument answers the question you asked*).
 
+**THE CLEAN FIXTURE FOR THIS INSTRUMENT IS A SELF-MERGE.** Arm it in the same breath as the test,
+because both wrong directions are systematic and neither errors:
+
+```bash
+git merge-tree --write-tree "$MAIN" "$BRANCH" >/dev/null 2>&1; rc=$?
+git merge-tree --write-tree "$MAIN" "$MAIN"   >/dev/null 2>&1 || echo "CONTROL FAILED"
+```
+
+Merging a ref into itself must return 0. If it does not, the rc you just read is a fact about your
+pipeline or your argument form, not about the branch. Without it, a seat once priced one pull
+request as conflicting with every other open one.
+
 ### 14p. Git raised the cosmetic conflict and merged the semantic one silently -- a shared version integer
 
 The worst instance of the keep-both-sides family measured so far, because **resolving the visible

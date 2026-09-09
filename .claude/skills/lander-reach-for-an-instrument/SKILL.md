@@ -52,6 +52,8 @@ light proves only what the gate asserts*. This section carries only what is spec
 | grep for a token | is the token PRESENT | is it an assertion or a QUOTATION of one |
 | `hasattr(item, "statuses")` | attribute absent, so vacuously true | do items declare one status |
 | a job conclusion | did the JOB pass | did the STEP pass |
+| `gh run view --job <id> --log-failed` | the LATEST attempt's log | did THIS attempt fail, and how |
+| a conflict test on local refs | do the refs I FETCHED conflict | do the branches conflict |
 | `--is-ancestor` | is it an ancestor | did it land (false under squash-merge) |
 | filesystem path resolution | is it ON DISK | is it IN THE REPOSITORY |
 | `rev-list <ref> --not --all` | nothing, because `--all` includes the ref and subtracts it from itself | is this ref's content held anywhere ELSE |
@@ -142,6 +144,36 @@ nothing. Both measured.
 | Two open limits | A stale properly-formatted `FETCH_HEAD` (real on-disk form `<sha>\t\t<desc>`) was NOT tested, so a genuine wrong-merge on some other path is untested rather than ruled out. |
 | The second limit | "A failed fetch truncates `FETCH_HEAD` to empty" is observed, not proven, as the general cause of (a). |
 | Recorded as FALSE | "One fetch anywhere poisons every worktree." `FETCH_HEAD` is per-worktree (`.git/worktrees/<name>/FETCH_HEAD`; `git-dir` differs from `git-common-dir`), so it does not propagate. |
+
+### 6a-septies. One log fetch returns the latest attempt for every attempt
+
+A re-run happens IN PLACE, so one run record holds every attempt and a run-scoped log fetch serves
+the newest bytes whichever attempt you asked for.
+
+| Item | Rule |
+| --- | --- |
+| How it hides | Three attempts came back byte-identical, so real failures on attempts 1 and 2 read as clean. A duplicated artifact and a true one render the same. |
+| The identity control | Compare the log's first timestamp against that job's own `started_at`. Disagreement means you hold another attempt's bytes. Identity beats absence here: there is nothing missing to notice. |
+| The fetch that honours the attempt | `gh api repos/<owner>/<repo>/actions/jobs/<job-id>/logs`, with the job id taken from the attempt you mean. |
+| Enumerating the attempts | Pass `?filter=all` to the run's `jobs` endpoint. Without it an earlier attempt is not misread, it is ABSENT from the list, so a census cannot even see what it missed. |
+| What it costs a census | A rate counted from run-scoped logs is biased low. Measured off-tree 2026-09-09: 24 percent where the per-attempt logs gave 33 percent. |
+| THE DENOMINATOR TRAP BESIDE IT | A re-run emits NEW job ids for jobs it did not actually re-run, with `started_at` and `completed_at` byte-identical to the earlier attempt. Those are one execution, not two. Subtract them before dividing. |
+| Where this tree still ships it | `roles/REGULATOR.md` prescribes `gh run view <id> --log-failed` at its red-reading row, then asks the record row to carry an attempt number that fetch cannot honour. |
+| It needs no queue | This is GitHub Actions alone, and applies to any repository where anything is ever re-run. |
+
+### 6a-octies. A conflict test answers about the refs you last fetched, not about the branches
+
+Measured off-tree 2026-09-09: two pull requests tested together read CLEAN, with a passing control,
+and the merge refused. The local refs predated a push by each author that made them collide.
+
+| Item | Rule |
+| --- | --- |
+| The shape | The arithmetic was correct, the control passed, and the answer described two trees that no longer existed. |
+| Why no instrument caught it | A stale ref is a valid object. Every downstream check answers correctly about it, so nothing is broken enough to report. |
+| The rule | Re-fetch every head in the SAME command as the test. `for n in $PRS; do git fetch origin pull/$n/head:pr$n -qf; done` |
+| Why the same command | A test and a fetch in separate steps degrade silently into a claim about whatever you last fetched, and the gap grows with the session. |
+| The general form | Any "does A still apply after B" question computed over cached refs has this failure. Testing a rebase or a cherry-pick against a ref fetched earlier in the session is the same sentence. |
+| Its cost is not local | Where a queue exists, enqueuing the known-bad entry rebuilt the group and evicted a healthy pull request. Without one, the cost is the wasted merge attempt and whatever you told the author. |
 
 ### 6b. A green suite is evidence about the mutations it kills, and nothing else
 
