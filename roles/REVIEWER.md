@@ -554,4 +554,4 @@ so your successor can resume".
 | Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it. |
 | Label the kind of a hold when you hand one over | A mechanical hold and a hold resting on your own judgment inherit differently. Beside mechanical rows, an unlabelled judgment call reads as mechanical and stops being examined. |
 | Never quote a count you did not just read | The required-check set drifts, differs per repository, and so does the workflow set. Both commands are in "the label is the only signal" and "Do not re-report what a green check already covers". |
-| Tone | The useful handoff sentence is the measured one, not the alarming one. The cost of being wrong scales with how good the sentence sounds. See [COMMON.md](COMMON.md), "The alarming sentence". |
+| Tone | The useful handoff sentence is the measured one, not the alarming one. The cost of being wrong scales with how good the sentence sounds. See `.claude/skills/fleet-conclude-from-a-reading`, row *The alarming sentence*. It moved there when COMMON.md became a skill-pointer index. |

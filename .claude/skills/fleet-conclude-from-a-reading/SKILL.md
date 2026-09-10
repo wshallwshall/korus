@@ -53,7 +53,8 @@ Carry the instant with any number you remember, or do not carry the number.
 | The same instrument twice | Do not treat a reading that agrees with the code as corroboration. |
 | Identity beats absence | Compare bytes or hashes. Absence of evidence needs a control; identity does not. |
 | Hedges | Do not write "probably" when one command gives you the fact. |
-| The alarming sentence | Measure the more alarming sentence before you write it or relay it. |
+| The alarming sentence | Measure the more alarming sentence before you write or relay it, **when you are about to fire it at someone else's work**. That scope is what separates this row from the next, which would otherwise contradict it. |
+| Why the direction matters | An overstated blocker deters the only party entitled to clear it. `lander-reach-for-an-instrument` 6e. |
 | Findings that agree | Test a finding hardest when it supports you, and hardest of all when it puts nobody in error. |
 | Label and mechanism | Examine the label and the mechanism separately. A false mechanism outlives a wrong answer. |
 | Three states | Write "confirmed", "refuted" and "untested" as three different states. |

@@ -93,7 +93,7 @@ independently and found a sharpening that had been missed.
 
 ### 6h. Hedging does not reduce the cost of a claim you could have measured
 
-Source of record: COMMON.md, rows *Hedges* and *The alarming sentence*.
+Source of record: `.claude/skills/fleet-conclude-from-a-reading`, rows *Hedges* and *The alarming sentence*. Both moved there when COMMON.md became a skill-pointer index; COMMON.md carries neither string.
 
 | Item | Rule |
 | --- | --- |
