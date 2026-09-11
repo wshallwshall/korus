@@ -636,9 +636,18 @@ Every backlog-filing merge appends to the same tail, so every such merge invalid
 backlog PR. `docs/adr/README.md` is the same shape: every PR in a wave appends its index row as the
 **last line**, so every landing conflicts the rest there too. Measured 2026-08-20.
 
+**Amended 2026-09-11: the trigger is `main` moving, not how many PRs are batched.** Four conflicts
+that day (PRs 1029, 1030, 1032, 1049) each had a branch that was correct when written.
+
+A row appended past what was the tail at the last rebase is no longer at the tail once anything
+lands. The window that matters is the gap between your last rebase and your merge.
+
+With a queue revalidating each entry against the stack, that gap is minutes to hours even at depth
+one. Holding to one in flight cannot close it.
+
 | Item | Rule |
 | --- | --- |
-| Expect it, and say so | Conflicts scale with how many filing PRs are open. Hold to **one backlog PR in flight at a time**. |
+| Expect it, and say so | Conflicts scale with how many filing PRs are open. Hold to **one APPENDING backlog PR in flight at a time**. Read *7c-bis* before applying that to an interior insert. |
 | Tell the owner what caused it | The queue caused the conflict, not the author's mistake. |
 | One in flight is not one per edit | The tail conflict is per **PR**, not per edit. N edits batched onto one branch cost exactly one tail resolution. |
 | Measured 2026-08-22 | **16 separate ledger-only PRs** in one drain, each burning a full required-check slot and re-BEHINDing every other open PR, for **zero closures**. |
@@ -653,7 +662,88 @@ backlog PR. `docs/adr/README.md` is the same shape: every PR in a wave appends i
 | Why | "Keep both sides" taken on faith is how a mechanically clean merge lands a duplicate. |
 | The authorship tell | A ledger-touching merge is the cheapest way to manufacture a conflict on your own queue. |
 | Measured 2026-08-22 | A lander landed one ledger PR and it immediately made the next ledger-touching PR DIRTY. Read who merged the dirtying commits. It was you. |
-| The check runs before the merge | List the open PRs whose diff also touches `docs/BACKLOG.md`. If any, batch or hold. That is gate-shaped. |
+| The check runs before the merge, and it is MANUAL | List the open PRs whose diff also touches `docs/BACKLOG.md`. If any, batch or hold. |
+| "Gate-shaped" is not "built" | No workflow does any part of it. `backlog-hygiene.yml` enforces banners and citations against ONE pull request, and a `pull_request` run has no way to see the others. |
+
+Measured 2026-09-11 on the engine repo at `8c50cb05b`, over `.github/workflows/backlog-hygiene.yml`:
+
+```
+grep -nE 'gh pr list|pulls\?|open PR|search/issues' .github/workflows/backlog-hygiene.yml
+grep -c "" .github/workflows/backlog-hygiene.yml        # the control
+```
+
+One hit, line 176, and it is a comment explaining a three-dot diff. Nothing enumerates another pull
+request. The control returns 273, so a zero would have meant absence rather than a dead pattern.
+
+### 7c-bis. Only an APPEND collides. An interior insert at a vacant slot resolves in parallel
+
+7c treated the ledger tail as one shape. It is two, and the difference decides whether you may
+resolve a conflict clique in parallel or must serialize it.
+
+A vacant interior slot is a number allocated and never filed, or filed and withdrawn. An insert
+there touches no other row, so it cannot collide with the tail or with another interior insert.
+
+Measured 2026-09-11 on `MEFORORG/MessageFoundry` at `origin/main` `8c50cb05b`:
+
+```
+grep -oE '^## [0-9]+\.' docs/BACKLOG.md | grep -oE '[0-9]+' | tail -6
+for n in 1528 1529 1530 1531 1533; do grep -c "^## $n\." docs/BACKLOG.md; done
+```
+
+The tail read 1524, 1525, 1526, 1527, 1528, 1533. The per-number counts read 1528 -> 1, 1529 -> 0,
+1530 -> 0, 1531 -> 0, 1533 -> 1.
+
+**The zeros are the finding. 1528 and 1533 are the controls that make a zero mean vacant rather than
+a broken grep.**
+
+| Item | Rule |
+| --- | --- |
+| Two shapes | An APPEND writes past the current last row. An INTERIOR INSERT fills a vacant slot between two present rows. |
+| Only appends serialize | Of the four conflicts that day, three were interior: #1529 was PR 1030, #1530 was PR 1029, #1531 was PR 1032. |
+| So resolve interior inserts in PARALLEL | Each sits at its own slot and leaves the clique permanently, not in turn. |
+| A true-tail clique still goes in ascending order | #1537, #1539 and #1544/#1545 were one. Rebase each only when it is NEXT. |
+| What 7c had wrong | Serializing interior inserts costs throughput and prevents nothing. |
+| What it costs | 34 open PRs that day, the large majority touching `docs/BACKLOG.md`. Strict one-at-a-time makes that one file the throughput ceiling for the whole repository. |
+| Never resolve by DELETING a row | `scripts/hooks/ledger_check.py` refuses a commit that deletes a BACKLOG item heading. A vanishing id trips the gate, and that is the gate working. |
+| Land it closed instead | A seat hit this on 2026-09-11 and landed #1531 closed-as-invalid rather than dropping it. |
+| Credit | The interior/tail distinction is the `manager-a3db9d` seat's. The Lander verified it before adopting it. |
+
+### 7c-ter. An evicted queue entry reads CLEAN, so read the merge itself and arm both controls
+
+Three instruments look authoritative here and are not: GitHub's cached merge opinion, the pull
+request's file list, and a run history showing no failures.
+
+| Item | Rule |
+| --- | --- |
+| Never derive the conflict set from the file list | `gh pr view --json files` lists CHANGED files, not CONFLICTING ones. Read as a conflict set on PR 1030 it named three files where `merge-tree` named one. |
+| Read the merge itself | `git merge-tree --write-tree origin/main <head>` for the exit code, `git merge-tree --name-only origin/main <head>` for the conflicting files. |
+| Always with two controls | `origin/main` against itself MUST exit 0. The PR's own PRE-FIX head MUST exit non-zero. |
+| Why its own pre-fix head | It makes the 0 attributable to that merge rather than to a check that cannot fail. A generic negative arm proves less. |
+| Measured on PR 1030 | Subject `d5b77a333` gave 0, the self-merge gave 0, pre-fix head `e520ad2f3` gave 1. |
+| Never read `mergeStateStatus` as the verdict | It is GitHub's cached opinion. It goes UNKNOWN, it goes stale, and it disagrees with the queue's own build. |
+| The shape that fools you | An entry EVICTED from the merge queue reads CLEAN or MERGEABLE at PR level, with its head unmoved. |
+| Credit | The own-pre-fix-head refinement is from the session that resolved PR 1030. |
+
+**The queue and pull-request CI share one runner pool, and a starved entry is evicted in silence.**
+
+Measured 2026-09-11 at 22 runs queued against 4 in progress: PR 1036's entry sat 30 minutes and was
+evicted. `main` never moved, and no `gh-readonly-queue` run ever appeared, because its build never
+got a slot. The Lander caused it by refreshing eight PRs at once for an unrelated reason.
+
+```
+gh run list --limit 100 --json status    # compare queued to in_progress BEFORE you enqueue
+```
+
+**A cancelled required check is a third route to eviction, and it reports zero failures.**
+
+`backlog-hygiene.yml` records its own case in its `concurrency` block. The key collapsed to a bare
+string on `merge_group`, so each queue entry cancelled the one before it.
+
+Measured over 754 `merge_group` runs: 151 backlog-hygiene runs, 102 success, 49 CANCELLED at 32.5
+percent, and ZERO failures. A cancelled required check can never go green, so the entry was evicted.
+
+The tell was an eviction 50 seconds after queueing, far too fast for any check to have run. That key
+is fixed. **The reading habit it teaches is not repo-specific: no failures is not an all-clear.**
 
 ### 7d. Ledger-first ordering, and close before you file
 
