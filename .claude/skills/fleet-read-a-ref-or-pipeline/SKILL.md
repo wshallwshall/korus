@@ -75,7 +75,7 @@ direction.
 Reading a working tree answers about whatever that checkout holds. Nothing errors, and the branch
 name carries no warning.
 
-Measured 2026-09-11 in the engine clone at `C:\Users\Scott\Code\MessageFoundry`, over
+Measured 2026-09-11 in a non-primary engine clone, over
 `.github/workflows/backlog-hygiene.yml`:
 
 ```
@@ -99,7 +99,7 @@ shallow and `origin/main` is still complete* for why that reach fails in general
 
 **A tool whose interface takes a PATH cannot be fixed by `git show`, and that is the second shape.**
 
-Measured 2026-09-10 on the vault primary at `C:\Users\Scott\Code\MessageFoundry-vault`, sitting on
+Measured 2026-09-10 on the vault primary checkout, sitting on
 `asvs-878-anchor-repair-1180` with a clean tree:
 
 ```
