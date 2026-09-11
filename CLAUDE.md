@@ -77,8 +77,13 @@ one is stale.
 ## The constitution governs
 
 [The KORUS Constitution](.specify/memory/constitution.md) holds the rules a session, a seat, a gate
-or a later spec may not break. Twelve articles at v1.10.0. Every article names the evidence behind
+or a later spec may not break. Thirteen articles at v1.15.0. Every article names the evidence behind
 it, so a reader can check rather than trust.
+
+**That line read "Twelve articles at v1.10.0" until 2026-09-10, and both numbers were wrong.**
+Measured at `5de5594`: `grep -cE '^#{2,3} [IVX]+\.' .specify/memory/constitution.md` returns 13, and
+the document's own Version line read 1.14.0. Control, same pattern over `README.md`: 0, so the
+heading shape is specific to the constitution.
 
 Four articles bite on ordinary work here:
 

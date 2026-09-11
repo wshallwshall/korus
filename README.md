@@ -27,7 +27,7 @@ Alongside it are the seat playbooks in [`roles/`](roles/), the working guides in
 [`docs/`](docs/), and the specs in [`specs/`](specs/). The constitution outranks all of them:
 where a playbook and an article disagree, the article wins and the playbook is the bug.
 
-Twelve articles, in short:
+Thirteen articles, in short:
 
 | | |
 |---|---|
@@ -43,8 +43,9 @@ Twelve articles, in short:
 | X | A seat that cannot be measured cannot be steered |
 | XI | A seat's job is to write something down |
 | XII | The shared write surface is the boundary that binds, not the account |
+| XIII | Work reaches the model through Claude Code, never through the API |
 
-It is at **v1.10.0** and it expects to be wrong in places. Most articles rest on a small
+It is at **v1.15.0** and it expects to be wrong in places. Most articles rest on a small
 number of observations, several from a single night of operation, and the document says so.
 Amendments require evidence, and retired text stays with the reason it was retired.
 
