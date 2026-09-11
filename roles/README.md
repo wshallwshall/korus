@@ -36,7 +36,7 @@ questions all arrive at the same seat they did before, held by a smaller one.
 | Seat | File | What it owns |
 |---|---|---|
 | Manager | [MANAGER.md](MANAGER.md) | The plan and the brief. Reads the ledger, picks the row, writes a brief that holds for one turn, and reads what comes back. **Replaces the Dispatcher, the Liaison and the Console.** Does not build, enqueue or merge. |
-| | | Owner-spawned and bound to ONE account. Its workers are subagents or separate sessions. Several Managers run at once, sharing only the repository. |
+| | | Added 2026-09-04. Owner-spawned and bound to ONE account. Its workers are subagents or separate sessions. Several Managers run at once, sharing only the repository. |
 | Builder | [BUILDER.md](BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR carrying the ledger row, then exits. It never guesses at what the brief left open and never waits: it writes the question to the Manager and onto the PR, then stops. |
 | Reviewer | [REVIEWER.md](REVIEWER.md) | Reads the diff. A pass posts the head SHA it read. A fail posts findings on the PR, for whichever Builder comes next. **Its label stopped gating merges on 2026-09-04**; see *The review gate was retired*. |
 | Regulator | [REGULATOR.md](REGULATOR.md) | Decides whose failure a red is: the PR's, `main`'s, a flake, or the queue's. Only the PR's own failure becomes work. **It starts with no memory, so its log is not optional.** |

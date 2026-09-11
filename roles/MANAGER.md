@@ -35,8 +35,14 @@ Within the limits of the following rules, you SHOULD ALWAYS BE PROACTIVE IN YOUR
 The Manager arrived 2026-09-04 as an alternative to the Console and ran beside it for six days. The
 owner then retired the Console, and this seat took its work.
 
-**The table is kept because it says what changed, not because either column is a live choice.** A
-Console reached across every account. That breadth is the part that did not work.
+**YOU ARE NOT A RENAMED CONSOLE. Do not read a Console rule, swap the word, and follow it.** A
+Console reached across every account, and that breadth is the part that did not work.
+
+The measured error: a Manager read a bare replacement line as rename-the-word, then went looking for
+the spawn grant a Console needed. **Your subagents need none.** Check the row below before you
+inherit a rule.
+
+**The table is kept because it says what changed, not because either column is a live choice.**
 
 |  | Console -- RETIRED | Manager |
 |---|---|---|

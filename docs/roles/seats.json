@@ -57,12 +57,18 @@
     "silent. Silence would send the reader looking for a card that was deliberately removed.",
     "Their playbooks stay in roles/retired/ as the record of what each seat did.",
     "Nothing replaced the PM, the Cleaner, the Role manager or the Process improvement seat.",
-    "The console rows carry the two spellings that were aliased. A numbered spelling such as",
-    "console1 resolves to nothing, and the reply names the live seats."
+    "EVERY observed console spelling gets its own row, because an alias must land on a LIVE seat.",
+    "A spelling left out resolves to MATCHES NO SEAT, which reads as a typo rather than as a",
+    "roster fact, so the reader never learns the seat was retired.",
+    "A retirement reason NAMES A DIFFERENCE rather than only the successor. A bare replacement",
+    "line leaves substitution as the obvious next move: a Manager read one as rename-the-word and",
+    "went looking for a spawn grant its subagents do not need."
   ],
   "retired": {
-    "console": "Retired 2026-09-10. The Manager replaces it. Broad oversight across every account did not work, so a Manager sits inside one account and runs its Builders as subagents or as separate sessions.",
-    "consul": "Retired 2026-09-10. A spelling of console, which the Manager replaces. See the console row.",
+    "console": "Retired 2026-09-10 by owner decision. The MANAGER replaces it, and is NOT a renamed Console: a Manager sits inside ONE account, several run at once, and its workers can be subagents in its own process, for which it needs NO spawn grant. Broad oversight across every account is the part that did not work. Do not substitute the word and carry the old rules over.",
+    "console1": "Retired 2026-09-10 by owner decision. A numbered spelling of console. See the console row for what the Manager does differently.",
+    "console-1": "Retired 2026-09-10 by owner decision. A numbered spelling of console. See the console row for what the Manager does differently.",
+    "consul": "Retired 2026-09-10 by owner decision. A spelling of console. See the console row for what the Manager does differently.",
     "dispatcher": "Retired 2026-09-01. The Console replaced it, and the Console itself retired 2026-09-10. The Manager now reads the record, picks the work and runs a Builder.",
     "liaison": "Retired 2026-09-01. The Console replaced it, and the Console itself retired 2026-09-10. The Manager is the seat the Owner talks to.",
     "pm": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",
