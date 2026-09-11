@@ -84,16 +84,15 @@ Work is divided among **seats**, each a session with one job:
 
 | Seat | What it does | Lifetime |
 |---|---|---|
-| Console | Plans, spawns workers, holds the owner's attention | long-lived |
-| Manager | Same job as a Console, but its workers are in-process subagents | long-lived |
+| Manager | Plans, runs workers, holds the owner's attention | long-lived |
 | Builder | Takes one brief, does the work, opens a pull request | one turn |
 | Reviewer | Reads one pull request | per pull request |
 | Regulator | Attributes a failing build | woken on a red |
 | Steward | Writes files other seats read | cron, no model calls |
 | Lander | Decides merge order | long-lived |
 
-Seven further seats were tried and retired. Why each went is part of the record this
-repository is being built to hold.
+Eight further seats were tried and retired, the Console among them on 2026-09-10. Why each
+went is part of the record this repository is being built to hold.
 
 ## Repository layout
 

@@ -73,8 +73,9 @@ next session from restoring the error.
 Match every cut against its exact text and require exactly one match. Raise an error when nothing
 matches; otherwise an unchanged file can look successfully edited.
 
-Across the six live playbooks, the pass removed 64 of 8,698 lines. Those files were BUILDER, COMMON,
-LANDER, STEWARD, CONSOLE, and MANAGER.
+Across the six playbooks live on 2026-09-05, the pass removed 64 of 8,698 lines. Those files were
+BUILDER, COMMON, LANDER, STEWARD, CONSOLE, and MANAGER. CONSOLE retired on 2026-09-10, and the file
+is now `roles/retired/CONSOLE.md`.
 
 ```
 git stash list                                  # nothing of ours in flight
@@ -82,7 +83,7 @@ git diff --numstat -- roles/                    # the removed count, per file
 git show HEAD:roles/BUILDER.md | wc -l          # 950 before, against 913 after
 ```
 
-STEWARD, CONSOLE, and MANAGER had no removable material. Their retractions passed the keep-test, and
+STEWARD, CONSOLE and MANAGER had no removable material. Their retractions passed the keep-test, and
 STEWARD's rule sheet counted them.
 
 Check contradictions separately from length. Faithful compression preserves both sides of a

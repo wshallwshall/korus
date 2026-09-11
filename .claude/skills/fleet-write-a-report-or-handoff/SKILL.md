@@ -14,7 +14,7 @@ disable-model-invocation: false
 
 **Owner-set for the Dispatcher 2026-08-28 and generalised here**, because every seat spends the
 owner's tokens. The routing exception in *The owner reads by sampling* is about routing only. The
-standing column binds the Console too.
+standing column binds the Manager too.
 
 | Item | Rule |
 | --- | --- |

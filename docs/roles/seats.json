@@ -2,13 +2,13 @@
   "_comment": [
     "The seat roster, the alias map, and the retired seats with the reason each was retired.",
     "CLAUDE.md's seat table GOVERNS. This file must agree with it, and tests/test_role_cards.py",
-    "fails if the two drift apart. roles/README.md came across from a private vault and still",
-    "lists every retired seat below as live, so it is not a source for this file.",
+    "fails if the two drift apart. roles/README.md holds a third copy and is not a source for",
+    "this file. The claim that its live table listed seven retired seats as live was retracted",
+    "in CLAUDE.md on 2026-09-10; that table named one retired seat, in a Replaces clause.",
     "An unmapped label resolves to NOTHING. The hook never guesses."
   ],
 
   "live": [
-    "console",
     "manager",
     "builder",
     "reviewer",
@@ -36,9 +36,6 @@
     "reviewer-1": "reviewer",
     "review": "reviewer",
     "reviewers": "reviewer",
-    "console1": "console",
-    "console-1": "console",
-    "consul": "console",
     "lander1": "lander",
     "lander-1": "lander",
     "land": "lander",
@@ -59,11 +56,15 @@
     "A retired label resolves to NO CARD, and the hook says it was retired rather than staying",
     "silent. Silence would send the reader looking for a card that was deliberately removed.",
     "Their playbooks stay in roles/retired/ as the record of what each seat did.",
-    "Nothing replaced the PM, the Cleaner, the Role manager or the Process improvement seat."
+    "Nothing replaced the PM, the Cleaner, the Role manager or the Process improvement seat.",
+    "The console rows carry the two spellings that were aliased. A numbered spelling such as",
+    "console1 resolves to nothing, and the reply names the live seats."
   ],
   "retired": {
-    "dispatcher": "Retired 2026-09-01. The Console replaces it: it reads the record, picks the work and spawns a Builder.",
-    "liaison": "Retired 2026-09-01. The Console replaces it and is the only seat the Owner talks to.",
+    "console": "Retired 2026-09-10. The Manager replaces it. Broad oversight across every account did not work, so a Manager sits inside one account and runs its Builders as subagents or as separate sessions.",
+    "consul": "Retired 2026-09-10. A spelling of console, which the Manager replaces. See the console row.",
+    "dispatcher": "Retired 2026-09-01. The Console replaced it, and the Console itself retired 2026-09-10. The Manager now reads the record, picks the work and runs a Builder.",
+    "liaison": "Retired 2026-09-01. The Console replaced it, and the Console itself retired 2026-09-10. The Manager is the seat the Owner talks to.",
     "pm": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",
     "project-manager": "Retired 2026-09-01 by Owner decision. Nothing replaced it. See roles/retired/PM.md.",
     "cleaner": "Retired 2026-09-01 by Owner decision. Nothing replaced it.",

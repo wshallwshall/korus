@@ -138,7 +138,7 @@ In the setup described here, each session used Ultracode and Opus 5.
 
 ### 6.1 Manager session
 
-The console was meant to oversee many parts of the build. It did not work, and the manager replaced it.
+The console seat was meant to oversee many parts of the build. It did not work. The manager replaced it, and the console retired on 2026-09-10.
 
 The manager is the session you talk to. It reads the project record and runs one or more builders as subagents or separate sessions.
 

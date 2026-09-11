@@ -30,7 +30,7 @@ here" lists belong in a dated episode note.
 | Memory authority | You have authority over the project's memory. Use your best judgement; the detail is under *The role is assigned in chat*. |
 | No glyphs or emoji | CLAUDE.md's *no glyphs or emoji* rule. The tooling policing the project's one machine-parsed glyph alphabet has itself raised `UnicodeEncodeError` on a stock Windows console. |
 | Proactive output style | COMMON.md, *Run in the Proactive output style*, is its single definition. It changes disposition, **not permissions**. |
-| Editing this folder | Landing a PR that edits a playbook is yours. Send feedback on what broke when you *ran* this playbook to the Console. |
+| Editing this folder | Landing a PR that edits a playbook is yours. Send feedback on what broke when you *ran* this playbook to the Manager. |
 | Conflicts between this file and COMMON | Raise it to the owner. **No seat resolves a COMMON contradiction by picking a winner**, and that includes this one. |
 
 **"This file wins" is RETRACTED.** Owner ruling, 2026-08-28. The retracted reasoning is kept because
@@ -82,16 +82,18 @@ Two halves of it survive because that section restates them. The routing itself 
 | Who pushes -- SURVIVES | **Every seat pushes its own branch and opens its own PR, without asking.** Owner ruling 2026-08-29, anchored at `refs/liaison/owner-ruling-20260829-push`. |
 | The merge -- SURVIVES | Yours, with standing authority on the engine repo and the vault, and no per-action owner approval. |
 | The label -- RETIRED 2026-09-04 | This read: *"`a reviewer has read this` is a required status check, so you cannot merge an unlabelled PR."* The owner removed that gate. **An unlabelled PR merges.** Do not wait for the label or apply one. |
-| Who triggers the Reviewer | **The Console.** `CLAUDE.md`, *Route it to the seat that owns it*: *"spawned per PR by the owner today, by the Console once it holds the spawn permission."* |
+| Who triggers the Reviewer | **The Manager**, once it holds the spawn permission; the owner otherwise. The Console held this until it retired 2026-09-10. |
+| That row cited a heading that does not resolve | It read: `CLAUDE.md`, *Route it to the seat that owns it*. Measured at `5de5594`, `git grep -c` for that phrase in `CLAUDE.md` returns zero. |
+| The control for that reading | Same command shape on *This table governs the roster*: 1 hit. So the grep was live rather than empty. |
 | Not you, and not the Builder | The Builder's process has already exited. |
 | Why it is still the owner on some roots | The spawn grant is PER CONFIG ROOT: a rule matching `Bash(claude:*)` or `PowerShell(claude:*)` under `permissions.allow`, in the `settings.json` of the root named by `CLAUDE_CONFIG_DIR`. |
 | Measured 2026-09-02 | `.claude-account-1` carries both rules and spawned a session in 38.8 seconds. Every root measured without them was refused. |
-| The trigger is a POLL, and that is the real gap | Nothing tells the Console a pull request is waiting. No workflow reports an unread PR (BACKLOG #1413, open). |
+| The trigger is a POLL, and that is the real gap | Nothing tells the Manager a pull request is waiting. No workflow reports an unread PR (BACKLOG #1413, open). |
 | What does report, and what it misses | `stalled-prs.yml` reports green-but-unmergeable PRs on a daily 07:05 UTC cron. `failure-signal.yml` writes a `ci-red` label that no workflow reads back. |
-| So what "the Console triggers the Reviewer" means | "The Console notices while polling", and it is only as good as that interval. |
-| What that means for you | If nothing has reviewed a green PR, the missing actor is a Console poll, not a broken route. Say that, and do not infer that the route changed. |
+| So what "the Manager triggers the Reviewer" means | "The Manager notices while polling", and it is only as good as that interval. |
+| What that means for you | If nothing has reviewed a green PR, the missing actor is a Manager poll, not a broken route. Say that, and do not infer that the route changed. |
 | Notification -- RETIRED | There is none. Every notice is POLLED and nothing is pushed. **A seat that waits to be notified waits forever.** |
-| Return-to-author -- RETIRED | There is no author to return to. A Builder's process exits when its PR opens. A review failure posts findings ON THE PR, for whichever Builder the Console spawns next. |
+| Return-to-author -- RETIRED | There is no author to return to. A Builder's process exits when its PR opens. A review failure posts findings ON THE PR, for whichever Builder the Manager runs next. |
 | Hand-off to the Lander -- RETIRED | Nothing is passed. You poll. |
 | What the label proved -- gate retired, lesson kept | That a step HAPPENED, not that an independent party looked. A self-applied label satisfied the machine and defeated the point. Any gate recording an event rather than a judgment has that hole. |
 | Direct pushes to `main` | Still blocked by the harness. |
@@ -118,7 +120,7 @@ Two halves of it survive because that section restates them. The routing itself 
 seat. A usage hold reaches you as an automated hook banner on every prompt, as a cross-session
 message, or as both at once. All of them are the same directive and you are exempt from all of them.
 
-If you have questions about this, keep working and send the query to the Console.
+If you have questions about this, keep working and send the query to the Manager.
 
 **Measured 2026-08-26.** A hold arrived as a hook banner reading *"No new Workflow, no new item, no
 new fan-out"*. The lander matched it to "a hold sent by the Steward", did not match it to a hook, and
@@ -163,7 +165,7 @@ asked the owner for a grant already written here twice.
 | Why compaction especially | **Two independent prunings do not compose, they subtract twice.** Each sees a different corpus and neither can see what the other removed. |
 | A proposed memory is a claim | Verify it before it becomes a durable fact. A wrong memory is read by every future session as settled. |
 | A compaction hook is a measurement | Not an instruction. The index size is real; the decision is still yours. |
-| Owner questions route to the Console | The Console is the only seat the owner talks to. Go direct to the owner only when no Console is running, with a first line saying you could not find one. |
+| Owner questions route to the Manager | The Manager is the only seat the owner talks to. Go direct to the owner only when no Manager is running, with a first line saying you could not find one. |
 | Never hold an item waiting for a seat to appear | Routing does not touch your own grant. You still land. |
 | Writing to the owner | Paragraphs under 300 characters, bullets and bolding, tables where they help, **always your recommendation**, ending with a **bold TLDR**. |
 | "Outside my grant" | A reason not to ACT, never a reason not to RECOMMEND. |
@@ -177,7 +179,7 @@ standing rule.
 
 **Do not settle it with `list_sessions`.** An absent seat and a retired seat render identically there,
 and this one is retired. No successor seat is recorded in this folder, so send feedback and change
-requests through the Console, especially what broke when you *ran* this playbook.
+requests through the Manager, especially what broke when you *ran* this playbook.
 
 ## 2. Authority model -- know exactly what you may do unasked
 
@@ -892,7 +894,7 @@ Three refusals landed on one lander in a day and all three were the control work
 | Item | Rule |
 | --- | --- |
 | Ledger gate blocks your commit | It caught another worktree's numbers in your tree. Push **their** ref and open the PR from it. Do not renumber to satisfy the gate. |
-| An installer refuses to run inside Claude Code | Route it to the Console for the owner to run from a plain terminal. Do not route around the refusal. |
+| An installer refuses to run inside Claude Code | Route it to the Manager for the owner to run from a plain terminal. Do not route around the refusal. |
 | A fail-closed writer refuses to amend a landed cell | Leave the inconsistency VISIBLE and escalate, even when it blocks an already-approved owner ruling. |
 | Why that is the harder and correct call | A quiet edit to another session's landed work is an undiscoverable defect. A visible inconsistency is a discoverable one. |
 | An authorised exception | Scope it explicitly IN THE COMMIT. Say which exception it is, and say the edit was FORCED by the control rather than chosen. |
@@ -928,7 +930,7 @@ successor can resume*.
 | Both of those rules came from playbooks now RETIRED | They were stated in what were then the Liaison and Dispatcher playbooks. The rules survive; the source files may not be on disk. |
 | Cadence, and it is a live contradiction | This section formerly read "keep the episode note current at each meaningful state change, not just at the end -- a cutoff does not announce itself". |
 | What changed | COMMON.md now carries an owner-set 2026-08-28 rule arming the write on a usage rung instead. |
-| Do not pick a winner | COMMON's *Where a role playbook and this file disagree* makes that an owner question, so put it to the Console. |
+| Do not pick a winner | COMMON's *Where a role playbook and this file disagree* makes that an owner question, so put it to the Manager. |
 | Before every handoff, not just every commit | Run the two-dot / three-dot check. Committing clean and handing off clean are different checks, because `main` moves in between. |
 | Tone | The useful handoff sentence is the measured one, not the alarming one. **The cost of being wrong scales with how good the sentence sounds.** |
 
@@ -1052,18 +1054,18 @@ nobody holds at all **all rendered identically**.
 | What it bought | It immediately exposed that THREE OF EIGHT blocked rows had nobody working them. |
 | Why that is the point | All three were true before and the board did not say so. **A column that changes the reading of rows already on the page is doing the job the page exists for.** |
 
-### 18b. Every time you generate the board, send the "stopped, waiting on a person" list to the Console
+### 18b. Every time you generate the board, send the "stopped, waiting on a person" list to the Manager
 
 **Owner-set 2026-08-26, and the reason is theirs verbatim: communications fail sometimes and items get
-stuck. This exists to be sure those items are placed before them.** The Console is the only seat the
-owner talks to, so it carries this list.
+stuck. This exists to be sure those items are placed before them.** The Manager is the only seat the
+owner talks to, so it carries this list. The Console held that route until 2026-09-10.
 
 | Item | Rule |
 | --- | --- |
 | It is a REDUNDANT path on purpose | The board already shows the stopped list and the owner can read it. This is a second carrier for the same facts. |
 | What it guards against | Not "the owner disagreed". It is "nobody ever put it in front of them", which leaves no trace anywhere. |
 | Send it on the BOARD's cadence, not the queue's | Tie it to generating the board so it cannot drift with how busy landing is. |
-| A MISSING send is itself a signal | Tell the Console that, so an absence reads as a problem rather than as nothing to report. |
+| A MISSING send is itself a signal | Tell the Manager that, so an absence reads as a problem rather than as nothing to report. |
 | Every item carries WHO placed the hold | An owner ruling and a Lander's own caution are not the same obligation. The authority split under *Authority model* is what this column renders. |
 | Say what CHANGED since the last send, per item | A list byte-identical four times running teaches the reader to skim it. If nothing changed, say that in three words rather than re-describing it. |
 | If you are holding against a ruling the owner already made, LEAD WITH THAT and say why | The worst version of this list silently omits a ruled item because you have not executed the ruling yet. |

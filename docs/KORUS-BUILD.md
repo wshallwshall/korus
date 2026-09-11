@@ -8,7 +8,7 @@ Run a KORUS build with a manager and one or more builders. Builders may be subag
 Distinct jobs reduce the chance that two sessions decide the same thing. Complete [Quickstart](QUICKSTART.md)
 first; this procedure assumes installed and proven gates.
 
-The console was meant to oversee many parts of the build. That approach did not work, so the manager replaced it.
+The console seat was meant to oversee many parts of the build. That did not work, so the manager replaced it and the console retired on 2026-09-10.
 
 The manager assigns work to its builders and reads their results. A builder can run as a subagent or in its own session.
 

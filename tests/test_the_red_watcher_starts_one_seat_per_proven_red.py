@@ -2,8 +2,9 @@
 report an all-clear it could not establish.
 
 THE FAILURE THIS EXISTS FOR. Nothing tells a session that a required check went red. The only path
-was a long-lived console session polling and then spawning a seat to attribute the failure, which
-makes that console a single point of failure while it is also the only seat the operator talks to.
+was the operator's one long-lived session polling and then spawning a seat to attribute the failure,
+which makes that session a single point of failure while it is also the only seat the operator talks
+to.
 `scripts/cron/watch-ci-red.ps1` replaces the polling half with a script. Four properties make that
 replacement safe, and each is a separate way the script can quietly stop being worth running:
 

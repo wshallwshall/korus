@@ -99,7 +99,7 @@ numbering.
 | `COMMON 4.x` | **The file is gone as of 2026-08-29.** Nine such citations remain live across this folder and are correct as written. Do not "fix" them by deleting them. |
 | `COMMON 2.1` | *Coordinate before you write*, the push and merge rules. |
 | `COMMON 2.2` | *Coordinate before you write*, the inherited claim and quoted doctrine rows. |
-| `COMMON 2.10` | *The owner reads by sampling*, the Console row. |
+| `COMMON 2.10` | *The owner reads by sampling*, the Manager row. |
 | `COMMON 2.11` | *The owner reads by sampling*, the recommendations row. |
 | `COMMON 3.3` | *Coordinate before you write*, the match on the directory row. |
 | `COMMON 3.4` | *One-line rules*, the past statement row. |

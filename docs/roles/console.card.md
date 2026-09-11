@@ -1,76 +1,40 @@
-# Console -- former role card
+# Console -- RETIRED SEAT
 
-The Console's broad oversight approach did not work. The [Manager](manager.card.md) replaced it and runs one or more Builders as subagents or separate sessions.
+**The Console retired on 2026-09-10. This page is a tombstone, not a card.**
 
-The instructions below record the former design. Use the Manager card for new builds.
+It is kept because archived pages on this site link to it. Deleting it would turn those links into a
+404, which reads as "this page never existed" rather than "this seat went away".
 
-This card loads at session start because `.claude/seat.local.txt` names `console`. It summarizes the
-role; CLAUDE.md's seat table governs.
+[The Manager](manager.card.md) replaced it. A Console reached across every account and oversaw the
+whole build. That breadth is the part that did not work, so a Manager sits inside one account and
+several run at once.
 
-Read `roles/COMMON.md` before `roles/CONSOLE.md`, the full playbook.
+**Nothing here is an instruction.** If `.claude/seat.local.txt` in your worktree names `console`, the
+role-card hook injects no card and says the seat was retired. Set a live seat instead:
 
-Stay active across the sessions you brief.
+```
+Set-Content .claude/seat.local.txt 'manager'
+```
+
+Live seats: manager, builder, reviewer, regulator, steward, lander.
 
 ## What this seat owns
 
-Own the plan and briefs. Read the record, choose a row, write a brief for one turn, and poll for
-results.
-
-The Owner talks only to the Console. Bring Owner questions through this seat, and actively read the
-sources where questions and results arrive.
-
-The Console replaces the Dispatcher and Liaison, retired 2026-09-01.
+Nothing. Read [the Manager's card](manager.card.md) and `roles/MANAGER.md` instead.
 
 ## What it must not do
 
-- Do not build. Write the brief and let a Builder write code.
-
-- Do not merge or enqueue. The Lander owns both.
-
-- Do not wait for incoming messages. Poll for replies; no process sends them to an idle reader.
-
-- Do not route work to Dispatcher, Liaison, PM, Cleaner, Role manager, or Process improvement. All are retired; use CLAUDE.md's governing roster.
-
-An earlier card called `roles/README.md` stale. [The later check](../PLAYBOOKS.md#rolesreadmemd-agrees-with-the-roster-and-this-page-said-it-did-not) retracts that claim.
+Take work. A document that routes anything to a Console is stale, and CLAUDE.md's seat table governs.
 
 ## Its authority
 
-Choose work and its order without asking. Handing work to a Builder is the default and needs no
-permission.
-
-The Owner controls pushes, new PRs, merges, and other outward-facing actions.
-
-Read your own config root to check whether it grants session spawning. Do not assume permission or
-its absence.
-
-Without a grant, write the Builder brief and give the launch line to the Owner. Your other duties
-stay the same.
+None. It holds no grant and no standing permission.
 
 ## On arrival
 
-1. Read `roles/COMMON.md`, then `roles/CONSOLE.md`.
-2. Read the record before picking anything. Your memory of the queue is not the queue.
-3. Check who is already live and what they are touching, so you do not brief work that collides:
-   `pwsh -NoProfile -File scripts/coord/presence.ps1` and `scripts/coord/overlap.ps1`.
-4. Read the open PRs before opening more work. A queue that is not landing does not need more input.
-
-## What a brief has to carry
-
-Give each brief one item and a clear completion condition.
-
-Name every undecided question. Otherwise the Builder must stop and ask instead of guessing,
-consuming a session to resolve an unmarked gap.
-
-Include the ledger row so later sessions can find the work.
-
-## What this seat does not own
-
-The Reviewer owns diff review; the Lander owns merging. The Regulator attributes failed checks, and
-the Owner assigns the account roster.
+You cannot arrive here. The hook resolves `console` to the retired message, never to this page.
 
 ## The full playbook
 
-The full rules are in `roles/CONSOLE.md`; read `roles/COMMON.md` first. Keep only durable rules in
-this card.
-
-Put live state in a dated note, including open queues, item numbers, and blockers.
+The record of what this seat did is `roles/retired/CONSOLE.md`. Read it as history. The version of
+this page from before the retirement is at [console.card.old.md](console.card.old.md).

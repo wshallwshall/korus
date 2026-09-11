@@ -79,7 +79,7 @@ rate and **no symptom until the cutoff**, and the sessions trusting you lose wor
 
 | Item | Rule |
 | --- | --- |
-| Ask, in words | Put the question to the owner through the Console. |
+| Ask, in words | Put the question to the owner through the Manager. |
 | Never infer it | Not from a hook line, a config file, a session title, or which account you are signed in as. **Inference is what produces the fluent wrong answer.** |
 | What the tooling can and cannot tell you | `python ~/.claude/mefor-usage/usage-now.py` names every account and prints the 5-hour and weekly bands per account. |
 | Its limit | **It reads the POOLS. It does not tell you which account is YOURS**, and it can return UNKNOWN for an account when a refresh errors. |

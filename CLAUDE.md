@@ -32,12 +32,11 @@ lies between what is convenient here and what a copier needs, the copier wins.
 
 ## The seats
 
-Seven seats are live. Each has a playbook in `roles/` and a card in `docs/roles/`.
+Six seats are live. Each has a playbook in `roles/` and a card in `docs/roles/`.
 
 | Seat | Playbook | What it owns |
 |---|---|---|
-| Console | [CONSOLE.md](roles/CONSOLE.md) | Reads the record, picks the work, writes the brief. The only seat the Owner talks to. |
-| Manager | [MANAGER.md](roles/MANAGER.md) | An alternative to the Console, not a layer above it. Runs workers as in-process subagents. |
+| Manager | [MANAGER.md](roles/MANAGER.md) | Reads the record, picks the work, writes the brief. The only seat the Owner talks to. Runs its Builders as subagents or as separate sessions. |
 | Builder | [BUILDER.md](roles/BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR, exits. |
 | Reviewer | [REVIEWER.md](roles/REVIEWER.md) | Reads the diff. Applies `reviewed`, or posts findings. |
 | Regulator | [REGULATOR.md](roles/REGULATOR.md) | Decides whose failure a red check is. |
@@ -47,8 +46,30 @@ Seven seats are live. Each has a playbook in `roles/` and a card in `docs/roles/
 [COMMON.md](roles/COMMON.md) holds the rules that belong to no single seat. Read it first,
 whichever seat you hold.
 
-**This table governs the roster.** `roles/README.md` came across from a private vault and still
-lists seven retired seats as live. Where the two disagree, this table wins.
+**This table governs the roster.** `roles/README.md` and `docs/roles/seats.json` each hold a second
+copy of it. Where any of them disagrees with this table, this table wins.
+
+**That sentence read "`roles/README.md` ... still lists seven retired seats as live" until
+2026-09-10, and it was false.**
+
+Measured at `5de5594`, over that README's section *1a. The live seats*:
+
+```bash
+git show 5de5594:roles/README.md | sed -n '/^### 1a\./,/^### 1b\./p' | grep -icE 'dispatcher|liaison|cleaner|role.manager|process improvement|asvs|project manager'
+```
+
+It returns 1. Read rather than counted, the one match is the Console row's *Replaces the Dispatcher*
+-- a mention of a retired seat, not a listing of one as live.
+
+Control, the same extraction over section *1b. The retired seats*: 2 hits, so the pattern was live
+rather than empty. That README lists every retired seat as retired, in its own section.
+
+**[The playbooks](docs/PLAYBOOKS.md) retracted the same claim on 2026-09-08**, under *`roles/README.md`
+agrees with the roster*, and says it was copied from here without checking the file. The repair did
+not come back the other way. A claim copied in two directions needs retracting in both.
+
+**The Console retired 2026-09-10.** The Manager replaces it. Broad oversight across every account
+did not work, so a Manager sits inside one account.
 
 Files under `roles/retired/` are the record of what a seat did. A document that routes work through
 one is stale.

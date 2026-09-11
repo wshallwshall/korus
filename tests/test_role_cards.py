@@ -40,11 +40,30 @@ AGREEMENT = t.REPO_ROOT / "CLAUDE.md"
 MARKER_RELPATH = ".claude/seat.local.txt"
 ROLE_COPY_RELPATH = ".claude/ROLE.local.md"
 
-#: Section 5 of the working agreement governs the roster. Seven seats, not the six a sibling
-#: project runs: this repository added the Manager as an alternative to the Console.
+#: The seat table in the working agreement governs the roster. SIX seats since 2026-09-10, when the
+#: Console retired and the Manager took its work. The Manager arrived 2026-09-04 as an alternative to
+#: the Console, ran alongside it for six days, and is now the only seat that writes a brief.
 EXPECTED_SEATS = frozenset(
-    {"console", "manager", "builder", "reviewer", "regulator", "steward", "lander"}
+    {"manager", "builder", "reviewer", "regulator", "steward", "lander"}
 )
+
+#: A retired seat whose card page an ARCHIVE still links to. The page stays and becomes a tombstone.
+#:
+#: WHY THIS IS NOT A HOLE IN THE TWO TESTS BELOW. What must never happen is a retired seat resolving
+#: to a card. That is enforced by the ROSTER, not by the file's absence: `console` is neither live
+#: nor an alias in `docs/roles/seats.json`, so `role-card-inject.ps1` prints the retired message and
+#: never builds a card path at all. `test_a_retired_label_says_it_was_retired` pins that behaviour.
+#:
+#: WHY THE FILE STAYS. `docs/PLAYBOOKS.old.md` is a published archive, its bytes are hash-pinned in
+#: `docs/_data/page-revisions.json`, and it links to `roles/console.card.md`. Deleting the target
+#: breaks that link, and `test_internal_links_resolve` fails on exactly this. The same reasoning
+#: `test_redirect_covers_every_page` is built on applies: a reader following an old link must not
+#: get a 404, which reads as "this page never existed".
+#:
+#: IT IS A NAMED SET, NOT A PATTERN, for the reason `AUTHORED_VERBATIM` is: adding to it has to be a
+#: visible diff somebody approves. A tombstone still carries every required section, stays inside
+#: both budgets, and is read by the leak and ASCII scans -- it leaves only the two roster tests.
+TOMBSTONE_SEATS = frozenset({"console"})
 
 #: Each card carries all five. A card missing one is a card that answers a question by omission.
 REQUIRED_SECTIONS = (
@@ -68,11 +87,16 @@ def card_paths() -> list[Path]:
 
 
 class TheRosterIsGovernedByTheWorkingAgreement(unittest.TestCase):
-    """CLAUDE.md governs, and `roles/README.md` is the stale one.
+    """CLAUDE.md governs, and `roles/README.md` is the copy that has drifted before.
 
-    That README came across from a private vault. It still lists seven RETIRED seats as live and
-    describes itself as a partial list, so a roster derived from it would hand a session rules for
-    a seat that no longer exists.
+    That README came across from a private vault and describes itself as a snapshot of a moving
+    set, so a roster derived from it would hand a session rules for a seat that no longer exists.
+
+    RETRACTED 2026-09-10. This docstring read "It still lists seven RETIRED seats as live", and
+    that was false. Measured at `5de5594`, extracting that README's section *1a. The live seats* and
+    grepping it for the seven retired names, the count was 1 and the match was the Console row's
+    *Replaces the Dispatcher* -- a mention, not a live listing. Control over section *1b. The
+    retired seats*: 2. CLAUDE.md, *The seats*, carries the command.
     """
 
     def test_seats_json_lists_exactly_the_live_seats(self):
@@ -83,7 +107,8 @@ class TheRosterIsGovernedByTheWorkingAgreement(unittest.TestCase):
         self.assertEqual([], missing, f"live seats with no card: {missing}")
 
     def test_no_card_exists_for_a_seat_that_is_not_live(self):
-        stray = sorted(p.name for p in card_paths() if p.name[: -len(".card.md")] not in EXPECTED_SEATS)
+        allowed = EXPECTED_SEATS | TOMBSTONE_SEATS
+        stray = sorted(p.name for p in card_paths() if p.name[: -len(".card.md")] not in allowed)
         self.assertEqual([], stray, f"cards for seats that are not live: {stray}")
 
     def test_the_working_agreement_names_every_live_seat(self):
@@ -115,8 +140,43 @@ class RetiredSeatsResolveToNothingAndSayWhy(unittest.TestCase):
         self.assertEqual([], both, f"declared retired AND live: {both}")
 
     def test_no_retired_seat_has_a_card(self):
-        present = sorted(s for s in seats()["retired"] if (CARD_DIR / f"{s}.card.md").is_file())
+        present = sorted(
+            s
+            for s in seats()["retired"]
+            if s not in TOMBSTONE_SEATS and (CARD_DIR / f"{s}.card.md").is_file()
+        )
         self.assertEqual([], present, f"retired seats that still have a card: {present}")
+
+    def test_every_tombstone_page_reads_as_one(self):
+        """The carve-out pays for itself: a tombstone must announce the retirement and the successor.
+
+        Without this the exemption would let a retired seat's LIVE card sit on the site unchanged,
+        which is the failure the two tests above exist to prevent.
+        """
+        offenders = []
+        for seat in sorted(TOMBSTONE_SEATS):
+            path = CARD_DIR / f"{seat}.card.md"
+            if not path.is_file():
+                offenders.append(f"{seat}: no tombstone page at {path.name}")
+                continue
+            text = t.read(path)
+            if "RETIRED" not in text:
+                offenders.append(f"{path.name} does not say RETIRED")
+            if not any(f"{live}.card.md" in text for live in EXPECTED_SEATS):
+                offenders.append(f"{path.name} names no live seat's card to go to instead")
+        self.assertEqual([], offenders, "\n  ".join(offenders))
+
+    def test_a_tombstone_seat_is_declared_retired_in_the_roster(self):
+        """The exemption may not be used to keep a LIVE seat's card out of the roster tests."""
+        undeclared = sorted(TOMBSTONE_SEATS - set(seats()["retired"]))
+        self.assertEqual([], undeclared, f"tombstoned but not retired in seats.json: {undeclared}")
+
+    def test_a_tombstone_seat_is_not_live_and_is_not_an_alias(self):
+        """The whole safety argument: the hook can never build a card path for a tombstone."""
+        reachable = sorted(
+            TOMBSTONE_SEATS & (set(seats()["live"]) | set(seats()["aliases"].values()))
+        )
+        self.assertEqual([], reachable, f"tombstoned seats the hook could still resolve: {reachable}")
 
 
 class TheAliasMapCollapsesDrift(unittest.TestCase):

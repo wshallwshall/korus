@@ -17,7 +17,7 @@ turn. Your brief is drawn from two ledgers: `docs/BACKLOG.md` in the engine repo
 a gate, and never mislead a teammate or the owner about what you built.
 
 **A team building nothing at all is a failure to raise at once, not a quiet lane.** Say so to the
-Console and on the pull request.
+Manager and on the pull request.
 
 **Two to four is the most you oversee, not the least you must reach.** Owner ruling 2026-08-28.
 Running fewer because your starts are being held is compliance. What should bother you is the other
@@ -51,7 +51,7 @@ that is the only moment they can win.
 | No glyphs or emoji | Root `CLAUDE.md`, *Documentation*. Say the word. |
 | Proactive output style | [COMMON.md](COMMON.md), *Run in the Proactive output style*, is its single definition. It changes **disposition, not permissions**. |
 | Where this file loses | On **landing** -- push, pull request, merge, who writes the ledger banner -- [LANDER.md](LANDER.md) is the authority. On everything else, COMMON. |
-| Editing this folder | Send what broke when you *ran* this playbook to the Console. |
+| Editing this folder | Send what broke when you *ran* this playbook to the Manager. |
 
 **Why the ordering of the first two rows matters.** The stale `CLAUDE.md` text is longer, more
 specific and reads as more authoritative, so a seat comparing the two picks the wrong one. If the
@@ -77,20 +77,20 @@ Measured 2026-08-28: LANDER claims precedence over COMMON for its own seat, and 
 precedence section that no longer exists. A reader who resolves this alone gets whichever file they
 read last.
 
-### The Dispatcher and the Liaison are retired; the Console replaced both
+### The Dispatcher, the Liaison and the Console are retired; the Manager holds all three
 
-**Owner decision 2026-09-01.** Do not route anything to a Dispatcher or a Liaison, and do not wait
-on one.
+**Owner decisions 2026-09-01 and 2026-09-10.** Do not route anything to a Dispatcher, a Liaison or a
+Console, and do not wait on one.
 
 | Item | Rule |
 | --- | --- |
-| Who writes your brief | The **Console**. It reads the two ledgers, picks the row, writes the brief, and polls for what comes back. |
+| Who writes your brief | The **Manager**. It reads the two ledgers, picks the row, writes the brief, and reads what comes back. |
 | Asking it something | Mail it, then keep going. The answer arrives as the next Builder's brief, not as a reply to you. |
 | Where a question actually lands | **On the pull request.** Findings on a pull request outlive the session; findings in mail do not. |
-| Sections below that still name a Dispatcher | A record of how the fleet ran, not a live route. **Who holds the START THROTTLE now is OPEN.** |
-| Expiry | This retires when the owner names a successor seat or restores one of the two. |
+| Sections below that still name a Dispatcher or a Console | A record of how the fleet ran, not a live route. **Who holds the START THROTTLE now is OPEN.** |
+| Expiry | This retires when the owner names a successor seat or restores one of the three. |
 
-Do not assume the throttle moved to the Console, and do not read a quiet lane as a throttled one on
+Do not assume the throttle moved to the Manager, and do not read a quiet lane as a throttled one on
 that assumption.
 
 Mail waits for the recipient's next turn. See [COMMON.md](COMMON.md), *Mail is a mailbox, not a
@@ -98,7 +98,7 @@ doorbell, and it expires in 72 hours*.
 
 ### If the brief does not answer something you must know, do not guess and do not wait
 
-Write the question to the Console, comment it on the pull request, and stop. Mail reaches the
+Write the question to the Manager, comment it on the pull request, and stop. Mail reaches the
 reader's next turn, and for you there is no next turn. **Stopping costs nothing; a guess costs the
 work.**
 
@@ -142,10 +142,10 @@ in *Write an ADR whenever it is reasonable* is met.
 | Allocate an ADR number **this lane will commit** | -- |
 | Push and open a pull request on your own branch | -- |
 | Merge, force-push, tags, releases | **Lander**, after the review step |
-| Blocked item, scope change, new defect, a file outside your cluster | **Console** |
-| A ruling, a policy call, a precedent-setting severity | **Console** |
+| Blocked item, scope change, new defect, a file outside your cluster | **Manager** |
+| A ruling, a policy call, a precedent-setting severity | **Manager** |
 
-**Record any routed item on the pull request before you exit.** The Console polls, and you will not
+**Record any routed item on the pull request before you exit.** The Manager reads it there, and you will not
 be awake to answer.
 
 **The governing test for "unasked":** is it confined to this worktree and reversible from it? For
@@ -158,7 +158,7 @@ over.
 
 | Case | What you do |
 | --- | --- |
-| The item is marked DEMAND-GATE | **Do not build it.** Write the explain-and-ask -- what it is, where it came from, who would need it -- to the Console and on the pull request, then stop. |
+| The item is marked DEMAND-GATE | **Do not build it.** Write the explain-and-ask -- what it is, where it came from, who would need it -- to the Manager and on the pull request, then stop. |
 | You find an authority question mid-work | Write it the same two places, finish only what is already safe to finish, then stop. |
 | Neither applies | If you cannot name the decision only the owner can make, you are hesitating, not holding. |
 
@@ -169,7 +169,7 @@ over.
 | `git commit --no-verify`, or a rename to dodge a gate | Nothing. No condition makes this correct. |
 | `git reset --hard` in a worktree | The harness deny-lists it. The answer to a refusal is to stop, not to find a spelling that gets past it. |
 | Edit, commit in, or remove another lane's worktree | Nothing, while lanes are concurrent. |
-| Release another worktree's claim | Policy, not mechanism -- `-Force` works. Not yours unless the Console asks. |
+| Release another worktree's claim | Policy, not mechanism -- `-Force` works. Not yours unless the Manager asks. |
 | Run a machine-global installer (`install-coordination.ps1`, `install-git-hooks.ps1`, `install-gate.ps1`, `install-selfheal.ps1`) | These are the owner's, from a plain terminal, by design. |
 | A bare `git stash` or `git stash pop` | Nothing, while worktrees share a repo -- that is git's design, not a setting. |
 | Put message content in a handoff or session mail | Nothing, while this seat holds the sample messages. No segment, field value, identifier, partner name or site code, synthetic or real. **Mail the path.** |
@@ -318,7 +318,7 @@ fan-out call, while everything looks recovered.
    it as your lane triple.
 3. **Move this session with `EnterWorktree`.** See *Relocating restores fan-out, and it costs four
    things*.
-4. **If you cannot move, say so and keep building.** Tell the Console, name the rule, and state
+4. **If you cannot move, say so and keep building.** Tell the Manager, name the rule, and state
    plainly that you are at **concurrency one and it is not your choice**.
 
 Do not stop -- step 1 left you able to build. And do not wait for a fresh session as if one were
@@ -469,7 +469,7 @@ check is the only reason the seat that hit this caught its own.**
    `BACKLOG #N` in the subject only if you hold the claim and the diff touches code.
 10. **Re-anchor after every commit:** `git update-ref refs/rescue/<name> <sha>`, SHA read live from
     HEAD. Five commits cost nothing to anchor; one anchor at handoff leaves four tips loose.
-11. **Open the pull request, write the exit report, and exit.** There is no next item. The Console
+11. **Open the pull request, write the exit report, and exit.** There is no next item. The Manager
     writes the next brief.
 
 **On step 3:** refresh the claim note when the work changes.
@@ -511,9 +511,9 @@ it did not do; reporting it as research discards the pointer, which is the whole
 
 **A title row and ONE data row.** The owner works across more than ten sessions and your prose has
 scrolled off screen before they return. See [COMMON.md](COMMON.md), *The owner reads by sampling, so
-route through the Console*.
+route through the Manager*.
 
-**This is what they see. Put it in the pull request body and address it to the Console.**
+**This is what they see. Put it in the pull request body and address it to the Manager.**
 
 | # | Column | What goes in it |
 | --- | --- | --- |
@@ -555,7 +555,7 @@ flight."*
 | Keep the last cell to about ten words | A verdict plus one load-bearing fact. Owner correction 2026-08-28, on the same shape of table: those cells become text walls. |
 | The health test is contradictability, not valence | A cell has stopped working when it can **no longer be contradicted**, not when it stops saying "no". |
 | The order is owner-set 2026-08-29 and it is not cosmetic | The supply question sits beside the work counts, and the claim question sits beside the claim counts. Each verdict is next to the numbers that make it checkable. |
-| A "no" on the last column is not a complaint | It is a supply signal, and it routes to the **Console**. The Dispatcher held this until that seat was retired 2026-09-01. |
+| A "no" on the last column is not a complaint | It is a supply signal, and it routes to the **Manager**. The Dispatcher held it until 2026-09-01 and the Console until 2026-09-10. |
 
 **Measured in this fleet:** `claim.ps1 -List` showed a builder holding **EIGHT** while the builder
 reported **TWO**, and both were honest.
@@ -766,7 +766,7 @@ stop.
 | --- | --- |
 | Which worktree family is this lane, and is it a prune candidate? | **Two questions, and only the second belongs to whoever supplies your work.** The family is a property of the path, so read it yourself. |
 | Does the venv tell me which family this is? | **No, in either direction.** Measured 2026-08-28: both named families hold lanes with a venv and lanes without. |
-| What does this lane do if an item is handed back and the Console is unreachable? | Record it on the pull request and stop. The Console polls. |
+| What does this lane do if an item is handed back and the Manager is unreachable? | Record it on the pull request and stop. The Manager reads the pull request. |
 | May this lane release its own claim on ALREADY-DONE or CONCLUDED-AS-RESEARCH? | The release condition is "the fix text is on `main`", which a research conclusion can never meet. |
 | Who checks scarce shared values across lanes -- contract seams, protocol integers? | The authoritative population is every **live branch**, not `main`. Until this is owned, grep it yourself. |
 
@@ -778,7 +778,7 @@ trees form a third group, and on this box it is the biggest of the three. The pa
 directory family only; it does not prove `new.ps1` made it.
 
 **On the venv row:** Measure the venv on its own terms, and ask
-the Console what you cannot read yourself: does this lane get removed, and what must land first.
+the Manager what you cannot read yourself: does this lane get removed, and what must land first.
 
 ---
 
@@ -811,14 +811,14 @@ fleet".
 
 ### 8a. Do not accept during a hold what you will not start
 
-**A hold that outlasts your turn is the Console's problem, not yours.** Your session ends when the
+**A hold that outlasts your turn is the Manager's problem, not yours.** Your session ends when the
 work does, so a row you accept and do not start is lost with you rather than waiting for the reset.
 
 > ***ACCEPTING IS NOT STARTING, AND THERE IS NO LATER IN WHICH YOU START IT.*** Rung 1 says no new
 > item, and you have no next turn in which to take one up.
 
 **What to do instead:** name what you did not start, and why, in your exit report and on the pull
-request. The Console polls, so a row recorded there is a row that can be briefed again. **Do not
+request. The Manager reads the pull request, so a row recorded there is a row that can be briefed again. **Do not
 claim what you are not working on.**
 
 ***THIS DOES NOT WIDEN WHAT A HOLD PERMITS.*** You still start nothing, launch no `Workflow`, and
