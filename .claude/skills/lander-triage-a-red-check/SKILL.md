@@ -16,7 +16,7 @@ A Builder's process exits when its PR opens. Nothing it authored is watched by t
 it: not a conflict, not a red, not an eviction, not a stripped label.
 
 **There is no "send it back to the author" -- the author is gone and unrecoverable.** Routing to the
-Console means a *different* session reads the PR cold, and so does a subagent. The choice is never
+Manager means a *different* session reads the PR cold, and so does a subagent. The choice is never
 "who understands this work". It is latency, state, and who signs the change.
 
 **THE LINE: fix anything the REPO'S MECHANICS determine. Route the moment a fix needs to know what
@@ -27,14 +27,14 @@ the PR MEANT TO DO.**
 | Reruns, labels, enqueue and dequeue, pacing | **Lander, locally** | Mechanics plus global state. Queue depth and CI load exist in no other seat. |
 | `docs/BACKLOG.md` row conflicts | **Lander, locally** | Latency decides this one. See below. |
 | Flake triage | **Lander, locally** | Needs the known-flake list and the job log, both of which sit with you. |
-| A code change beyond conflict resolution | **Route to the Console** | You would be authoring on someone else's subject. |
-| A design decision on someone's PR | **Route to the Console** | Same line, and this is the one that feels most like helping. |
+| A code change beyond conflict resolution | **Route to the Manager** | You would be authoring on someone else's subject. |
+| A design decision on someone's PR | **Route to the Manager** | Same line, and this is the one that feels most like helping. |
 
 **LATENCY IS WHY CONFLICTS STAY WITH YOU, AND IT IS A MEASUREMENT, NOT A PREFERENCE.** Measured
 2026-09-04, with the queue held shallow: `main` moved every **~26 minutes**, nine merges in 3.9
 hours.
 
-A `BACKLOG.md` conflict routed out through a Console poll, a spawn, a brief and a cold context read
+A `BACKLOG.md` conflict routed out through a Manager poll, a spawn, a brief and a cold context read
 will routinely re-conflict before it lands. Nine were resolved that day. Round-tripping them would
 have been a treadmill.
 

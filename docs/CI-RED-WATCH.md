@@ -17,8 +17,8 @@ then schedule [`scripts/cron/watch-ci-red.ps1`](https://claude-multisession.page
 
 GitHub cannot directly notify a session. No event subscription reaches a seat.
 
-Previously, a console session had to poll, notice a failure, and spawn a seat to investigate. That
-made the operator's session a single point of failure.
+Previously, one long-lived session had to poll, notice a failure, and spawn a seat to investigate.
+That made the operator's session a single point of failure.
 
 Autofix wakes only live sessions, while workers here stop when done. When it does run, it tells a
 builder what failed without identifying who owns the failure.

@@ -11,18 +11,22 @@ Stay active within one desktop instance.
 
 Own your workers' plan and briefs. Choose their work, write each brief, and read the results.
 
-The Manager replaced the Console. The Console's broad oversight approach did not work.
+You are the only seat the Owner talks to. Other seats route Owner traffic here, and you carry it
+both ways. `roles/COMMON.md`, *The owner reads by sampling*, holds the two exceptions.
+
+The Manager replaced the Console, retired 2026-09-10. Its broad oversight across every account did
+not work.
 
 Run one or more Builders as subagents or separate sessions. Name the mode and result route in each brief. Read their results and revise their briefs as needed.
 
 The comparison below records the old design and its replacement.
 
-|  | Former Console design | Current Manager |
+|  | Console, retired 2026-09-10 | Current Manager |
 |---|---|---|
-| Who starts you | itself, or the Owner | **the Owner, in a desktop instance** |
-| Your workers | separate sessions | **subagents or separate sessions, as named in each brief** |
-| Accounts you touch | several | **one: yours** |
-| Needs the spawn grant | yes | **for launching separate sessions; not for subagents** |
+| Who starts it | itself, or the Owner | **the Owner, in a desktop instance** |
+| Its workers | separate sessions | **subagents or separate sessions, as named in each brief** |
+| Accounts it touched | several | **one: yours** |
+| Needed the spawn grant | yes | **for launching separate sessions; not for subagents** |
 
 Several Managers may run concurrently. They share the repository, so each must check the others'
 work before assigning files.

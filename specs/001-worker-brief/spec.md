@@ -50,7 +50,7 @@ Both take a brief. Almost nothing else about them is the same.
 
 | | **Session worker** | **Subagent worker** |
 |---|---|---|
-| Started by | `claude -p` from a Console or Manager | the Agent tool, in-process |
+| Started by | `claude -p` from a Manager | the Agent tool, in-process |
 | Lifetime | outlives the session that started it | dies when the parent turn ends |
 | Account | may be a **different** account from the briefer | always the **parent's** account |
 | Budget | its own | drawn from the parent's remaining budget |
@@ -64,6 +64,12 @@ Both take a brief. Almost nothing else about them is the same.
 block, and **all three** replaced the document's `Write the question to the console` with
 `Write the question in your final message`. Needle: the literal strings, case-insensitive,
 whitespace-normalised.
+
+**The needle no longer matches the corpus, and that does not change the finding.** The Console seat
+retired on 2026-09-10, and the playbooks now read `Write the question to the Manager`. Re-run the
+needle against `roles/` at a ref on or after that date and it returns zero. The measurement stands at
+the ref it was taken at; the defect it found is about naming a SURFACE, and renaming the seat did not
+fix that.
 
 That substitution is correct, and it is not a rewording of convenience. A worker whose output is a
 returned message has no console to write to. Three independent briefs made the same substitution
@@ -301,7 +307,7 @@ Named so a later reader can see these were considered and declined, rather than 
 - **Brief**: the complete instruction a worker receives at spawn. Text. Not versioned, and no tool
   stores one today.
 - **Worker**: a session worker or a subagent worker. The kind determines which requirements apply.
-- **Briefer**: the Console or Manager that writes the brief. Named because FR-022 binds it, not
+- **Briefer**: the Manager that writes the brief. Named because FR-022 binds it, not
   the worker.
 - **Destination**: a role, either *reaches the briefer* or *attached to the work*, resolved to a
   surface by worker kind.
@@ -340,8 +346,9 @@ Named so a later reader can see these were considered and declined, rather than 
 1. **Does a subagent brief need the prohibition at all?** Its parent is present and can be asked
    mid-turn in a way a session worker's briefer cannot. The argument for keeping it is that a
    subagent still cannot reach the parent until it returns.
-2. **What is the coordinator address for a Manager?** A Console has a coordinator worktree. A
-   Manager's subagents return to the Manager, which may itself be a subagent of nothing. Undecided.
+2. **What is the coordinator address for a Manager?** A Manager's subagents return to the Manager,
+   which may itself be a subagent of nothing. Undecided. The retired Console had a coordinator
+   worktree, which is why this question reads as a gap rather than as a new requirement.
 3. **Should FR-018 name a specific artifact?** A branch, a file and a pull request are not
    equivalent in durability, and the spec currently accepts any of the three.
 4. **Is the two-destination rule right for a subagent that opens no pull request?** FR-010 permits

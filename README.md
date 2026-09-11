@@ -27,7 +27,7 @@ Alongside it are the seat playbooks in [`roles/`](roles/), the working guides in
 [`docs/`](docs/), and the specs in [`specs/`](specs/). The constitution outranks all of them:
 where a playbook and an article disagree, the article wins and the playbook is the bug.
 
-Twelve articles, in short:
+Thirteen articles, in short:
 
 | | |
 |---|---|
@@ -43,8 +43,9 @@ Twelve articles, in short:
 | X | A seat that cannot be measured cannot be steered |
 | XI | A seat's job is to write something down |
 | XII | The shared write surface is the boundary that binds, not the account |
+| XIII | Work reaches the model through Claude Code, never through the API |
 
-It is at **v1.10.0** and it expects to be wrong in places. Most articles rest on a small
+It is at **v1.15.0** and it expects to be wrong in places. Most articles rest on a small
 number of observations, several from a single night of operation, and the document says so.
 Amendments require evidence, and retired text stays with the reason it was retired.
 
@@ -84,16 +85,15 @@ Work is divided among **seats**, each a session with one job:
 
 | Seat | What it does | Lifetime |
 |---|---|---|
-| Console | Plans, spawns workers, holds the owner's attention | long-lived |
-| Manager | Same job as a Console, but its workers are in-process subagents | long-lived |
+| Manager | Plans, runs workers, holds the owner's attention | long-lived |
 | Builder | Takes one brief, does the work, opens a pull request | one turn |
 | Reviewer | Reads one pull request | per pull request |
 | Regulator | Attributes a failing build | woken on a red |
 | Steward | Writes files other seats read | cron, no model calls |
 | Lander | Decides merge order | long-lived |
 
-Seven further seats were tried and retired. Why each went is part of the record this
-repository is being built to hold.
+Eight further seats were tried and retired, the Console among them on 2026-09-10. Why each
+went is part of the record this repository is being built to hold.
 
 ## Repository layout
 

@@ -341,11 +341,16 @@ that recorded the decision:
 > **The rule that generated all of it.** Every seat that survived does its job by WRITING
 > SOMETHING DOWN. Every seat that went away did its job by TALKING TO ANOTHER SEAT.
 
-**Evidence.** Seven seats were retired on 2026-09-01 and six kept. Every retained seat has
-an artefact: the Console writes briefs, the Builder writes a pull request, the Reviewer
+**Evidence.** Seven seats were retired on 2026-09-01 and six kept. Every retained seat had
+an artefact: the Console wrote briefs, the Builder writes a pull request, the Reviewer
 writes a label, the Regulator writes an attribution log, the Steward writes files other
 seats read, the Lander writes a merge order. Every retired seat existed to relay, route or
 represent, and produced nothing a later reader could open.
+
+**The roster moved again on 2026-09-10 and this article held.** The Owner retired the
+Console. The Manager replaced it and writes the same artefact, a brief, so the seat that
+went away was not one this article would have kept out. The retirement turned on breadth,
+not on output: a Console reached across every account, and a Manager sits inside one.
 
 **Why this is constitutional and not merely tidy.** A seat whose output is a message
 disappears when its session ends, so its work cannot be checked by Article I, cannot be
@@ -690,10 +695,19 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.14.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-04
+**Version**: 1.15.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-10
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.15.0 2026-09-10  Article XI's evidence named the Console as a retained seat in the present
+       tense, and the Owner retired that seat on 2026-09-10. The 2026-09-01 reading is kept in
+       the past tense, which is what it always was, and the later change is appended beside it.
+       The article itself is unchanged: the Manager that replaced the Console writes a brief, the
+       same artefact, so the retirement turned on breadth rather than on output.
+       Instrument: docs/roles/seats.json at this commit lists six live seats and carries console
+       in its retired map with the reason. Control: the same file's retired map already carried
+       dispatcher and liaison, so the map was live rather than empty.
 
 1.14.0 2026-09-04  The review gate was removed by the Owner, and this document described it as
        live in three places. Verified against the live GitHub API: the review check is no longer
