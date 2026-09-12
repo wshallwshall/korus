@@ -19,23 +19,9 @@ that expires* states the split; *Episode notes live outside this folder* says wh
 
 ## 1. The seat set changed twice, and the Manager now holds what two retired seats did
 
-**Six seats retired by owner decision on 2026-09-01: Dispatcher, Project Manager, Liaison, Cleaner,
-Role manager and Process improvement.** The Console took the Dispatcher's and the Liaison's work.
-Nothing replaced the other four.
-
-**RETIRED 2026-09-12.** This section once said seven seats retired, naming ASVS Tracker as one.
-
-`docs/roles/seats.json` is the roster's source of truth. Its retired map dates only six seats to
-2026-09-01: Dispatcher, Liaison, PM (filed under two spellings, `pm` and `project-manager`),
-Cleaner, Role manager, and Process improvement.
-
-Instrument: `grep -c '"Retired 2026-09-01' docs/roles/seats.json` returns 7 (the two PM spellings
-count twice). `grep -ic asvs docs/roles/seats.json` returns 0. A control, `grep -ic dispatcher` on
-the same file, returns 1, so the zero is a real absence and not a broken search.
-
-ASVS Tracker carries no entry in that map and no 2026-09-01 date. `roles/retired/` still holds its
-playbook, an eighth file beside the six named above and `CONSOLE.md`. Its label resolves to
-nothing and prints no retirement notice. See section 1b.
+**Seven seats retired by owner decision on 2026-09-01: Dispatcher, Project Manager, Liaison, Cleaner,
+Role manager, Process improvement and ASVS Tracker.** The Console took the Dispatcher's and the
+Liaison's work. Nothing replaced the other five.
 
 **The Console then retired on 2026-09-10, and the Manager took all three.** A Console reached across
 every account and oversaw the whole build. That breadth did not work.
