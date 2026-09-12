@@ -248,7 +248,45 @@ Read the `seen` column, not the inbox. A non-empty inbox beside `seen=0` was nev
 hook, which is not the same as never read. Reading a box by hand does not consume it. **Treat
 `seen=0` as a prompt to ask, never a verdict.**
 
-Cross-session messaging is unaffected, because it addresses a session rather than a directory.
+**Cross-session messaging is unaffected by your cwd, because it addresses a session rather than a
+directory. It is bounded by something else instead, and that boundary is the one that strands
+people.**
+
+### The seat registry is the only channel that crosses accounts, so declare into it on arrival
+
+    pwsh -NoProfile -File scripts\coord\seat.ps1 -Declare -Seat <role> -Goal "<one line>"
+
+**`SendMessage` and `ListAgents` do not cross Claude accounts.** Measured 2026-09-12 on the engine
+repository: a Lander on `.claude-account-2` enumerated exactly two peers, both on its own config
+root, while a session on a different account was holding finished work for it. That session read its
+own empty result as the known gap where some sessions fail to surface, and kept trying. **No retry
+reaches across. It is an account boundary, not a listing delay.**
+
+**The coordination directory DOES cross accounts, which is what makes it the fallback.** Measured the
+same day: six config roots -- `.claude-account-1` through `-5`, and `.claude` -- have all written
+seat records into one `.git/mefor-coord/`, under one operating-system user.
+
+**But your box is named for your WORKTREE and a searcher is looking for your SEAT.** That is this
+section's own (worktree, session) keying seen from the other end, and it defeats the obvious search.
+By its own account the stranded session looked for `lander-*`, found five boxes, and concluded they
+all belonged to finished sessions. It was right: the newest was a week stale. The live Lander's box
+was named from an unrelated worktree slug and carried no hint of the seat. **Sound method, wrong
+search space.**
+
+**So the registry is the bridge, and it only bridges if you declared.** That session had grounds to
+look in exactly the right place and would still have found nothing usable: the Lander's record was
+live that minute -- 158 writes that day -- with `seat` absent, `seatSource` null and `declaredAt`
+null. **A live record with no seat is indistinguishable from no record at all** to anyone asking who
+holds a role.
+
+**Finding a live seat from any account, which is the read side of the same rule:**
+
+    grep -rl '"seat": *"<role>"' <repo>/.git/mefor-coord/seats
+    # newest by mtime wins; read its boxKey; mail that box.
+
+Newest-by-mtime is load-bearing, for the reason this section already gives: a record answers "a seat
+once declared here", never "a seat is alive here". Five dead Lander records outrank a live one on
+every axis except recency, so any search that does not sort by time finds a corpse first.
 
 ---
 
