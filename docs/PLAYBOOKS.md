@@ -5,7 +5,7 @@
 KORUS keeps short cards and full playbooks for its roles. Name the current playbook in the
 session's opening prompt.
 
-The roster changed on 2026-09-01, when six seats retired. It changed again on 2026-09-10 and
+The roster changed on 2026-09-01, when seven seats retired. It changed again on 2026-09-10 and
 2026-09-12. Older instructions may still route work to a seat that is gone.
 
 The site serves the cards. Open the full playbooks in your checkout; nothing delivers them to a
@@ -47,9 +47,9 @@ the fix it awaited merged.
 
 ## The seats that retired, and what replaced each
 
-Six seats retired on 2026-09-01, the Console on 2026-09-10, and the Reviewer on 2026-09-12. Retired
-playbooks remain in `roles/retired/` as a record. Instructions that route work through those seats
-are stale.
+Seven seats retired on 2026-09-01, the Console on 2026-09-10, and the Reviewer on 2026-09-12.
+Retired playbooks remain in `roles/retired/` as a record. Instructions that route work through
+those seats are stale.
 
 | Retired seat | What replaced it |
 |---|---|
