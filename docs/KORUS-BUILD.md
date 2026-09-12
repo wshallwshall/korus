@@ -26,9 +26,9 @@ opening prompts and `CLAUDE.md`.
 <figure class="explain-figure">
 <picture>
 <source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
-<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Pull requests go to the authorized Lander; failed checks reach Regulator. The drawing still shows a review step that retired on 2026-09-12." loading="lazy" width="797" height="1027">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="887">
 </picture>
-<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. The drawing still places a review step between Builder and Lander. That seat retired on 2026-09-12 and nothing replaced it, so a pull request reaches the Lander directly. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
+<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
 
 The Builder uses its own worktree and branch, with the collision gate checking covered edits.
