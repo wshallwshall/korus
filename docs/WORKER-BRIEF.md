@@ -81,7 +81,7 @@ Stopping loses the session's context, but preserves its work.
 | Where | What only it does |
 |---|---|
 | Mail to the coordinating session | Crosses the account boundary. Nothing else here reaches a session under a second login |
-| A comment on the pull request | Sits beside the work, outlives the session, and a later reviewer reads it |
+| A comment on the pull request | Sits beside the work, outlives the session, and a later reader finds it |
 
 Delivery consumes the mail; the pull request comment remains for later readers. The rule requires
 both channels because they serve different needs.

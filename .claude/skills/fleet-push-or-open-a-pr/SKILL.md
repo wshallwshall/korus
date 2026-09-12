@@ -12,19 +12,19 @@ disable-model-invocation: false
 
 ### The PR route: every seat pushes its own, and the Lander merges
 
-**Owner-set 2026-08-29, three steps.** Create the pull request and notify the Reviewer. The Reviewer
-posts any findings on the pull request. On approval the Reviewer passes it to the Lander, which
-merges. Creating the pull request means pushing your own branch, and that needs no approval.
+**Two steps since 2026-09-12.** Push your own branch and open your own pull request, which needs no
+approval. The Lander merges it once the two required checks are green.
 
 | Item | Rule |
 | --- | --- |
-| Notification is a courtesy, not the trigger | The Reviewer finds waiting pull requests itself. Nothing pushes a notice to it. |
-| Findings go on the pull request | Never back to an author, which has usually exited. *Your pull request has to survive your own exit* covers what it must carry. |
+| RETIRED 2026-09-12, the middle step | The 2026-08-29 route had three: create the pull request, a review seat posts findings or approves, then it passes the work to the Lander. The owner retired that seat and nothing replaced it. |
+| Nothing reads your diff before the merge | Your own pass is the only one it gets. Say in the pull request what you ran and what you did not vary. |
+| Findings on a pull request are still worth posting | Any seat may write them, and the pull request outlives the session that did. Nobody waits for them. *Your pull request has to survive your own exit* covers what it must carry. |
 | RETIRED 2026-09-04, the label | No label blocks a merge. The owner removed the review gate. The required checks on `main` are `gates (ubuntu-latest)` and `gates (windows-latest)`. |
 | Do not spend a turn on it | `reviewed` now carries no machine meaning. Do not apply it, wait on it, or read a pull request as blocked for want of it. |
 | What that label proved, kept | That a step happened, not that a party looked. A seat could label a pull request it wrote itself and satisfy the machine. Any gate keyed on a self-appliable mark has this shape. |
 | Direct pushes to `main` | Still blocked by the harness. Branch and pull request is the path. |
-| RETIRED 2026-08-31, the fallback | The old route around an absent Reviewer. See [REVIEWER.md](../../../roles/REVIEWER.md), *You sit in the pull request path*. |
+| RETIRED 2026-08-31, the fallback | The old route around an absent review seat. The record is [retired/REVIEWER.md](../../../roles/retired/REVIEWER.md), *You sit in the pull request path*. |
 
 **What the retired rows used to say**, kept because seats still quote them.
 
@@ -38,8 +38,8 @@ The sentence that retired it, whose gate is now gone:
 *"Since the review gate was armed the Lander cannot merge an unlabelled pull request either. Start a
 Reviewer, have any other running seat read the diff and label it."*
 
-**Do not read that as the fallback returning.** Whether the Reviewer stays in the pull request path
-is the owner's call. Nothing here answers it, and no seat should act as though it has.
+**Neither one is a route now.** The gate went on 2026-09-04, the seat on 2026-09-12, and the fallback
+became the whole path: push, open the pull request, and the Lander merges.
 
 ## A new test file is unlandable until the manifest classifies it
 

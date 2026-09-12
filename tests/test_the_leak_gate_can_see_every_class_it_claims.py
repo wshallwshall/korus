@@ -175,7 +175,7 @@ QUIET: tuple[tuple[str, tuple[str, ...]], ...] = (
         (FAKE_UUID,),
     ),
     (
-        "an ordinary claude.ai link with no artifact path. roles/REVIEWER.md carries one",
+        "an ordinary claude.ai link with no artifact path. roles/retired/REVIEWER.md carries one",
         ("https://claude.ai/", "code"),
     ),
     # THE THREE BELOW ARE THE ONLY NEAR MISSES WITH WIDTH DISCRIMINATION, and without them a

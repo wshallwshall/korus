@@ -72,8 +72,11 @@ merge queue cannot route around a failing required check.**
 
 Source of record: root `CLAUDE.md`, *Route it to the seat that owns it*, which REPLACED the
 pre-2026-09-01 method. The
-2026-08-29 three-step route is from the replaced era and is **stale as routing**. That route said to
-notify the Reviewer, have it return the PR to you, then have it pass the PR to the Lander.
+2026-08-29 three-step route is from the replaced era and is **stale as routing**. That route sent a
+notice to a Reviewer seat, had it return the PR to you, then had it pass the PR on to the Lander.
+
+**That seat retired on 2026-09-12 and nothing replaced it**, so the route has no middle step left to
+be stale about. A PR merges on its two required gates.
 
 Two halves of it survive because that section restates them. The routing itself does not.
 
@@ -82,18 +85,17 @@ Two halves of it survive because that section restates them. The routing itself 
 | Who pushes -- SURVIVES | **Every seat pushes its own branch and opens its own PR, without asking.** Owner ruling 2026-08-29, anchored at `refs/liaison/owner-ruling-20260829-push`. |
 | The merge -- SURVIVES | Yours, with standing authority on the engine repo and the vault, and no per-action owner approval. |
 | The label -- RETIRED 2026-09-04 | This read: *"`a reviewer has read this` is a required status check, so you cannot merge an unlabelled PR."* The owner removed that gate. **An unlabelled PR merges.** Do not wait for the label or apply one. |
-| Who triggers the Reviewer | **The Manager**, once it holds the spawn permission; the owner otherwise. The Console held this until it retired 2026-09-10. |
+| Who starts a review -- RETIRED 2026-09-12 | This row read *"the Manager, once it holds the spawn permission; the owner otherwise"*. The owner retired the seat and nothing replaced it. **Nothing reads a diff before the merge, and you do not wait for one.** |
 | That row cited a heading that does not resolve | It read: `CLAUDE.md`, *Route it to the seat that owns it*. Measured at `5de5594`, `git grep -c` for that phrase in `CLAUDE.md` returns zero. |
 | The control for that reading | Same command shape on *This table governs the roster*: 1 hit. So the grep was live rather than empty. |
-| Not you, and not the Builder | The Builder's process has already exited. |
-| Why it is still the owner on some roots | The spawn grant is PER CONFIG ROOT: a rule matching `Bash(claude:*)` or `PowerShell(claude:*)` under `permissions.allow`, in the `settings.json` of the root named by `CLAUDE_CONFIG_DIR`. |
+| Neither you nor the Builder ever started it | Part of the same retired row. A Builder's process has already exited when its PR opens. |
+| Where the spawn grant lives, for the sessions that still need one | PER CONFIG ROOT: a rule matching `Bash(claude:*)` or `PowerShell(claude:*)` under `permissions.allow`, in the `settings.json` of the root named by `CLAUDE_CONFIG_DIR`. |
 | Measured 2026-09-02 | `.claude-account-1` carries both rules and spawned a session in 38.8 seconds. Every root measured without them was refused. |
-| The trigger is a POLL, and that is the real gap | Nothing tells the Manager a pull request is waiting. No workflow reports an unread PR (BACKLOG #1413, open). |
+| Every trigger is a POLL, and that is the real gap | Nothing tells you a pull request is waiting. No workflow reports one (BACKLOG #1413, open). |
 | What does report, and what it misses | `stalled-prs.yml` reports green-but-unmergeable PRs on a daily 07:05 UTC cron. `failure-signal.yml` writes a `ci-red` label that no workflow reads back. |
-| So what "the Manager triggers the Reviewer" means | "The Manager notices while polling", and it is only as good as that interval. |
-| What that means for you | If nothing has reviewed a green PR, the missing actor is a Manager poll, not a broken route. Say that, and do not infer that the route changed. |
+| What that means for you | A green PR nobody has taken is waiting on your own poll, not on a broken route. Say that, and do not infer that the route changed. |
 | Notification -- RETIRED | There is none. Every notice is POLLED and nothing is pushed. **A seat that waits to be notified waits forever.** |
-| Return-to-author -- RETIRED | There is no author to return to. A Builder's process exits when its PR opens. A review failure posts findings ON THE PR, for whichever Builder the Manager runs next. |
+| Return-to-author -- RETIRED | There is no author to return to. A Builder's process exits when its PR opens. Findings go ON THE PR, for whichever Builder the Manager runs next. |
 | Hand-off to the Lander -- RETIRED | Nothing is passed. You poll. |
 | What the label proved -- gate retired, lesson kept | That a step HAPPENED, not that an independent party looked. A self-applied label satisfied the machine and defeated the point. Any gate recording an event rather than a judgment has that hole. |
 | Direct pushes to `main` | Still blocked by the harness. |

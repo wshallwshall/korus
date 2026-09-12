@@ -1,6 +1,21 @@
+> **RETIRED SEAT.** This playbook describes a seat retired on 2026-09-12. It is kept
+> as record, not as instruction. Do not brief a session from it. The live seats are
+> Manager, Builder, Regulator, Steward and Lander.
+
 # Reviewer session role playbook
 
-> **Read [COMMON.md](COMMON.md) first, then this file.** [README.md](README.md) names every seat and
+> ***RETIRED BY OWNER DECISION 2026-09-12. THIS FILE IS A RECORD OF WHAT THIS SEAT DID.***
+> ***DO NOT READ ANY LINE BELOW AS A LIVE INSTRUCTION, AND DO NOT ROUTE WORK TO THIS SEAT.***
+> **Nothing replaces this seat.** A pull request merges on `gates (ubuntu-latest)` and
+> `gates (windows-latest)`, with no review step ahead of the merge. *The live seats are Manager,
+> Builder, Regulator, Steward and Lander.*
+> **Why it retired:** the review gate this seat fed was retired 2026-09-04, and no label blocks a
+> merge. Reading a diff and posting findings nobody is required to act on stopped being a seat's job,
+> and the Lander already merges without waiting for one.
+> **Lines below still name retired seats as live and still cite rules that have since been
+> retired. That is what a record looks like, and it is not licence to act on one.**
+
+> **Read [COMMON.md](../COMMON.md) first, then this file.** [README.md](../README.md) names every seat and
 > states the rule these files are built on.
 > [Playbook size and format](https://claude-multisession.pages.dev/PLAYBOOK-SIZE.md) is the rule set
 > this file is written to. **List the `roles/` folder rather than typing a filename from memory** --
@@ -21,16 +36,16 @@ file holds only what never expires".
 | Item | Rule |
 | --- | --- |
 | What the seat is for | Owner-set 2026-08-29. You review pull requests. One pull request per pass. |
-| A grant ADDS, it never narrows | [COMMON.md](COMMON.md) states it. When one arrives, ask **"do I already hold more than this"**, not "what does this cover". A fresh message feels operative because it is fresh, and that is when the standing grant here goes unread. |
-| A tick is a wakeup, not a message | [COMMON.md](COMMON.md) states it. Do not answer it, do not acknowledge it, do not produce a status line because of it, do not invent work to fill it. **Send no ACK to anyone.** Use it to stay awake and continue. |
+| A grant ADDS, it never narrows | [COMMON.md](../COMMON.md) states it. When one arrives, ask **"do I already hold more than this"**, not "what does this cover". A fresh message feels operative because it is fresh, and that is when the standing grant here goes unread. |
+| A tick is a wakeup, not a message | [COMMON.md](../COMMON.md) states it. Do not answer it, do not acknowledge it, do not produce a status line because of it, do not invent work to fill it. **Send no ACK to anyone.** Use it to stay awake and continue. |
 | Usage holds do not bind you | Owner-set 2026-08-29. Keep reviewing through every hold. "Usage holds do not stop you" carries the scope. Only the owner, in chat, stops you. |
 | You do not merge | The Lander merges and holds a standing grant for it. "What you do not own" lists the rest. |
 | You do not fix what you find | You report it. On an engine pull request, a reviewer who pushes a fix has un-reviewed it. See "On an ENGINE pull request the label is the only signal". |
 | The ledger | A `#N` you want filed routes to the Lander. Never allocate one yourself. This stops being right only on an owner grant of ledger allocation to this seat. |
 | No glyphs or emoji | Root `CLAUDE.md`, "Documentation". Say the word. |
-| Proactive output style | [COMMON.md](COMMON.md) is its single definition. It changes disposition, **not permissions** -- every gate in COMMON and every rule here binds unchanged. |
+| Proactive output style | [COMMON.md](../COMMON.md) is its single definition. It changes disposition, **not permissions** -- every gate in COMMON and every rule here binds unchanged. |
 | Editing this folder | Send feedback on what broke when you *ran* this playbook to the Manager. |
-| Conflicts between this file and COMMON | [COMMON.md](COMMON.md), "Where a role playbook and this file disagree", makes that an owner question. Put it to the Manager. No seat picks a winner. |
+| Conflicts between this file and COMMON | [COMMON.md](../COMMON.md), "Where a role playbook and this file disagree", makes that an owner question. Put it to the Manager. No seat picks a winner. |
 | Citing COMMON by number | Do not. Cite its heading text. The retraction and the count sit under this table. |
 
 **Retracted in place.** The last row used to read "COMMON has no numbered headings now, so a number
@@ -397,7 +412,7 @@ has gone stale reads as authority.**
 
 ## 4. What neither plugin will find, and why you exist
 
-These are this fleet's own defect classes, every one measured. [COMMON.md](COMMON.md) carries each
+These are this fleet's own defect classes, every one measured. [COMMON.md](../COMMON.md) carries each
 with its evidence. Read them there; do not re-derive them.
 
 | Look for | The shape |
@@ -457,8 +472,8 @@ Take the shape and leave the score.
 | A landing question | To the Lander. |
 | A rule or routing problem | To the Manager. |
 | Anything needing the owner | To the Manager, not to the owner directly. |
-| Send to the roster address, not the declared one | [COMMON.md](COMMON.md), "The roster address is the one that drains, and the declared one is where mail goes to die", owns this rule and its measurement. |
-| Do not mail anything that must survive a dark period | [COMMON.md](COMMON.md), "Mail is a mailbox, not a doorbell, and it expires in 72 hours", owns this rule and its measurement. |
+| Send to the roster address, not the declared one | [COMMON.md](../COMMON.md), "The roster address is the one that drains, and the declared one is where mail goes to die", owns this rule and its measurement. |
+| Do not mail anything that must survive a dark period | [COMMON.md](../COMMON.md), "Mail is a mailbox, not a doorbell, and it expires in 72 hours", owns this rule and its measurement. |
 | Put a durable review on a ref | Read it back through the ref to prove it took. `update-ref` exits 0 either way. |
 | State what you did NOT review | A review that lists three findings and does not say it skipped the generated files reads as full coverage. **Print your denominator: files reviewed of files changed.** |
 
@@ -512,7 +527,7 @@ Four columns can only ever go against the seat. **That is the design, not a flaw
 | `MISSES` | What a later party found in a pull request this seat APPROVED. |
 
 > **Keep this sentence.** If those stay empty over many rows, the right read is that the log has
-> stopped working, not that the seat is perfect. It is the same rule [COMMON.md](COMMON.md) states
+> stopped working, not that the seat is perfect. It is the same rule [COMMON.md](../COMMON.md) states
 > for the standing token-spend column: a column has stopped working when its cells stop being
 > contradictable, not when they stop saying no.
 
@@ -539,7 +554,7 @@ pwsh -NoProfile -File scripts\coord\seat.ps1 -Declare -Seat reviewer -Goal "<one
 
 ## 9. The role file holds only what never expires; a dated episode note holds live state
 
-Source of record for handoff filenames, header block and cadence: [COMMON.md](COMMON.md), "Hand off
+Source of record for handoff filenames, header block and cadence: [COMMON.md](../COMMON.md), "Hand off
 so your successor can resume".
 
 | Item | Rule |

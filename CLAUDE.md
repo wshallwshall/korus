@@ -32,13 +32,12 @@ lies between what is convenient here and what a copier needs, the copier wins.
 
 ## The seats
 
-Six seats are live. Each has a playbook in `roles/` and a card in `docs/roles/`.
+Five seats are live. Each has a playbook in `roles/` and a card in `docs/roles/`.
 
 | Seat | Playbook | What it owns |
 |---|---|---|
 | Manager | [MANAGER.md](roles/MANAGER.md) | Reads the record, picks the work, writes the brief. The only seat the Owner talks to. Runs its Builders as subagents or as separate sessions. |
 | Builder | [BUILDER.md](roles/BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR, exits. |
-| Reviewer | [REVIEWER.md](roles/REVIEWER.md) | Reads the diff. Applies `reviewed`, or posts findings. |
 | Regulator | [REGULATOR.md](roles/REGULATOR.md) | Decides whose failure a red check is. |
 | Steward | [STEWARD.md](roles/STEWARD.md) | A cron, not a seat. Reads usage and names the account with headroom. |
 | Lander | [LANDER.md](roles/LANDER.md) | What enters the merge queue, and in what order. |
@@ -71,13 +70,20 @@ not come back the other way. A claim copied in two directions needs retracting i
 **The Console retired 2026-09-10.** The Manager replaces it. Broad oversight across every account
 did not work, so a Manager sits inside one account.
 
+**The Reviewer retired 2026-09-12, and nothing replaced it.** The review gate it fed was retired
+2026-09-04, so no label blocks a merge. A PR merges on `gates (ubuntu-latest)` and
+`gates (windows-latest)`, with no review step ahead of it.
+
+Do not open a review step back up, and do not hold a PR waiting for one. The Lander already merges
+without waiting.
+
 Files under `roles/retired/` are the record of what a seat did. A document that routes work through
 one is stale.
 
 ## The constitution governs
 
 [The KORUS Constitution](.specify/memory/constitution.md) holds the rules a session, a seat, a gate
-or a later spec may not break. Thirteen articles at v1.15.0. Every article names the evidence behind
+or a later spec may not break. Thirteen articles at v1.16.0. Every article names the evidence behind
 it, so a reader can check rather than trust.
 
 **That line read "Twelve articles at v1.10.0" until 2026-09-10, and both numbers were wrong.**

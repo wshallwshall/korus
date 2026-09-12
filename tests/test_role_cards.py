@@ -40,30 +40,37 @@ AGREEMENT = t.REPO_ROOT / "CLAUDE.md"
 MARKER_RELPATH = ".claude/seat.local.txt"
 ROLE_COPY_RELPATH = ".claude/ROLE.local.md"
 
-#: The seat table in the working agreement governs the roster. SIX seats since 2026-09-10, when the
-#: Console retired and the Manager took its work. The Manager arrived 2026-09-04 as an alternative to
-#: the Console, ran alongside it for six days, and is now the only seat that writes a brief.
-EXPECTED_SEATS = frozenset(
-    {"manager", "builder", "reviewer", "regulator", "steward", "lander"}
-)
+#: The seat table in the working agreement governs the roster. FIVE seats since 2026-09-12, when the
+#: Reviewer retired and NOTHING replaced it: the review gate it fed was retired 2026-09-04, so a pull
+#: request merges on `gates (ubuntu-latest)` and `gates (windows-latest)` with no review step.
+#:
+#: SIX from 2026-09-10, when the Console retired and the Manager took its work. The Manager arrived
+#: 2026-09-04 as an alternative to the Console, ran alongside it for six days, and is now the only
+#: seat that writes a brief.
+EXPECTED_SEATS = frozenset({"manager", "builder", "regulator", "steward", "lander"})
 
-#: A retired seat whose card page an ARCHIVE still links to. The page stays and becomes a tombstone.
+#: Retired seats whose card page an ARCHIVE still links to. The page stays and becomes a tombstone.
 #:
 #: WHY THIS IS NOT A HOLE IN THE TWO TESTS BELOW. What must never happen is a retired seat resolving
-#: to a card. That is enforced by the ROSTER, not by the file's absence: `console` is neither live
-#: nor an alias in `docs/roles/seats.json`, so `role-card-inject.ps1` prints the retired message and
-#: never builds a card path at all. `test_a_retired_label_says_it_was_retired` pins that behaviour.
+#: to a card. That is enforced by the ROSTER, not by the file's absence: neither `console` nor
+#: `reviewer` is live or an alias in `docs/roles/seats.json`, so `role-card-inject.ps1` prints the
+#: retired message and never builds a card path at all. `test_a_retired_label_says_it_was_retired`
+#: pins that behaviour.
 #:
-#: WHY THE FILE STAYS. `docs/PLAYBOOKS.old.md` is a published archive, its bytes are hash-pinned in
+#: WHY THE FILES STAY. `docs/PLAYBOOKS.old.md` is a published archive, its bytes are hash-pinned in
 #: `docs/_data/page-revisions.json`, and it links to `roles/console.card.md`. Deleting the target
 #: breaks that link, and `test_internal_links_resolve` fails on exactly this. The same reasoning
 #: `test_redirect_covers_every_page` is built on applies: a reader following an old link must not
 #: get a 404, which reads as "this page never existed".
 #:
+#: `reviewer` JOINED ON 2026-09-12 for the same reason and one more: `docs/REVISIONS.md` is the
+#: site's index of current-and-archived pages, and it carries a row pointing at both
+#: `roles/reviewer.card.md` and its `.old.md` archive. The archive is hash-pinned like the Console's.
+#:
 #: IT IS A NAMED SET, NOT A PATTERN, for the reason `AUTHORED_VERBATIM` is: adding to it has to be a
 #: visible diff somebody approves. A tombstone still carries every required section, stays inside
 #: both budgets, and is read by the leak and ASCII scans -- it leaves only the two roster tests.
-TOMBSTONE_SEATS = frozenset({"console"})
+TOMBSTONE_SEATS = frozenset({"console", "reviewer"})
 
 #: Each card carries all five. A card missing one is a card that answers a question by omission.
 REQUIRED_SECTIONS = (
@@ -411,6 +418,34 @@ class TheHookNeverGuessesASeat(unittest.TestCase):
         self.assertEqual(0, r.returncode, r.stderr)
         self.assertIn("retired", r.stdout.lower())
 
+    def test_every_retired_label_says_it_was_retired_and_injects_no_card(self):
+        """One label per retired spelling, because a spelling left out reads as a typo.
+
+        `console1` was measured returning "MATCHES NO SEAT" before it got its own row, which sends
+        the reader looking for a card rather than telling them the seat went away. The Reviewer's
+        five spellings were added on 2026-09-12 for the same reason.
+        """
+        for label in sorted(seats()["retired"]):
+            with self.subTest(label=label):
+                r = self.run_hook(marker=label)
+                self.assertEqual(0, r.returncode, r.stderr)
+                self.assertIn("retired", r.stdout.lower())
+                self.assertNotIn("What this seat owns", r.stdout)
+
+    def test_a_retired_reviewer_marker_resolves_to_no_card(self):
+        """The Reviewer retired 2026-09-12 with no successor, and every spelling must say so.
+
+        Until that day `reviewer`, `reviewer1`, `reviewer2`, `reviewer-1`, `review` and `reviewers`
+        all resolved to a LIVE card telling the session to read a diff and post findings. A card is
+        injected at the weight of the working agreement, so that card would outrank the roster.
+        """
+        for label in ("reviewer", "reviewer1", "reviewer2", "reviewer-1", "review", "reviewers"):
+            with self.subTest(label=label):
+                r = self.run_hook(marker=label)
+                self.assertEqual(0, r.returncode, r.stderr)
+                self.assertIn("retired", r.stdout.lower())
+                self.assertNotIn("What this seat owns", r.stdout)
+
     def test_a_branch_that_looks_like_a_seat_yields_no_card(self):
         """No rung reads a branch or directory name. This is the trap rung, and it stays unbuilt.
 
@@ -472,14 +507,14 @@ class TheHookResolvesInOrder(unittest.TestCase):
         )
 
     def test_a_marker_injects_that_seats_card(self):
-        r = self.run_hook(marker="reviewer")
+        r = self.run_hook(marker="regulator")
         self.assertEqual(0, r.returncode, r.stderr)
         self.assertIn("What this seat owns", r.stdout)
-        self.assertIn("Reviewer", r.stdout)
+        self.assertIn("Regulator", r.stdout)
 
     def test_a_marker_is_case_and_space_insensitive(self):
-        r = self.run_hook(marker="  Reviewer\n")
-        self.assertIn("Reviewer", r.stdout)
+        r = self.run_hook(marker="  Regulator\n")
+        self.assertIn("Regulator", r.stdout)
 
     def test_an_alias_injects_the_canonical_card(self):
         r = self.run_hook(marker="builder2")
@@ -490,12 +525,12 @@ class TheHookResolvesInOrder(unittest.TestCase):
         self.assertIn("Lander", r.stdout)
 
     def test_the_marker_outranks_the_env_var(self):
-        r = self.run_hook(marker="reviewer", env_seat="lander")
-        self.assertIn("Reviewer", r.stdout)
+        r = self.run_hook(marker="regulator", env_seat="lander")
+        self.assertIn("Regulator", r.stdout)
         self.assertNotIn("| Lander --", r.stdout)
 
     def test_the_card_is_written_where_a_compacted_session_can_re_read_it(self):
-        self.run_hook(marker="reviewer")
+        self.run_hook(marker="regulator")
         copy = self.root / ".claude" / "ROLE.local.md"
         self.assertTrue(copy.is_file(), "the hook did not write the re-readable copy")
         self.assertIn("What this seat owns", copy.read_text(encoding="utf-8"))

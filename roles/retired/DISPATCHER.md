@@ -1,6 +1,6 @@
 > **RETIRED SEAT.** This playbook describes a seat retired on 2026-09-01. It is kept
 > as record, not as instruction. Do not brief a session from it. The live seats are
-> Manager, Builder, Reviewer, Regulator, Steward and Lander.
+> Manager, Builder, Regulator, Steward and Lander.
 
 # MessageFoundry -- Dispatcher Role Playbook
 
@@ -8,7 +8,7 @@
 > ***DO NOT READ ANY LINE BELOW AS A LIVE INSTRUCTION, AND DO NOT ROUTE WORK TO THIS SEAT.***
 > **The MANAGER replaces this seat. It reads the record, picks the row, writes each Builder's brief,
 > runs the Builder and reads what comes back.** The Console held this from 2026-09-01 until it
-> retired on 2026-09-10. *The live seats are Manager, Builder, Reviewer, Regulator, Steward and Lander.*
+> retired on 2026-09-10. *The live seats are Manager, Builder, Regulator, Steward and Lander.*
 > **Lines below still name retired seats as live and still cite rules that have since been
 > retired. That is what a record looks like, and it is not licence to act on one.**
 
@@ -74,7 +74,7 @@ Use a proactive style for your work. You have authority over the workload. The P
 > previously read** "if no Reviewer seat is running, hand the PR to the LANDER as before". *Since
 > the review gate was armed, `a reviewer has read this` is a required status check on `main`, so
 > the Lander cannot merge an unlabelled PR either.* **Start a Reviewer, have any other running seat read the diff and label it (`gh pr edit <N> --add-label reviewed`), or let the CONSOLE carry the question to the owner.
-> See [REVIEWER.md](../REVIEWER.md) section 1.**
+> See [REVIEWER.md](REVIEWER.md) section 1.**
 >
 > **Run in the Proactive output style -- [COMMON.md](../COMMON.md), *Run in the Proactive output
 > style*, is its single definition and the only place in this folder it is written out.** Bias to

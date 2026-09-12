@@ -5,8 +5,8 @@
 KORUS keeps short cards and full playbooks for its roles. Name the current playbook in the
 session's opening prompt.
 
-The roster changed on 2026-09-01, when six seats retired. Older instructions may still route work to
-them.
+The roster changed on 2026-09-01, when six seats retired. It changed again on 2026-09-10 and
+2026-09-12. Older instructions may still route work to a seat that is gone.
 
 The site serves the cards. Open the full playbooks in your checkout; nothing delivers them to a
 session automatically.
@@ -21,7 +21,6 @@ Read `roles/COMMON.md` before your seat's playbook. It holds the rules shared by
 |---|---|---|---|
 | Manager | Runs one or more Builders as subagents or separate sessions. Writes their briefs and reads their results. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
 | Builder | One brief, one turn. Commits, opens the pull request, exits. | [Builder](roles/builder.card.md) | `roles/BUILDER.md` |
-| Reviewer | Reads the diff and posts findings on the pull request. | [Reviewer](roles/reviewer.card.md) | `roles/REVIEWER.md` |
 | Regulator | Decides whose failure a red check is. | [Regulator](roles/regulator.card.md) | `roles/REGULATOR.md` |
 | Steward | A cron rather than a seat. Reads usage and names the account with headroom. | [Steward](roles/steward.card.md) | `roles/STEWARD.md` |
 | Lander | What enters the merge queue, and in what order. | [Lander](roles/lander.card.md) | `roles/LANDER.md` |
@@ -48,11 +47,13 @@ the fix it awaited merged.
 
 ## The seats that retired, and what replaced each
 
-Six seats retired on 2026-09-01 and the Console on 2026-09-10. Retired playbooks remain in
-`roles/retired/` as a record. Instructions that route work through those seats are stale.
+Six seats retired on 2026-09-01, the Console on 2026-09-10, and the Reviewer on 2026-09-12. Retired
+playbooks remain in `roles/retired/` as a record. Instructions that route work through those seats
+are stale.
 
 | Retired seat | What replaced it |
 |---|---|
+| Reviewer, 2026-09-12 | Nothing, by Owner decision. The review gate it fed was retired on 2026-09-04, so a pull request merges on its two required checks with no review step. |
 | Console, 2026-09-10 | The Manager. Broad oversight across every account did not work. |
 | Dispatcher | The Console replaced it in September 2026, then retired. Use the Manager. |
 | Liaison | The Console replaced it in September 2026, then retired. The Owner talks to the Manager. |
@@ -80,7 +81,8 @@ At `9658940`, `roles/README.md:22` names all seven retired seats in bold. Line 2
 work to them or read retired rows as live.
 
 Section 1a listed the same seven live seats this page then listed. Section 1b lists the retired
-files. This page and that section both show six now, because the Console retired on 2026-09-10.
+files. This page and that section both show five now: the Console retired on 2026-09-10 and the
+Reviewer on 2026-09-12.
 
 As a control, `wc -l roles/README.md` returned 237. The search read a real document, not an empty
 file.
