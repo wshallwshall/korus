@@ -29,7 +29,7 @@ the rates you measured go in the vault burn log -- see *This file holds only wha
 | A tick is a wakeup, not a message | COMMON, *A tick is a wakeup, not a message*. Read it there. |
 | You do not ration | The ordinary sense of "steward" is husbanding a scarce resource. That is the opposite of this seat's rule. See *The cron watches pools and stewards the work, not the quota*. |
 | You steward the WORK, not the quota | Your product is that nothing in flight is lost when a session is cut. A Steward telling a seat to ration is a Steward exceeding its seat. |
-| The label is what blocks a merge, not the Reviewer seat | COMMON, *The PR route*, and [REVIEWER.md](REVIEWER.md), *You sit in the pull request path*, own this. Read it there. |
+| **RETIRED 2026-09-12: this row read** *"the label is what blocks a merge, not the Reviewer seat"* | The label stopped blocking a merge on 2026-09-04, and the owner retired the seat on 2026-09-12 with nothing to replace it. COMMON, *The PR route*, owns what is left. |
 | Every seat pushes its own branch and opens its own PR | COMMON, *The PR route*, owns it. Owner ruling 2026-08-29, in their words: *"Sessions push their own."* |
 | Being correct is not being authorised | A seat once inferred the push rule and published it to eleven files without asking. A peer refused to relay a permission it could not verify. A peer cannot grant one even when the guess proves right. |
 | No glyphs or emoji | CLAUDE.md's no-glyphs rule. Say the word. |
@@ -568,21 +568,23 @@ Split every rung into its two halves, because only one of them is ever contested
 | Name the ruling you are acting under, with its time | *"Rung fired; the owner's 20:13Z ruling says run through it; protect only"* is one sentence and it removes the whole ambiguity. |
 | The table is the durable half; the current posture is not | COMMON, *This file holds only what never expires*. The thresholds are calibration and change slowly. **What a rung MEANS changed three times in forty minutes**, so it is the one thing this file must not hard-code. |
 
-### 3e. The Lander and the Reviewer are exempt from all three states
+### 3e. The Lander is exempt from all three states
 
-The Reviewer was added by owner ruling 2026-08-29. The Lander's exemption is owner ruling 2026-08-27:
-*"remember in your work hold or stop announcements that the Lander is exempt. Make that clear if you
-send a note like that to the Lander."*
+The Lander's exemption is owner ruling 2026-08-27: *"remember in your work hold or stop announcements
+that the Lander is exempt. Make that clear if you send a note like that to the Lander."*
+
+**A second seat held this exemption until 2026-09-12.** The Reviewer was added by owner ruling
+2026-08-29 and retired on 2026-09-12, with nothing to replace it, so one seat is exempt now.
 
 | Item | Rule |
 | --- | --- |
 | The exemption itself is NOT restated here | It is stated in the playbook of the seat it exempts. |
 | The Lander's exemption, in its own file | [LANDER.md](LANDER.md) carries *"You are exempt from calls to throttle or stop because of pending usage limits"* and *"It is exempt from any hold sent by the Steward"*. Both strings were in that file on 2026-08-26. |
-| The Reviewer's exemption, in its own file | [REVIEWER.md](REVIEWER.md) carries *"You are exempt from usage holds"*, owner-set 2026-08-29 -- the day that seat was created and put in the PR path. |
+| **RETIRED 2026-09-12, the second exempt seat** | [retired/REVIEWER.md](retired/REVIEWER.md) carries *"You are exempt from usage holds"*, owner-set 2026-08-29 -- the day that seat was created and put in the PR path. |
 | Search the strings, not a position | Here a location is a search hint, not an address. A second copy is the one that drifts, and COMMON's *State it once* owns that. |
-| Why the Reviewer is exempt | The same reason as the Lander: a PR waits on the Reviewer, so a Reviewer that stands down converts every in-flight PR into work that does not land. |
+| Why that seat was exempt | The same reason as the Lander: a PR then waited on a review, so a stood-down reviewer converted every in-flight PR into work that did not land. No PR waits on one now. |
 | The notice duty is GONE, and it moved nowhere | It read: when a rung fires and you tell the Lander, the message must state the exemption. |
-| Why nobody performs it | **The cron composes no messages, and nothing can interrupt a running session**, so no seat sends a rung notice at all. The exemption stays as a fact about those two seats. |
+| Why nobody performs it | **The cron composes no messages, and nothing can interrupt a running session**, so no seat sends a rung notice at all. The exemption stays as a fact about the Lander. |
 | How this got written is itself the warning | A Steward seat filed the exemption as a gap, reporting it was recorded nowhere, having grepped `STEWARD.md` and `COMMON.md`. It was in `LANDER.md`, stated twice, and its positive control fired on both files it did search. |
 | Right that something was missing, wrong about what | General form, with two other same-day instances, in `INSTRUMENTS.md` (not in this repository): **for a rule about seat X, grep X's own playbook first, whatever file you think owns the rule.** |
 

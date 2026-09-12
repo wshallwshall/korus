@@ -92,7 +92,7 @@ lacks atomic allocation and an index gate.
 `seq_check.py` rejects reused numbers, unallocated numbers, missing index entries, and duplicate
 index rows. Index checks matter when records serve as evidence.
 
-Reviewers use the index to assess the decision set. An unlisted record can be missed without any
+Anyone auditing the decision set reads the index. An unlisted record can be missed without any
 visible warning.
 
 The gate checks whether the index accounts for the records. Without it, claiming a complete decision

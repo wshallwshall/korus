@@ -21,7 +21,7 @@ branches are held, unpushed SHAs and "pick up here" lists belong in a dated epis
 | --- | --- |
 | A grant ADDS, it never narrows | Ask "do I already hold more than this", not "what does this cover". Scoping an incoming grant conservatively is right. Treating it as your ceiling is the defect. |
 | A tick is a wakeup, not a message | Do not answer it. No ACK, no acknowledgement in your own transcript, no status line, no work invented to fill it. Continue; do not report. |
-| Every seat pushes its own branch and opens its own pull request | No approval needed. The merge stays the Lander's and reaches it through the Reviewer. *The PR route* carries the steps. |
+| Every seat pushes its own branch and opens its own pull request | No approval needed. The merge stays the Lander's, and since 2026-09-12 no review step sits in front of it. *The PR route* carries the steps. |
 | Route owner traffic through the Manager | The Manager is the only seat the owner talks to. *The owner reads by sampling* carries the two named exceptions. |
 | No glyphs or emoji | Write the word. *Write the word, not the glyph* carries the rule and the one machine-parsed holdout. |
 | Proactive output style | *Run in the Proactive output style* is its single definition. It changes disposition, **not permissions**. |

@@ -52,7 +52,7 @@ These pages were revised on September 9, 2026. Each archive preserves the versio
 | Lander -- role card | [Read current](roles/lander.card.md) | [Read archive](roles/lander.card.old.md) |
 | Manager -- role card | [Read current](roles/manager.card.md) | [Read archive](roles/manager.card.old.md) |
 | Regulator -- role card | [Read current](roles/regulator.card.md) | [Read archive](roles/regulator.card.old.md) |
-| Reviewer -- role card | [Read current](roles/reviewer.card.md) | [Read archive](roles/reviewer.card.old.md) |
+| Reviewer -- role card (retired seat) | [Read current](roles/reviewer.card.md) | [Read archive](roles/reviewer.card.old.md) |
 | Steward -- role card | [Read current](roles/steward.card.md) | [Read archive](roles/steward.card.old.md) |
 
 The Word download also has a saved copy.

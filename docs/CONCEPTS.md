@@ -125,8 +125,8 @@ Install coordination hooks at user scope; see [Install](INSTALL.md).
 > Not yet adopted. No seat uses a narrowed checkout, and nothing described here is installed. This
 > proposal comes from an outside essay and remains unmeasured here.
 
-A worktree selects a branch but contains the entire repository. A Reviewer who only reads pull
-requests still has source files available to edit.
+A worktree selects a branch but contains the entire repository. A Regulator who only reads check logs
+still has source files available to edit.
 
 `git sparse-checkout` limits which files a worktree contains while keeping its branch. A seat can
 then lack files its job never needs.

@@ -45,7 +45,7 @@ Thirteen articles, in short:
 | XII | The shared write surface is the boundary that binds, not the account |
 | XIII | Work reaches the model through Claude Code, never through the API |
 
-It is at **v1.15.0** and it expects to be wrong in places. Most articles rest on a small
+It is at **v1.16.0** and it expects to be wrong in places. Most articles rest on a small
 number of observations, several from a single night of operation, and the document says so.
 Amendments require evidence, and retired text stays with the reason it was retired.
 
@@ -87,13 +87,12 @@ Work is divided among **seats**, each a session with one job:
 |---|---|---|
 | Manager | Plans, runs workers, holds the owner's attention | long-lived |
 | Builder | Takes one brief, does the work, opens a pull request | one turn |
-| Reviewer | Reads one pull request | per pull request |
 | Regulator | Attributes a failing build | woken on a red |
 | Steward | Writes files other seats read | cron, no model calls |
 | Lander | Decides merge order | long-lived |
 
-Eight further seats were tried and retired, the Console among them on 2026-09-10. Why each
-went is part of the record this repository is being built to hold.
+Nine further seats were tried and retired: the Console on 2026-09-10 and the Reviewer on 2026-09-12,
+with nothing replacing the Reviewer. Why each went is part of the record this repository holds.
 
 ## Repository layout
 

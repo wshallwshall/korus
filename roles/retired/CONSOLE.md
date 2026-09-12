@@ -1,6 +1,6 @@
 > **RETIRED SEAT.** This playbook describes a seat retired on 2026-09-10. It is kept
 > as record, not as instruction. Do not brief a session from it. The live seats are
-> Manager, Builder, Reviewer, Regulator, Steward and Lander.
+> Manager, Builder, Regulator, Steward and Lander.
 
 # Console session role playbook
 

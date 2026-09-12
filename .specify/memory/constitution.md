@@ -74,8 +74,12 @@ incident happened and the reasoning drawn from it did not depend on that gate's 
 changed: every session still pushes as one account, so no process gate KORUS can build is
 able to tell an author from a reviewer. **KORUS has no gate meeting this requirement today**,
 and anything proposed to replace one must record refusal as legibly as approval before it is
-worth building. Whether the Reviewer seat outlives the gate it fed is an Owner decision and is
-not settled here.
+worth building.
+
+**That paragraph ended "Whether the Reviewer seat outlives the gate it fed is an Owner
+decision and is not settled here" until 2026-09-12.** The Owner settled it on 2026-09-12:
+the seat retired and nothing replaced it. The article is unchanged, because it binds a
+gate rather than a seat.
 
 ### IV. Every claim names the condition it did not vary
 
@@ -342,8 +346,8 @@ that recorded the decision:
 > SOMETHING DOWN. Every seat that went away did its job by TALKING TO ANOTHER SEAT.
 
 **Evidence.** Seven seats were retired on 2026-09-01 and six kept. Every retained seat had
-an artefact: the Console wrote briefs, the Builder writes a pull request, the Reviewer
-writes a label, the Regulator writes an attribution log, the Steward writes files other
+an artefact: the Console wrote briefs, the Builder writes a pull request, the Reviewer wrote
+a label, the Regulator writes an attribution log, the Steward writes files other
 seats read, the Lander writes a merge order. Every retired seat existed to relay, route or
 represent, and produced nothing a later reader could open.
 
@@ -351,6 +355,15 @@ represent, and produced nothing a later reader could open.
 Console. The Manager replaced it and writes the same artefact, a brief, so the seat that
 went away was not one this article would have kept out. The retirement turned on breadth,
 not on output: a Console reached across every account, and a Manager sits inside one.
+
+**It moved a third time on 2026-09-12, and this is the case the article does not cover.**
+The Owner retired the Reviewer and nothing replaced it. That seat wrote an artefact, a label
+and findings on a pull request, so writing something down did not save it.
+
+**So the rule is necessary and not sufficient, and it always was.** A seat whose product is
+a message is not a seat. A seat whose product is an artefact nobody is required to read can
+still be retired for that, which is what happened here: the gate that made the label binding
+went on 2026-09-04 and the seat followed eight days later.
 
 **Why this is constitutional and not merely tidy.** A seat whose output is a message
 disappears when its session ends, so its work cannot be checked by Article I, cannot be
@@ -695,10 +708,28 @@ contradicts one, the article changes and the old text stays with the reason, bec
 reader who remembers the old rule needs to see it named as retired rather than find it
 silently absent.
 
-**Version**: 1.15.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-10
+**Version**: 1.16.0 | **Ratified**: 2026-09-02 | **Last Amended**: 2026-09-12
 
 <!--
 Amendment log. Kept because Governance requires retired text to stay with its reason.
+
+1.16.0 2026-09-12  The Owner retired the Reviewer seat and nothing replaced it. Two articles
+       described that seat in the present tense.
+       ARTICLE III IS UNCHANGED and its evidence is untouched. Its closing sentence read
+       "Whether the Reviewer seat outlives the gate it fed is an Owner decision and is not settled
+       here". That question is now answered, so the sentence is kept with the answer beside it. The
+       article binds any future gate rather than any seat, which is why the retirement costs it
+       nothing.
+       ARTICLE XI GAINS THE CASE IT DID NOT COVER. Its evidence listed the Reviewer among the
+       retained seats because it wrote a label. That seat has now retired while still writing one,
+       so writing something down is NECESSARY and not SUFFICIENT. The article's prohibition is
+       unchanged: a seat whose product is a message is still not a seat. What is added is that an
+       artefact nobody must read does not keep a seat alive. The reading is kept in the past tense
+       and the later change appended, per Governance.
+       Instrument: docs/roles/seats.json at this commit lists five live seats and carries reviewer
+       plus five of its spellings in its retired map, each with a reason. Control: the same file's
+       retired map already carried console and its three spellings, so the map was live rather
+       than empty.
 
 1.15.0 2026-09-10  Article XI's evidence named the Console as a retained seat in the present
        tense, and the Owner retired that seat on 2026-09-10. The 2026-09-01 reading is kept in

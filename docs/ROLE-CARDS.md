@@ -83,10 +83,13 @@ The hook runs in every worktree. A missing seat should not stop the session's wo
 
 ## The roster comes from CLAUDE.md, not from `roles/README.md`
 
-The six registered labels are Manager, Builder, Reviewer, Regulator, Steward, and Lander.
+The five registered labels are Manager, Builder, Regulator, Steward, and Lander.
 
 Console was the seventh until 2026-09-10. Its broad oversight did not work, so the Manager took its
 work. The label now resolves to no card, and the hook says it was retired.
+
+Reviewer was the sixth until 2026-09-12, and nothing replaced it. The review gate it fed was retired
+on 2026-09-04, so a pull request merges on its two required checks. That label resolves to no card too.
 
 The original design record described `roles/README.md` as a partial list copied from a private
 vault. It said Dispatcher, PM, Liaison, Cleaner, Role manager, and Process improvement remained live
@@ -139,7 +142,7 @@ That separately filed gap is now covered in [the leak gate's detector history](L
 - It does not replace a seat declaration. The marker carries the role, which a machine can
   write. It does not carry the goal, which no machine can.
 - It does not compete with a nested `CLAUDE.md`. Those scope by directory. A Builder and a
-  Reviewer editing one folder need different rules, so directory scoping cannot carry a seat.
+  Regulator editing one folder need different rules, so directory scoping cannot carry a seat.
 - It changes no section of `CLAUDE.md`.
 
 ## Rollout

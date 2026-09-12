@@ -26,13 +26,13 @@ opening prompts and `CLAUDE.md`.
 <figure class="explain-figure">
 <picture>
 <source media="(max-width: 1100px)" srcset="/assets/diagrams/g04-build-handoffs-mobile.svg">
-<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Reviewed pull requests go to the authorized Lander; failed checks reach Regulator." loading="lazy" width="797" height="1027">
+<img src="/assets/diagrams/g04-build-handoffs.svg" alt="A Manager runs one or more Builders as subagents or separate sessions. Pull requests go to the authorized Lander; failed checks reach Regulator. The drawing still shows a review step that retired on 2026-09-12." loading="lazy" width="797" height="1027">
 </picture>
-<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The Reviewer reads the pull request and returns findings or passes it to the Lander. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
+<figcaption>The Manager runs one or more Builders, with one brief per task. Each Builder can be a subagent or a separate session. The authorized Lander sets queue order; the queue merges. Failed checks take the separate Regulator path. The drawing still places a review step between Builder and Lander. That seat retired on 2026-09-12 and nothing replaced it, so a pull request reaches the Lander directly. <a href="/assets/diagrams/g04-build-handoffs.drawio">Editable diagram</a>.</figcaption>
 </figure>
 
 The Builder uses its own worktree and branch, with the collision gate checking covered edits.
-Findings stay on the pull request for correction; the Reviewer does not merge.
+Findings stay on the pull request for correction, and nobody waits for them.
 
 A role name grants no merge permission. The operator must give the Lander authority through the
 [documented route](RUNNING-MULTIPLE-SESSIONS.md); the retired review label enforces nothing.
@@ -41,15 +41,14 @@ A role name grants no merge permission. The operator must give the Lander author
 |---|---|---|
 | **Manager** | Its builders, their briefs, and their results | Write application code |
 | **Builder** | The change, the commit, the push, and the pull request for one brief | Guess at what the brief left open, or wait for an answer |
-| **Reviewer** | Reading the diff on one pull request, and the findings it posts there | Merge, or pass on a pull request it did not read |
 | **Regulator** | Deciding whose failure a red is: the pull request's, the trunk's, a flake's, or the queue's | Assume it remembers an earlier red |
-| **Lander** | What enters the merge queue and in what order | Merge a pull request the reviewer has not returned |
+| **Lander** | What enters the merge queue and in what order | Hold a pull request waiting for a review step that no longer exists |
 
-The reviewer route is advisory. The owner removed the required `gate` check on 2026-09-04;
-it previously read the `reviewed` label, which now blocks nothing.
+The review seat retired on 2026-09-12 and nothing replaced it. The owner had already removed the
+required `gate` check on 2026-09-04; it read the `reviewed` label, which blocks nothing.
 
 Earlier instructions told reviewers to apply the label and landers to wait for it. Following those
-instructions now wastes a turn on an inactive check.
+instructions now wastes a turn on an inactive check and an empty seat.
 
 The ASVS monitor retired on 2026-09-01. It had been a fifth session updating the security register
 as builders completed work.
@@ -169,10 +168,10 @@ Paste this prompt:
 You are the lander. You decide what enters the merge queue and in what order, and you
 merge-forward. Builders push their own branches and open their own pull requests.
 
-Do not merge a pull request the reviewer has not read and returned to you. No check
-enforces this: the required check that read a reviewed label was removed on 2026-09-04,
-so the label blocks nothing. Do not wait on it. Keep one ledger-appending pull request in
-the queue at a time.
+No review step sits in front of you. The reviewer seat retired on 2026-09-12 and the
+required check that read a reviewed label was removed on 2026-09-04, so the label blocks
+nothing. Merge on the required checks and do not wait for a review. Keep one
+ledger-appending pull request in the queue at a time.
 
 Read state rather than being told it:
   pwsh -NoProfile -File scripts/coord/presence.ps1   # who is live
@@ -184,11 +183,12 @@ You arbitrate and land. You do not build.
 
 The lander reads branch state instead of waiting for messages about it.
 
-Builders push their branches. The lander reads open pull requests and takes those the reviewer has
-returned.
+Builders push their branches. The lander reads open pull requests and takes the ones whose checks
+are green.
 
-Read the reviewer's comments on the pull request. The remaining required checks, `gates (ubuntu-latest)`
-and `gates (windows-latest)`, cannot establish that anyone read the diff.
+Read any comments already on the pull request. The required checks, `gates (ubuntu-latest)` and
+`gates (windows-latest)`, cannot establish that anyone read the diff, and since 2026-09-12 no seat
+is assigned to.
 
 [Running multiple sessions](RUNNING-MULTIPLE-SESSIONS.md) defines the lander's authority and route. Authority cannot transfer; a worker
 unable to reach the lander remains blocked from merging.
