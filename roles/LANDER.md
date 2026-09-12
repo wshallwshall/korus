@@ -873,7 +873,7 @@ edits on lines 3 and 5 of one eight-line file on two branches, `git merge-tree -
 
 ### 11f. A write gate keyed on TARGET PATHS does not reach network or API operations
 
-Source of record: COMMON.md's worktree-gate rule. The gate denies `Write`, `Edit`, `MultiEdit` and
+Source of record: `docs/HOOKS.md` row 60 and `scripts/hooks/worktree_gate.ps1`. COMMON.md carries no gate rule: its one `gate` hit is about DEMAND-GATE items. The gate denies `Write`, `Edit`, `MultiEdit` and
 `NotebookEdit` whose TARGET PATH is inside the primary's tree, and only the dispatch rule keys on
 session cwd.
 

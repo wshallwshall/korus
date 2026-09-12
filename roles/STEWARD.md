@@ -1514,6 +1514,6 @@ Every standing rule here carries one, per [README.md](README.md).
 | State it once | State a load-bearing fact once and link to it. A fact restated in three places is corrected in one. |
 | Every prohibition carries its expiry | Write beside it what would have to become true for it to stop being right, and how to check. A prohibition without one becomes permanent by default. *Expiry conditions* collects them. |
 | Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it. Six entries here do it. Grep **Retracted in place** and **Retired** to find them. |
-| Tone | The useful sentence is the measured one, not the alarming one. **The cost of being wrong scales with how good the sentence sounds.** See `COMMON.md`, *The alarming sentence*. |
+| Tone | The useful sentence is the measured one, not the alarming one. **The cost of being wrong scales with how good the sentence sounds.** See `.claude/skills/fleet-conclude-from-a-reading`, row *The alarming sentence*. It moved there when COMMON.md became a skill-pointer index. |
 | Where a dated episode note goes | Under `<git-common-dir>/mefor-coord/handoffs/`. Merged from the vault copy 2026-09-04. |
 | Derive that directory, never type it | `git rev-parse --path-format=absolute --git-common-dir`. The bare `.git/` form is wrong from a worktree and lists nothing. |

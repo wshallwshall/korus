@@ -95,6 +95,10 @@ evidence, so it closes the question instead of inviting one. Three instances in 
 | Defence 1 | Pin the environment INSIDE the thing under test, not around it: fix the child's encoding, resolve the interpreter explicitly. |
 | Defence 2 | Prove the fix is not itself environment-dependent by running it under several ambient conditions, including a hostile one. |
 | Defence 3 | Never inherit a baseline. Measure your own and diff it node-id by node-id (`comm -13` and `comm -23` both empty), never by count. |
+| **`comm` HAS AN INPUT CONTRACT, AND BREAKING IT FAILS LOUD AND WRONG** | Both sides must be sorted with plain `sort`. Never `sort -n`. `comm` compares lexicographically, so numerically sorted input makes it answer wrongly rather than refuse. |
+| Measured off-tree 2026-09-10 | Over 92 cited numbers, `comm` on `sort -n` output reported 92 of 92 unresolvable. Correctly sorted: 0 unresolvable, with an injected impossible value as the positive control. |
+| Why the warning does not save you | It prints `comm: file N is not in sorted order` to STDERR while printing a full, plausible answer to stdout. The answer reads as news and gets acted on. |
+| The rule that generalises | A comparison reporting near-total mismatch is a claim about the INPUT FORM until it is re-run. Near-total agreement and near-total mismatch are both suspicious; only the middle is ordinary. |
 
 ### 6a-quinquies. A control that cannot RUN where the answer would be "no"
 
