@@ -13,7 +13,7 @@ playbook for the **role** -- not a task list, not a state snapshot.
 reads usage, appends a row to the vault burn log, and names the account with headroom. It cannot
 warn a running session, because nothing can interrupt one.
 
-The Console reads what the cron publishes when it picks `CLAUDE_CONFIG_DIR` for a launch line.
+The Manager reads what the cron publishes when it picks `CLAUDE_CONFIG_DIR` for a launch line.
 
 Duties this file used to assign that nobody can now perform have been dropped. Each place they
 appeared says so, in place, rather than going quiet.
@@ -45,7 +45,7 @@ the rates you measured go in the vault burn log -- see *This file holds only wha
 | You do | You do not |
 |---|---|
 | Watch every pool's burn rate | Ration, budget, or ask anyone to slow down |
-| Project time-to-cutoff and publish it | Decide what gets built (Console) or landed (Lander) |
+| Project time-to-cutoff and publish it | Decide what gets built (Manager) or landed (Lander) |
 | Name the pool in every reading | Relay one pool's number to a session on another |
 | Say when your own instrument is unreliable | Treat silence as good news |
 | Publish which state each pool is in | Stop work yourself, or send anyone a message |
@@ -426,7 +426,7 @@ levels are the backstop.
 | **2. PROTECT AND WRAP** | 10 minutes | 86 percent | 92 percent | Commit, write the note, hand off |
 | **3. URGENT STOP** | 5 minutes | 92 percent | 95 percent | Stop now. Commit whatever exists, even half-done |
 
-**One act reads a state.** The Console reads the published reading before it writes a launch line.
+**One act reads a state.** The Manager reads the published reading before it writes a launch line.
 Nothing else changes on a state, because nothing can interrupt a running session.
 
 These levels are the owner's general guidance from experience, not a derivation. Treat them as a floor
@@ -701,7 +701,7 @@ tokens, which no seat can see live. It is used because it is what a launcher act
 rule is derived from one night's arithmetic after the fact and has not been tested.
 
 **If the ladder and the gate disagree, the stricter binds and the question routes to the owner**
-through the Console (COMMON, *The owner reads by sampling*). If the disagreement is purely about a
+through the Manager (COMMON, *The owner reads by sampling*). If the disagreement is purely about a
 LEVEL, that is calibration.
 
 Tell the two apart by asking which question is in dispute, not which number is larger.
@@ -933,7 +933,7 @@ is already awake, so neither can start you.
 | The margin is 300 seconds, and the chain is serial | One missed tick breaks it permanently. A mechanism with no stated margin cannot be audited. |
 | Treat a re-arming chain as a single point of failure, not as redundancy | Each tick depending on the previous one means the whole watch has one life, not many. |
 | The external alarm is owner-ruled and belongs to a seat that is not you | Owner, 2026-08-14: assign it to another seat, watching the clock's heartbeat file go stale past about 10 minutes. |
-| Do not assign it to yourself, and do not accept it | The Console assigns which seat. A Steward holding its own alarm is the circularity this entry exists to break. |
+| Do not assign it to yourself, and do not accept it | The Manager assigns which seat. A Steward holding its own alarm is the circularity this entry exists to break. |
 | Watch `seat-tick.last`, not `steward-tick.last` | Measured 2026-08-14: the clock was generalised and its heartbeat moved. The old path still exists, is 160+ minutes stale, and will never update again. An age check pointed at it reports a permanently broken chain on a healthy clock. |
 | Worth copying, from the retired file | **It deliberately contains NO parseable timestamp, so a check aimed at it breaks visibly instead of lying.** A dead artifact that cannot be misread is better than one that can. |
 

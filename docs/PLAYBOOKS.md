@@ -19,7 +19,6 @@ Read `roles/COMMON.md` before your seat's playbook. It holds the rules shared by
 
 | Seat | What it owns | Card | Playbook |
 |---|---|---|---|
-| Console (former design) | Broad oversight did not work. The Manager replaced it; this card remains for reference. | [Console](roles/console.card.md) | `roles/CONSOLE.md` |
 | Manager | Runs one or more Builders as subagents or separate sessions. Writes their briefs and reads their results. | [Manager](roles/manager.card.md) | `roles/MANAGER.md` |
 | Builder | One brief, one turn. Commits, opens the pull request, exits. | [Builder](roles/builder.card.md) | `roles/BUILDER.md` |
 | Reviewer | Reads the diff and posts findings on the pull request. | [Reviewer](roles/reviewer.card.md) | `roles/REVIEWER.md` |
@@ -47,15 +46,16 @@ the fix it awaited merged.
 
 ---
 
-## Six seats were retired on 2026-09-01
+## The seats that retired, and what replaced each
 
-Retired playbooks remain in `roles/retired/` as a record. Instructions that route work through those
-seats are stale.
+Six seats retired on 2026-09-01 and the Console on 2026-09-10. Retired playbooks remain in
+`roles/retired/` as a record. Instructions that route work through those seats are stale.
 
 | Retired seat | What replaced it |
 |---|---|
-| Dispatcher | The Console first replaced this seat. Use the Manager now. |
-| Liaison | The Console first replaced this seat. The Owner now talks to the Manager. |
+| Console, 2026-09-10 | The Manager. Broad oversight across every account did not work. |
+| Dispatcher | The Console replaced it in September 2026, then retired. Use the Manager. |
+| Liaison | The Console replaced it in September 2026, then retired. The Owner talks to the Manager. |
 | PM | Nothing, by Owner decision. |
 | Cleaner | Nothing, by Owner decision. |
 | Role manager | Nothing, by Owner decision. |
@@ -79,7 +79,8 @@ That claim was false. This page copied it from CLAUDE.md without checking the fi
 At `9658940`, `roles/README.md:22` names all seven retired seats in bold. Line 26 says not to route
 work to them or read retired rows as live.
 
-Section 1a lists the same seven live seats as this page. Section 1b lists the retired files.
+Section 1a listed the same seven live seats this page then listed. Section 1b lists the retired
+files. This page and that section both show six now, because the Console retired on 2026-09-10.
 
 As a control, `wc -l roles/README.md` returned 237. The search read a real document, not an empty
 file.

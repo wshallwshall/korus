@@ -88,9 +88,9 @@ A workflow created below the threshold keeps running. The gate binds the next on
 
 ### A fan-out nobody sized was sized by whatever was on the bench
 
-Two seats fan work out. A Console spawns sessions that outlive it on other accounts; a Manager spawns
-in-process subagents that share its account and die with its turn. **What bounds the number is
-different for each, and each playbook owns its own bound.** These rows are the part that is not.
+A Manager fans work out two ways. Separate sessions outlive its turn; in-process subagents share its
+account and die with it. **What bounds the number differs between them, and the playbook owns that
+bound.** These rows are the part that does not.
 
 | Item | Rule |
 | --- | --- |
@@ -98,6 +98,6 @@ different for each, and each playbook owns its own bound.** These rows are the p
 | The outside ladder is a shape to copy, not a size to adopt | Anthropic's write-up of its multi-agent research system keeps the sizing rule in the orchestrator. It calls the lack of one a common failure mode, and records fifty subagents spawned for one simple query. |
 | Its integers do not come with it | The ladder runs from one agent for simple fact-finding, through two to four for a direct comparison, to ten or more for complex research. |
 | The condition that stops them transferring | **Those were measured on research tasks, and the same post says coding parallelises worse.** No number in that ladder has been measured on this fleet. |
-| What bounds YOUR number is in your own playbook | [CONSOLE.md](../../../roles/CONSOLE.md), *A Console's fan-out is bounded by accounts and by what the Lander can land*. [MANAGER.md](../../../roles/MANAGER.md), *A Manager's fan-out is bounded by one window and by shared runners*. Read the one you are sitting in. |
+| What bounds YOUR number is in your own playbook | [MANAGER.md](../../../roles/MANAGER.md), *A Manager's fan-out is bounded by one window and by shared runners*. The retired [CONSOLE.md](../../../roles/retired/CONSOLE.md) bounded a fan-out by accounts and by what the Lander could land; that is record, not a live bound. |
 
 ---

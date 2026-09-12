@@ -6,9 +6,10 @@
 
 .DESCRIPTION
     THE GAP THIS FILLS. When a required check fails, nothing tells any session. GitHub cannot reach
-    into a session, so the only path was: a long-lived console session notices while polling, then
-    spawns a seat to attribute the failure. That makes the console a single point of failure, and it
-    is already the only seat the operator talks to. While it is busy, a red sits unattributed.
+    into a session, so the only path was: the operator's one long-lived session notices while
+    polling, then spawns a seat to attribute the failure. That makes that session a single point of
+    failure, and it is already the only seat the operator talks to. While it is busy, a red sits
+    unattributed.
 
     THIS IS NOT A PUSH, AND MUST NOT BE DESCRIBED AS ONE. GitHub still cannot reach into a session.
     What changes is the price of asking. The consuming repository labels a pull request when a

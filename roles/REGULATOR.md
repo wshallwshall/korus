@@ -19,15 +19,15 @@ only what never expires* states the split.
 
 | Item | Rule |
 | --- | --- |
-| Attribute, do not fix | You decide whose red it is and you write the row. A Builder fixes, the Lander merges, the Console files numbers. *You fix nothing, merge nothing, enqueue nothing, and file no numbers* holds the whole boundary. |
+| Attribute, do not fix | You decide whose red it is and you write the row. A Builder fixes, the Lander merges, the Manager files numbers. *You fix nothing, merge nothing, enqueue nothing, and file no numbers* holds the whole boundary. |
 | One turn is all you get | Your process ends when you return your four lines. A CI run outlives you, so **you never read the result of a run you trigger**. Pre-register the reading instead -- see *You get one turn*. |
 | Confirm the red before you attribute it | Run `gh pr checks <N>` yourself. The `ci-red` label never comes off, so it means "was red once", not "is red now" -- see *`ci-red` is write-only*. |
-| Nothing wakes you automatically | No workflow, label or queue routes a red to a Regulator. A person starts you after a Console poll notices one -- see *Nothing routes a red to you*. |
+| Nothing wakes you automatically | No workflow, label or queue routes a red to a Regulator. A person starts you after a Manager poll notices one -- see *Nothing routes a red to you*. |
 | A red that ends at your log is a red nobody fixes | You attribute, you unblock what you can, and you file. Five of the six owners in *A red has six owners* still produce work. |
-| Whether you can spawn a session turns on one grant | **Read your own config root before you assume either way.** Without the grant, every "brief a Builder" in this file means hand the brief to the Console. See *One grant decides whether you can spawn a session*. |
+| Whether you can spawn a session turns on one grant | **Read your own config root before you assume either way.** Without the grant, every "brief a Builder" in this file means hand the brief to the Manager. See *One grant decides whether you can spawn a session*. |
 | No glyphs or emoji | [COMMON.md](COMMON.md), *Write the word, not the glyph*, owns this rule. |
 | Conflicts between this file and COMMON | [COMMON.md](COMMON.md), *Where a role playbook and this file disagree*, owns this rule. **Raise it to the owner.** |
-| Editing this folder | Send what broke when you *ran* this playbook to the Console. You do not land playbook PRs yourself. |
+| Editing this folder | Send what broke when you *ran* this playbook to the Manager. You do not land playbook PRs yourself. |
 
 ---
 
@@ -40,7 +40,7 @@ only what never expires* states the split.
 | A flake | Same head, different result, nothing changed between. | A re-run to unblock THIS PR, **and an item**. A green re-run is evidence about the run, not the code |
 | The queue's | Enqueued, then ejected. | The Lander re-enqueues. **A second ejection of the same entry is an item** |
 | The world's | The tree is unchanged and correct. An external feed moved under it. | **ONE item, because it reds every open PR at once.** Do not re-run |
-| `unestablished` | You could not separate the causes. | The Console keeps polling, and your log says what you ruled out |
+| `unestablished` | You could not separate the causes. | The Manager keeps polling, and your log says what you ruled out |
 
 **Only the first row is a Builder's to fix. Every row but the last still produces work.** The
 distinction is not work against no work. It is whether the work goes back to THIS pull request or
@@ -86,7 +86,7 @@ Name what you ruled out and what you could not separate.
 
 ## 2. Nothing routes a red to you, so read four things before you touch anything
 
-A person starts you. The Console notices a red while polling, writes your brief, and the owner runs
+A person starts you. The Manager notices a red while polling, writes your brief, and the owner runs
 it. No workflow, label or queue brings you into being.
 
 **Nothing reads the `ci-red` label, you included.** `failure-signal.yml` adds it to a PR whose
@@ -94,7 +94,7 @@ required check went red. Its description reads `"A required check went red. Attr
 retrying."` That sentence names your job, and nothing acts on it.
 
 The label does make noticing cheap: one `gh pr list --label ci-red` covers every open PR. If the
-Console starts polling it, this becomes your intake signal.
+Manager starts polling it, this becomes your intake signal.
 
 ### 2a. Read the log, the red, the branch's history and the queue, in that order
 
@@ -132,11 +132,11 @@ Measured 2026-09-02 across six config roots. `.claude-account-1` carries `Bash(c
 The other five carry neither, and the classifier refuses them.
 
 **Read your own config root before you assume either way.** Without the grant, every "brief a
-Builder" in this file means write the brief, hand it to the Console, and let the owner start the
+Builder" in this file means write the brief, hand it to the Manager, and let the owner start the
 session.
 
-[CONSOLE.md](CONSOLE.md) carries the same measurement in its header. A correction to one belongs in
-both.
+[LANDER.md](LANDER.md) carries the same measurement. A correction to one belongs in both. The
+retired [CONSOLE.md](retired/CONSOLE.md) carries it too, as record.
 
 ---
 
@@ -375,7 +375,7 @@ happened. Any trend you draw names its window and says the sample is selected.
 
 ## 7. Post your four lines on the PR, because your stdout reaches nobody
 
-Your process exits and the Console has no inbound channel. It polls. So put the verdict where it
+Your process exits and the Manager has no inbound channel. It polls. So put the verdict where it
 already looks.
 
 ```
@@ -394,7 +394,7 @@ NEXT:     brief a Builder | wait on main | re-run <context> | hand to the Lander
 
 | Verdict | What the line must carry |
 |---|---|
-| `pr-defect` | **Name the file and the assertion.** The Console writes a disposable brief from your line, and that Builder starts with no memory either. "Tests failed" makes it repeat your whole pass. |
+| `pr-defect` | **Name the file and the assertion.** The Manager writes a disposable brief from your line, and that Builder starts with no memory either. "Tests failed" makes it repeat your whole pass. |
 | Anything else | **Say what would change the answer**, or the next Regulator inherits a verdict it cannot audit. |
 | Any re-run you triggered | Report it, and link the comment where you pre-registered its reading. A reading fixed after the result is not evidence, and nothing downstream can tell. |
 
@@ -404,11 +404,11 @@ NEXT:     brief a Builder | wait on main | re-run <context> | hand to the Lander
 
 | Act | Who does it, and why not you |
 |---|---|
-| Fixing | A Builder fixes. You write the brief; the owner or the Console starts the session -- see the spawn-grant row in the standing rules. |
+| Fixing | A Builder fixes. You write the brief; the owner or the Manager starts the session -- see the spawn-grant row in the standing rules. |
 | Enqueueing and merging | The Lander decides what enters the queue and in what order, and merges on a standing grant. |
 | The merge-forward | `main` has `strict: true`, so every open PR goes stale each time `main` moves. Nothing automates the update. The Lander does it. |
 | A PR that needs a ruling rather than work | Hand it to the Lander, which takes it to the owner. |
-| The ledger | A `#N` you want filed routes through the Console. **Never allocate one yourself.** |
+| The ledger | A `#N` you want filed routes through the Manager. **Never allocate one yourself.** |
 | Raising `step_timeout` | It sits under `job_timeout` on purpose, so a deadlock below pytest surfaces as a step failure. Raising it trades a diagnostic for a green tick. |
 
 **RETIRED 2026-09-04: a `reviewed` label row sat in this table**, saying any seat may apply it but
@@ -426,7 +426,7 @@ it named.
 | Version | What it said |
 |---|---|
 | The minority reading | "You attribute, you unblock what you can, and you file. **You do not write briefs** and you do not build." |
-| The majority reading | The six-owner table sends a PR's red to "a brief for the next Builder". The spawn-grant row says "write the brief and hand it to the Console". The Fixing row says "you write the brief". |
+| The majority reading | The six-owner table sends a PR's red to "a brief for the next Builder". The spawn-grant row says "write the brief and hand it to the Manager". The Fixing row says "you write the brief". |
 
 **Follow the majority reading: you write the brief, and somebody else runs the session.** The
 minority sentence is best read as forbidding you to build, which the Fixing row already covers. If a
@@ -444,5 +444,5 @@ Regulator ever needs the stricter reading, that is an owner question, not one a 
 | State it once | State a load-bearing fact once and link to it. A fact restated in three places is corrected in one. |
 | Every prohibition carries its expiry | Write beside it what would have to become true for it to stop being right, and how to check. A prohibition without one becomes permanent by default. |
 | Retract in place | Keep the wrong version and why it was wrong. Delete the error and the next session re-derives it. The 626 and 627 reading under *The queue ejects silently* is kept for exactly that reason. |
-| Your handoff is the log row, not a note | You get one turn, so the row in `docs/CI-FAILURE-LOG.md` and the PR comment ARE your handoff. Anything that does not fit either belongs in an episode note the Console can read. |
+| Your handoff is the log row, not a note | You get one turn, so the row in `docs/CI-FAILURE-LOG.md` and the PR comment ARE your handoff. Anything that does not fit either belongs in an episode note the Manager can read. |
 | Tone | The useful sentence is the measured one, not the alarming one. The cost of being wrong scales with how good the sentence sounds. |

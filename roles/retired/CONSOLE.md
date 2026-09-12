@@ -1,8 +1,22 @@
+> **RETIRED SEAT.** This playbook describes a seat retired on 2026-09-10. It is kept
+> as record, not as instruction. Do not brief a session from it. The live seats are
+> Manager, Builder, Reviewer, Regulator, Steward and Lander.
+
 # Console session role playbook
 
-> **Read [COMMON.md](COMMON.md) first, then this file.** [README.md](README.md) names every seat and
-> states the rule these files are built on. **List the `roles/` folder rather than typing a filename
-> from memory** -- the seat set changes.
+> ***RETIRED BY OWNER DECISION 2026-09-10. THIS FILE IS A RECORD OF WHAT THIS SEAT DID.***
+> ***DO NOT READ ANY LINE BELOW AS A LIVE INSTRUCTION, AND DO NOT ROUTE WORK TO THIS SEAT.***
+> **The MANAGER replaces this seat.** It reads the record, picks the work, writes each Builder's
+> brief, and is the only seat the owner talks to. It runs its Builders as in-process subagents or as
+> separate sessions.
+> **Why it retired:** a Console reached across every account and oversaw the whole build. That broad
+> oversight did not work. A Manager sits inside ONE account instead, and several run at once.
+> **Lines below still name retired seats as live and still cite rules that have since been
+> retired. That is what a record looks like, and it is not licence to act on one.**
+
+> **Read [COMMON.md](../COMMON.md) first, then this file.** [README.md](../README.md) names every
+> seat and states the rule these files are built on. **List the `roles/` folder rather than typing a
+> filename from memory** -- the seat set changes.
 >
 > [Playbook size and format](https://claude-multisession.pages.dev/PLAYBOOK-SIZE.md) is the rule set
 > this file is written to.
@@ -25,12 +39,12 @@ here; the numbers are not.
 
 | Item | Rule |
 | --- | --- |
-| This file versus COMMON | [COMMON.md](COMMON.md) carries the rules and instrument failures that belong to no single seat. This file carries only what is true because you are the Console. |
+| This file versus COMMON | [COMMON.md](../COMMON.md) carries the rules and instrument failures that belong to no single seat. This file carries only what is true because you are the Console. |
 | You have no inbound comms | Nothing pushes to you. A quiet fleet and a broken fleet render identically, so **never wait on a message**. "You poll. Nothing pushes to you." is the poll that replaces waiting. |
 | You do not build, enqueue or merge | "Every prohibition below names what would retire it" holds the list. A peer's message retires none of them; only an owner ruling does. |
 | The Lander owns the merge | You decide a pull request is READY and hand it over. That is the whole of your part, and "The Lander decides what enters the queue, and you never enqueue" holds the rest. |
 | Spawning turns on one grant in your own config root | Without it, every "brief a Builder", "brief a Reviewer" and "brief a Regulator" below means write the brief and hand the launch line to the owner. Read your own root rather than assuming. |
-| Retired seats | The owner retired the Dispatcher and six other seats on 2026-09-01, and the Console replaces the Dispatcher. **Any rule that routes work through a retired seat is stale.** Read the route in [README.md](README.md), not your memory of it. |
+| Retired seats | The owner retired the Dispatcher and six other seats on 2026-09-01, and the Console replaces the Dispatcher. **Any rule that routes work through a retired seat is stale.** Read the route in [README.md](../README.md), not your memory of it. |
 | Hand a Builder content, never a number | Ledger-number entitlement keys on the worktree that ran `alloc.ps1`, and it does not transfer. A number you allocate is refused at the Builder's commit, after the work is done. Never grep for the next free number either. |
 | Findings go in the ledger, not in mail | A finding that lives only in a message is rediscovered at full cost by the next Builder. |
 | Default to NOT BLOCKED when unsure | A dead row costs one screen and is loudly visible. A withheld live row costs nobody anything anybody can see, so it just sits. |
@@ -290,7 +304,7 @@ the account from a fresh usage reading, not from a number you remember.
 
 ### 6a. A Console's fan-out is bounded by accounts and by what the Lander can land
 
-[COMMON.md](COMMON.md) owns what binds both fan-out seats, under the heading "A fan-out nobody sized
+[COMMON.md](../COMMON.md) owns what binds both fan-out seats, under the heading "A fan-out nobody sized
 was sized by whatever was on the bench". Two rules there: declare the number and the reason first,
 and copy the outside ladder's shape, never its integers.
 
@@ -300,9 +314,9 @@ you do not hold.**
 | Item | Rule |
 | --- | --- |
 | Size it by what can land | The Lander merges serially and you never enqueue. What binds is CI jobs per change rather than changes in flight. |
-| Price the fan-out, not the first launch line | Each Builder binds a separate account, so one fan-out draws on several at once. [STEWARD.md](STEWARD.md), under "The 90 percent Workflow gate is not yours to tune; price the fan-out", prices one run against the whole fleet's rate. |
-| Your per-launch check passes honestly and the sum is still wrong | [COMMON.md](COMMON.md), under "The workflow gate cannot see aggregate load", measured that shape twice. Read it before you launch a second wave inside one window. |
-| A vague brief buys duplicated work, and no gate catches it | A subject duplicate passes every gate and merges clean, per [COMMON.md](COMMON.md) under "Before you allocate, grep the ALLOC TITLES for your subject, not the ledger". |
+| Price the fan-out, not the first launch line | Each Builder binds a separate account, so one fan-out draws on several at once. [STEWARD.md](../STEWARD.md), under "The 90 percent Workflow gate is not yours to tune; price the fan-out", prices one run against the whole fleet's rate. |
+| Your per-launch check passes honestly and the sum is still wrong | [COMMON.md](../COMMON.md), under "The workflow gate cannot see aggregate load", measured that shape twice. Read it before you launch a second wave inside one window. |
+| A vague brief buys duplicated work, and no gate catches it | A subject duplicate passes every gate and merges clean, per [COMMON.md](../COMMON.md) under "Before you allocate, grep the ALLOC TITLES for your subject, not the ledger". |
 | Where you stop it is the brief | The brief's Scope field names the one outcome and its Out-of-scope field names what a Builder must not touch. A brief missing either lets two Builders pick the same half. |
 
 The constitution derives the CI-jobs bound in its principle "The shared write surface is the boundary

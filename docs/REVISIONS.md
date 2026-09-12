@@ -48,7 +48,7 @@ These pages were revised on September 9, 2026. Each archive preserves the versio
 | Brief a worker session | [Read current](WORKER-BRIEF.md) | [Read archive](WORKER-BRIEF.old.md) |
 | Worktrees | [Read current](WORKTREES.md) | [Read archive](WORKTREES.old.md) |
 | Builder -- role card | [Read current](roles/builder.card.md) | [Read archive](roles/builder.card.old.md) |
-| Console -- role card | [Read current](roles/console.card.md) | [Read archive](roles/console.card.old.md) |
+| Console -- role card (retired seat) | [Read current](roles/console.card.md) | [Read archive](roles/console.card.old.md) |
 | Lander -- role card | [Read current](roles/lander.card.md) | [Read archive](roles/lander.card.old.md) |
 | Manager -- role card | [Read current](roles/manager.card.md) | [Read archive](roles/manager.card.old.md) |
 | Regulator -- role card | [Read current](roles/regulator.card.md) | [Read archive](roles/regulator.card.old.md) |

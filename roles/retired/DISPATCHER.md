@@ -1,12 +1,14 @@
 > **RETIRED SEAT.** This playbook describes a seat retired on 2026-09-01. It is kept
 > as record, not as instruction. Do not brief a session from it. The live seats are
-> Console, Builder, Reviewer, Regulator, Steward and Lander.
+> Manager, Builder, Reviewer, Regulator, Steward and Lander.
 
 # MessageFoundry -- Dispatcher Role Playbook
 
 > ***RETIRED BY OWNER DECISION 2026-09-01. THIS FILE IS A RECORD OF WHAT THIS SEAT DID.***
 > ***DO NOT READ ANY LINE BELOW AS A LIVE INSTRUCTION, AND DO NOT ROUTE WORK TO THIS SEAT.***
-> **The CONSOLE replaces this seat. It reads the record, picks the row, writes each Builder's brief, spawns the Builder and polls for what comes back.** *The live seats are Console, Builder, Reviewer, Regulator, Steward and Lander.*
+> **The MANAGER replaces this seat. It reads the record, picks the row, writes each Builder's brief,
+> runs the Builder and reads what comes back.** The Console held this from 2026-09-01 until it
+> retired on 2026-09-10. *The live seats are Manager, Builder, Reviewer, Regulator, Steward and Lander.*
 > **Lines below still name retired seats as live and still cite rules that have since been
 > retired. That is what a record looks like, and it is not licence to act on one.**
 

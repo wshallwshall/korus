@@ -29,8 +29,8 @@ file holds only what never expires".
 | The ledger | A `#N` you want filed routes to the Lander. Never allocate one yourself. This stops being right only on an owner grant of ledger allocation to this seat. |
 | No glyphs or emoji | Root `CLAUDE.md`, "Documentation". Say the word. |
 | Proactive output style | [COMMON.md](COMMON.md) is its single definition. It changes disposition, **not permissions** -- every gate in COMMON and every rule here binds unchanged. |
-| Editing this folder | Send feedback on what broke when you *ran* this playbook to the Console. |
-| Conflicts between this file and COMMON | [COMMON.md](COMMON.md), "Where a role playbook and this file disagree", makes that an owner question. Put it to the Console. No seat picks a winner. |
+| Editing this folder | Send feedback on what broke when you *ran* this playbook to the Manager. |
+| Conflicts between this file and COMMON | [COMMON.md](COMMON.md), "Where a role playbook and this file disagree", makes that an owner question. Put it to the Manager. No seat picks a winner. |
 | Citing COMMON by number | Do not. Cite its heading text. The retraction and the count sit under this table. |
 
 **Retracted in place.** The last row used to read "COMMON has no numbered headings now, so a number
@@ -85,7 +85,7 @@ One command, two repositories, two answers. The needle was found where it exists
 it does not, so the empty result is a reading rather than a failed lookup.
 
 > **What this seat is for in korus, now that no gate enforces it, is an OWNER question.** This file
-> does not answer it and no seat may. Put it to the Console. Until it is ruled on, review korus pull
+> does not answer it and no seat may. Put it to the Manager. Until it is ruled on, review korus pull
 > requests as before and know that only prose records the pass.
 
 ### 1a. Nothing notifies you, so find the waiting pull requests yourself
@@ -174,7 +174,7 @@ playbooks say, and a sweep is editing them now.
 | Item | Rule |
 | --- | --- |
 | Why there is no fallback | No automation adds the label, GitHub reports such a pull request BLOCKED, and `enforce_admins` is true on the engine. |
-| The three ways out | Start a Reviewer. Have any other running seat read the diff and label it. Let the Console carry the question to the owner on its next poll. |
+| The three ways out | Start a Reviewer. Have any other running seat read the diff and label it. Let the Manager carry the question to the owner on its next poll. |
 | Who rules on a named backstop | The owner, and no seat may make that ruling. |
 | Why the ruling is still needed | The engine's `review-gate.yml` says the gate records a process step and not an identity, so a backstop would not weaken what it checks. It changes who may satisfy a merge gate, and no peer grants that. |
 | When "no admin override" expires | When `enforce_admins` goes false. Check it with the protection call in "The label is the only signal", never from memory. |
@@ -385,7 +385,7 @@ answer to the question the caller asked, which is exactly why nothing downstream
 
 > **Enabling the plugin is the other fix, and it is neither this seat's to make nor the Role
 > Manager's.** It changes `enabledPlugins` in a config root, which no playbook and no peer may
-> authorise. Route it to the Console for the owner if you want it. The Console is the only seat the
+> authorise. Route it to the Manager for the owner if you want it. The Manager is the only seat the
 > owner talks to. Until it lands, the manual method is the method, not a fallback.
 
 ### 3i. `comment-analyzer` earns its place too
@@ -455,8 +455,8 @@ Take the shape and leave the score.
 | --- | --- |
 | A code defect | On the pull request. The Builder that held the item has exited, and the next one reads the thread. |
 | A landing question | To the Lander. |
-| A rule or routing problem | To the Console. |
-| Anything needing the owner | To the Console, not to the owner directly. |
+| A rule or routing problem | To the Manager. |
+| Anything needing the owner | To the Manager, not to the owner directly. |
 | Send to the roster address, not the declared one | [COMMON.md](COMMON.md), "The roster address is the one that drains, and the declared one is where mail goes to die", owns this rule and its measurement. |
 | Do not mail anything that must survive a dark period | [COMMON.md](COMMON.md), "Mail is a mailbox, not a doorbell, and it expires in 72 hours", owns this rule and its measurement. |
 | Put a durable review on a ref | Read it back through the ref to prove it took. `update-ref` exits 0 either way. |

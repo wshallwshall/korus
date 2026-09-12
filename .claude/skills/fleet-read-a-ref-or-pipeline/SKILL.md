@@ -70,6 +70,61 @@ maintenance.
 A seat that learns "this repo is shallow" and applies it to the vault gets it wrong in the opposite
 direction.
 
+### A checkout is not a ref, and a branch named `main` is not `origin/main`
+
+Reading a working tree answers about whatever that checkout holds. Nothing errors, and the branch
+name carries no warning.
+
+Measured 2026-09-11 in a non-primary engine clone, over
+`.github/workflows/backlog-hygiene.yml`:
+
+```
+git rev-parse --short HEAD                          # 4c68c28eb, on a branch called main
+git rev-list --count 4c68c28eb..685549e06           # 106
+grep -c '' .github/workflows/backlog-hygiene.yml    # 248, the working tree
+git show 685549e06:<path> | grep -c ''              # 273
+git show 8c50cb05b:<path> | grep -c ''              # 273
+```
+
+The seat had read `origin/main` with `git log` in that same clone one step earlier, then opened the
+working tree and reported the result as the ref. `git status` was clean, because a checkout always
+matches its own HEAD.
+
+**It then explained the gap by shallowness, and that was wrong twice over.** Shallow truncates
+history, not file content at a ref.
+
+`git show <ref>:<path>` returns the same bytes either way, provided the ref is present, and
+`git cat-file -t` confirmed both refs were present the whole time. Read *The engine repo is flagged
+shallow and `origin/main` is still complete* for why that reach fails in general.
+
+**A tool whose interface takes a PATH cannot be fixed by `git show`, and that is the second shape.**
+
+Measured 2026-09-10 on the vault primary checkout, sitting on
+`asvs-878-anchor-repair-1180` with a clean tree:
+
+```
+git -C <vault> rev-list --left-right --count HEAD...origin/main   # 1  16
+```
+
+One ahead, sixteen behind. Reading `docs/security/asvs-scorecard.toml` from that tree answers about
+a sixteen-commit-stale record.
+
+The documented command takes a path, `--scorecard <vault>/docs/security/asvs-scorecard.toml`, so its
+own interface invites reading whatever the checkout happens to hold.
+
+Extracting the blob to a loose file is not the fix. The tool then prints `scorecard=NO-GIT` and loses
+the provenance header that makes its numbers citable at all.
+
+| Shape | The tell | The fix |
+| --- | --- | --- |
+| A reader aimed at a checkout | You named a ref and then opened a path | `git show <ref>:<path>` |
+| A tool whose interface takes a path | The documented command has a path argument | A DETACHED WORKTREE at the ref, with the tool pointed there |
+
+**A rule that stops at "use `git show`" covers only the first.**
+
+Both seats reached the right conclusion anyway, which is why neither caught it alone. A correct
+number attached to the wrong question survives every check of the number.
+
 ### Read `PIPESTATUS[0]`, and only with a consumer that reads all its input
 
 A failing read is not silent -- `git show` exits 128 and writes to stderr. The pipe is what silences

@@ -17,11 +17,17 @@ present-tense claim that MessageFoundry is deployed, because it is a not-yet-dep
 who is blocked on whom and session names belong in a dated episode note. *These files carry nothing
 that expires* states the split; *Episode notes live outside this folder* says where they go.
 
-## 1. The seat set changed on 2026-09-01, and the Console replaced two seats at once
+## 1. The seat set changed twice, and the Manager now holds what two retired seats did
 
 **Seven seats retired by owner decision on 2026-09-01: Dispatcher, Project Manager, Liaison, Cleaner,
-Role manager, Process improvement and ASVS Tracker.** The Console replaces the Dispatcher and the
-Liaison both. Nothing replaced the other five.
+Role manager, Process improvement and ASVS Tracker.** The Console took the Dispatcher's and the
+Liaison's work. Nothing replaced the other five.
+
+**The Console then retired on 2026-09-10, and the Manager took all three.** A Console reached across
+every account and oversaw the whole build. That breadth did not work.
+
+A Manager sits inside ONE account, and several run at once. So the plan, the brief and the owner's
+questions all arrive at the same seat they did before, held by a smaller one.
 
 **Do not route work to a retired seat, and do not read a retired row as a live instruction.**
 
@@ -29,9 +35,9 @@ Liaison both. Nothing replaced the other five.
 
 | Seat | File | What it owns |
 |---|---|---|
-| Console | [CONSOLE.md](CONSOLE.md) | The plan and the brief. Reads the ledger, picks the row, writes a brief that holds for one turn, and polls for what comes back. **Replaces the Dispatcher.** Does not build, enqueue or merge. |
-| Manager | [MANAGER.md](MANAGER.md) | **An ALTERNATIVE to the Console, not a layer.** Added 2026-09-04. Owner-spawned, bound to ONE account, running its workers as in-process subagents rather than separate sessions. Several run at once, sharing only the repository. |
-| Builder | [BUILDER.md](BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR carrying the ledger row, then exits. It never guesses at what the brief left open and never waits: it writes the question to the Console and onto the PR, then stops. |
+| Manager | [MANAGER.md](MANAGER.md) | The plan and the brief. Reads the ledger, picks the row, writes a brief that holds for one turn, and reads what comes back. **Replaces the Dispatcher, the Liaison and the Console.** Does not build, enqueue or merge. |
+| | | Added 2026-09-04. Owner-spawned and bound to ONE account. Its workers are subagents or separate sessions. Several Managers run at once, sharing only the repository. |
+| Builder | [BUILDER.md](BUILDER.md) | One brief, one turn. Commits, pushes, opens the PR carrying the ledger row, then exits. It never guesses at what the brief left open and never waits: it writes the question to the Manager and onto the PR, then stops. |
 | Reviewer | [REVIEWER.md](REVIEWER.md) | Reads the diff. A pass posts the head SHA it read. A fail posts findings on the PR, for whichever Builder comes next. **Its label stopped gating merges on 2026-09-04**; see *The review gate was retired*. |
 | Regulator | [REGULATOR.md](REGULATOR.md) | Decides whose failure a red is: the PR's, `main`'s, a flake, or the queue's. Only the PR's own failure becomes work. **It starts with no memory, so its log is not optional.** |
 | Lander | [LANDER.md](LANDER.md) | **What enters the merge queue, and in what order.** Merge-forwards, made continuous by `strict: true` as `main` moves. The one-at-a-time ledger slot, since the queue builds each entry on the one ahead. Handing back PRs needing a ruling. |
@@ -44,11 +50,11 @@ Liaison both. Nothing replaced the other five.
 
 | Item | Rule |
 | --- | --- |
-| Where they live | [retired/DISPATCHER.md](retired/DISPATCHER.md), [retired/PM.md](retired/PM.md), [retired/LIAISON.md](retired/LIAISON.md), [retired/CLEANER.md](retired/CLEANER.md), [retired/ROLE-MANAGER.md](retired/ROLE-MANAGER.md), [retired/PROCESS IMPROVEMENT.md](<retired/PROCESS IMPROVEMENT.md>), [retired/ASVS-TRACKER.md](retired/ASVS-TRACKER.md). Seven seats, seven files. |
+| Where they live | [retired/DISPATCHER.md](retired/DISPATCHER.md), [retired/PM.md](retired/PM.md), [retired/LIAISON.md](retired/LIAISON.md), [retired/CLEANER.md](retired/CLEANER.md), [retired/ROLE-MANAGER.md](retired/ROLE-MANAGER.md), [retired/PROCESS IMPROVEMENT.md](<retired/PROCESS IMPROVEMENT.md>), [retired/ASVS-TRACKER.md](retired/ASVS-TRACKER.md), [retired/CONSOLE.md](retired/CONSOLE.md). Eight seats, eight files. |
 | **RETRACTED 2026-09-04** | This table once called `ASVS-TRACKER.md` **absent from this edition**, on a `find . -iname '*asvs*'` returning zero files. True when measured. The file was then imported, and that command now returns the path above. |
 | Why the rows survive | So a reader who remembers a seat finds it retired rather than missing. What each one did is in its own file, not summarised here. |
 | Where their general rules went | Into [COMMON.md](COMMON.md), rather than lost with the seats. |
-| Who answers an owner question now | The Console. It is the only seat the owner talks to. |
+| Who answers an owner question now | The Manager. It is the only seat the owner talks to. |
 
 ### 1c. `INSTRUMENTS 4.x` and `COMMON 4.x` citations resolve to a blob, not a file
 
