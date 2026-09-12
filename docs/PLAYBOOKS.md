@@ -61,12 +61,17 @@ are stale.
 | Cleaner | Nothing, by Owner decision. |
 | Role manager | Nothing, by Owner decision. |
 | Process improvement | Nothing, by Owner decision. |
+| ASVS tracker | Nothing, by Owner decision. Renamed from ASVS monitor on 2026-08-13, then retired with the other five on 2026-09-01. |
 
 A retired label returns no card and prints its retirement reason. This tells readers the missing
 card was removed on purpose.
 
-The ASVS tracker has a playbook in `roles/retired/` but no roster entry. Its label returns nothing,
-including no retirement notice.
+**RETRACTED 2026-09-12.** This section said the ASVS tracker had a playbook in `roles/retired/` but
+no roster entry, and that its label returned nothing, including no retirement notice.
+
+Both were true when written. `docs/roles/seats.json`'s retired map now carries `asvs-tracker` and
+`asvs-monitor`, its former name, so the label returns a retirement notice like every other retired
+seat.
 
 ---
 
