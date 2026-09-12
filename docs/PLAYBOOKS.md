@@ -5,7 +5,7 @@
 KORUS keeps short cards and full playbooks for its roles. Name the current playbook in the
 session's opening prompt.
 
-The roster changed on 2026-09-01, when six seats retired. It changed again on 2026-09-10 and
+The roster changed on 2026-09-01, when seven seats retired. It changed again on 2026-09-10 and
 2026-09-12. Older instructions may still route work to a seat that is gone.
 
 The site serves the cards. Open the full playbooks in your checkout; nothing delivers them to a
@@ -47,9 +47,9 @@ the fix it awaited merged.
 
 ## The seats that retired, and what replaced each
 
-Six seats retired on 2026-09-01, the Console on 2026-09-10, and the Reviewer on 2026-09-12. Retired
-playbooks remain in `roles/retired/` as a record. Instructions that route work through those seats
-are stale.
+Seven seats retired on 2026-09-01, the Console on 2026-09-10, and the Reviewer on 2026-09-12.
+Retired playbooks remain in `roles/retired/` as a record. Instructions that route work through
+those seats are stale.
 
 | Retired seat | What replaced it |
 |---|---|
@@ -61,12 +61,17 @@ are stale.
 | Cleaner | Nothing, by Owner decision. |
 | Role manager | Nothing, by Owner decision. |
 | Process improvement | Nothing, by Owner decision. |
+| ASVS tracker | Nothing, by Owner decision. Renamed from ASVS monitor on 2026-08-13, then retired with the other five on 2026-09-01. |
 
 A retired label returns no card and prints its retirement reason. This tells readers the missing
 card was removed on purpose.
 
-The ASVS tracker has a playbook in `roles/retired/` but no roster entry. Its label returns nothing,
-including no retirement notice.
+**RETRACTED 2026-09-12.** This section said the ASVS tracker had a playbook in `roles/retired/` but
+no roster entry, and that its label returned nothing, including no retirement notice.
+
+Both were true when written. `docs/roles/seats.json`'s retired map now carries `asvs-tracker` and
+`asvs-monitor`, its former name, so the label returns a retirement notice like every other retired
+seat.
 
 ---
 
